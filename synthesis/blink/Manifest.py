@@ -20,7 +20,7 @@ syn_grade = "-2-i"
 syn_package = "-ffvb676"
 
 # set project name and top module
-syn_top = "blink"
+syn_top = "blink_top"
 syn_project = "blink"
 
 ################################################################################
