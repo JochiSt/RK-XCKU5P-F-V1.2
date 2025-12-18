@@ -1,21 +1,21 @@
-# this is the constraints
+################################################################################
+# reset
+set_property IOSTANDARD LVCMOS33 [get_ports rst_n]
+set_property PACKAGE_PIN K9 [get_ports rst_n]
 
+################################################################################
 # PL_CLK, a 50 MHz clock (doesn't work on my board)
 # create_clock -period 20.0        [get_ports "pl_clk50"]
 # set_property IOSTANDARD LVCMOS33 [get_ports "pl_clk50"]
 # set_property PACKAGE_PIN AC13    [get_ports "pl_clk50"]
 
+################################################################################
 # SYS CLK 200 MHz
 set_property PACKAGE_PIN T24 [ get_ports "sys_clk_p" ]
 set_property PACKAGE_PIN U24 [ get_ports "sys_clk_n" ]
 set_property IOSTANDARD DIFF_SSTL12 [ get_ports "sys_clk_p" ]
 set_property IOSTANDARD DIFF_SSTL12 [ get_ports "sys_clk_n" ]
 create_clock -period 5.0 [get_ports "sys_clk_p"]
-
-set_property IOSTANDARD LVCMOS33 [get_ports clk]
-set_property IOSTANDARD LVCMOS33 [get_ports rst_n]
-set_property PACKAGE_PIN AC13 [get_ports clk]
-set_property PACKAGE_PIN K9 [get_ports rst_n]
 
 # QSFP28 CLK 156.25 MHz
 # create_clock -period 6.05 [get_ports "gt_clk156p25_p"]
