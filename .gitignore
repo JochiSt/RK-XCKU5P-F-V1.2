@@ -1,2 +1,31 @@
+################################################################################
+## HDLMAKE
+# generated tcl scripts
+*.tcl
+
+# generated Makefiles
+Makefile
+
+# generated targets
+project
+synthesize
+par
+bitstream
+
+################################################################################
+## VIVADO
+# output log and journal files
 *.log
 *.jou
+
+# generated folders
+*.cache/
+*.hw/
+*.ip_user_files/
+*.runs/
+*.sim/
+
+# vivado project
+*.xpr
+
+################################################################################
