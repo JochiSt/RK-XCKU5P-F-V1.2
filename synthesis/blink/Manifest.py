@@ -23,7 +23,7 @@ syn_package = "-ffvb676"
 syn_top = "blink"
 syn_project = "blink"
 
-
+################################################################################
 # when done with bitstream generation, remove jou and log files from vivado
 syn_post_bitstream_cmd = "rm -rf *.jou *.log"
 
@@ -53,6 +53,7 @@ syn_properties = [
     ["steps.write_bitstream.args.verbose", "0"],
     ]
 
+################################################################################
 # modules, which needed to be included
 modules = {
     "local" : [
