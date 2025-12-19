@@ -1,0 +1,25 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Fri Dec 19 11:00:08 2025
+[*]
+[dumpfile] "/home/steinmann/devel/github/FPGA/RK-XCKU5P-F-V1.2/simulation/modules/blink/tb_blink.ghw"
+[dumpfile_mtime] "Fri Dec 19 10:59:04 2025"
+[dumpfile_size] 2055
+[savefile] "/home/steinmann/devel/github/FPGA/RK-XCKU5P-F-V1.2/simulation/modules/blink/tb_blink.gtkw"
+[timestart] 0
+[size] 1920 1121
+[pos] -27 -24
+*-25.004961 498900000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] top.
+[treeopen] top.tb_blink.
+[sst_width] 297
+[signals_width] 110
+[sst_expanded] 1
+[sst_vpaned_height] 340
+@28
+top.tb_blink.clk
+top.tb_blink.blinking_0
+@25
+top.tb_blink.blink_0.cnt
+[pattern_trace] 1
+[pattern_trace] 0
