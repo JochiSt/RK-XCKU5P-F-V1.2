@@ -1,0 +1,9 @@
+# GDHL
+# work folder
+work/
+
+# simulation output
+*.ghw
+
+# object files
+*.o
