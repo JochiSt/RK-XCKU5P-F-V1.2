@@ -1,0 +1,1 @@
+../../modules/Ethernet/RGMII/liteeth_core.vhdl
