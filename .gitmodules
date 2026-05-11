@@ -1,0 +1,3 @@
+[submodule "utils/pyVHDLinstTemplate"]
+	path = utils/pyVHDLinstTemplate
+	url = https://github.com/JochiSt/pyVHDLinstTemplate.git
