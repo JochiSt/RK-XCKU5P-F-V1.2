@@ -1,0 +1,31 @@
+# PHY --------------------------------------------------------------------------
+vendor: xilinx
+toolchain: vivado
+device: xcku3p-ffvb676-2-i
+phy: LiteEthUSPHYRGMII
+
+# Core -------------------------------------------------------------------------
+clk_freq: 2e+8
+
+core: udp
+mac_address: 0x10e2d5000016
+ip_address: 192.168.1.16
+data_width: 8
+
+# UDP --------------------------------------------------------------------------
+udp_ports:
+  udp0:
+    with_broadcast: False
+    udp_port: 2000
+    data_width: 8
+    tx_fifo_depth: 16
+    rx_fifo_depth: 16
+    mode: "streamer"
+
+  udp1:
+    with_broadcast: False
+    udp_port: 2001
+    data_width: 8
+    tx_fifo_depth: 16
+    rx_fifo_depth: 16
+    mode: "streamer"
