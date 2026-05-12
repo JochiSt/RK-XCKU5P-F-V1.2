@@ -1,0 +1,13 @@
+certifi==2026.2.25
+charset-normalizer==3.4.7
+colorama==0.4.6
+idna==3.12
+liteeth==2024.4
+liteiclink==2025.4
+litex==2024.12
+migen==0.9.2
+packaging==26.1
+pyserial==3.5
+PyYAML==6.0.3
+requests==2.33.1
+urllib3==2.6.3
