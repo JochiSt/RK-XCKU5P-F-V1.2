@@ -8,8 +8,8 @@
 //
 // Filename   : liteeth_core.v
 // Device     : xcku3p-ffvb676-2-i
-// LiteX sha1 : a1ea5a2f6
-// Date       : 2026-05-11 15:12:26
+// LiteX sha1 : --------
+// Date       : 2026-05-12 13:38:30
 //------------------------------------------------------------------------------
 
 `timescale 1ns / 1ps
@@ -74,12 +74,12 @@ UDPCore
 │    │    │    └─── [FDCE]
 │    │    │    └─── [FDCE]
 │    │    │    └─── [FDCE]
+│    │    │    └─── [FDCE]
+│    │    │    └─── [FDCE]
+│    │    │    └─── [FDCE]
+│    │    │    └─── [FDCE]
+│    │    │    └─── [FDCE]
 │    │    │    └─── [PLLE2_ADV]
-│    │    │    └─── [FDCE]
-│    │    │    └─── [FDCE]
-│    │    │    └─── [FDCE]
-│    │    │    └─── [FDCE]
-│    │    │    └─── [FDCE]
 │    │    │    └─── [BUFG]
 │    │    │    └─── [BUFG]
 │    │    └─── [IBUF]
@@ -91,11 +91,11 @@ UDPCore
 │    │    └─── [OBUF]
 │    │    └─── [ODDRE1]
 │    │    └─── [OBUF]
-│    │    └─── [OBUF]
-│    │    └─── [ODDRE1]
-│    │    └─── [ODDRE1]
 │    │    └─── [ODDRE1]
 │    │    └─── [OBUF]
+│    │    └─── [ODDRE1]
+│    │    └─── [OBUF]
+│    │    └─── [ODDRE1]
 │    │    └─── [OBUF]
 │    └─── rx (LiteEthPHYRGMIIRX)
 │    │    └─── [IBUF]
@@ -104,12 +104,12 @@ UDPCore
 │    │    └─── [IBUF]
 │    │    └─── [IDELAYE3]
 │    │    └─── [IDDRE1]
+│    │    └─── [IBUF]
 │    │    └─── [IDELAYE3]
 │    │    └─── [IDDRE1]
 │    │    └─── [IBUF]
-│    │    └─── [IDDRE1]
-│    │    └─── [IBUF]
 │    │    └─── [IDELAYE3]
+│    │    └─── [IDDRE1]
 │    │    └─── [IBUF]
 │    │    └─── [IDELAYE3]
 │    │    └─── [IDDRE1]
@@ -1504,7 +1504,6 @@ wire    [9:0] liteethudpstreamer0_rx_converter_source_source_payload_data;
 wire          liteethudpstreamer0_rx_converter_source_source_ready;
 wire          liteethudpstreamer0_rx_converter_source_source_valid;
 wire          liteethudpstreamer0_rx_converter_source_valid;
-reg           liteethudpstreamer0_rx_enable = 1'd1;
 reg     [3:0] liteethudpstreamer0_rx_fifo_consume = 4'd0;
 wire          liteethudpstreamer0_rx_fifo_do_read;
 wire          liteethudpstreamer0_rx_fifo_fifo_in_first;
@@ -1563,7 +1562,6 @@ wire    [7:0] liteethudpstreamer0_rx_source_source_payload_data;
 wire          liteethudpstreamer0_rx_source_source_payload_error;
 wire          liteethudpstreamer0_rx_source_source_ready;
 wire          liteethudpstreamer0_rx_source_source_valid;
-reg    [15:0] liteethudpstreamer0_rx_udp_port = udp0_udp_port;
 reg           liteethudpstreamer0_rx_valid = 1'd1;
 reg           liteethudpstreamer0_state = 1'd0;
 wire          liteethudpstreamer0_tx_cdc_sink_first;
@@ -1629,7 +1627,6 @@ wire          liteethudpstreamer0_tx_converter_source_valid;
 reg     [4:0] liteethudpstreamer0_tx_counter = 5'd0;
 reg     [4:0] liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value0 = 5'd0;
 reg           liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value_ce0 = 1'd0;
-reg           liteethudpstreamer0_tx_enable = 1'd1;
 reg     [3:0] liteethudpstreamer0_tx_fifo_consume = 4'd0;
 wire          liteethudpstreamer0_tx_fifo_do_read;
 wire          liteethudpstreamer0_tx_fifo_fifo_in_first;
@@ -1667,14 +1664,12 @@ reg     [3:0] liteethudpstreamer0_tx_fifo_wrport_adr = 4'd0;
 wire    [9:0] liteethudpstreamer0_tx_fifo_wrport_dat_r;
 wire    [9:0] liteethudpstreamer0_tx_fifo_wrport_dat_w;
 wire          liteethudpstreamer0_tx_fifo_wrport_we;
-reg    [31:0] liteethudpstreamer0_tx_ip_address0 = udp0_ip_address;
-reg    [31:0] liteethudpstreamer0_tx_ip_address1 = 32'd0;
-reg    [31:0] liteethudpstreamer0_tx_ip_address1_liteethudpstreamer0_next_value1 = 32'd0;
-reg           liteethudpstreamer0_tx_ip_address1_liteethudpstreamer0_next_value_ce1 = 1'd0;
+reg    [31:0] liteethudpstreamer0_tx_ip_address = 32'd0;
+reg    [31:0] liteethudpstreamer0_tx_ip_address_liteethudpstreamer0_next_value1 = 32'd0;
+reg           liteethudpstreamer0_tx_ip_address_liteethudpstreamer0_next_value_ce1 = 1'd0;
 reg     [4:0] liteethudpstreamer0_tx_level = 5'd0;
 reg     [4:0] liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value3 = 5'd0;
 reg           liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value_ce3 = 1'd0;
-wire          liteethudpstreamer0_tx_reset;
 reg           liteethudpstreamer0_tx_sink_sink_first = 1'd0;
 wire          liteethudpstreamer0_tx_sink_sink_last;
 wire    [7:0] liteethudpstreamer0_tx_sink_sink_payload_data;
@@ -1691,10 +1686,9 @@ reg           liteethudpstreamer0_tx_source_source_payload_error = 1'd0;
 reg           liteethudpstreamer0_tx_source_source_payload_last_be = 1'd0;
 wire          liteethudpstreamer0_tx_source_source_ready;
 reg           liteethudpstreamer0_tx_source_source_valid = 1'd0;
-reg    [15:0] liteethudpstreamer0_tx_udp_port0 = udp0_udp_port;
-reg    [15:0] liteethudpstreamer0_tx_udp_port1 = 16'd0;
-reg    [15:0] liteethudpstreamer0_tx_udp_port1_liteethudpstreamer0_next_value2 = 16'd0;
-reg           liteethudpstreamer0_tx_udp_port1_liteethudpstreamer0_next_value_ce2 = 1'd0;
+reg    [15:0] liteethudpstreamer0_tx_udp_port = 16'd0;
+reg    [15:0] liteethudpstreamer0_tx_udp_port_liteethudpstreamer0_next_value2 = 16'd0;
+reg           liteethudpstreamer0_tx_udp_port_liteethudpstreamer0_next_value_ce2 = 1'd0;
 wire          liteethudpstreamer0_user_port_sink_first;
 wire          liteethudpstreamer0_user_port_sink_last;
 wire   [15:0] liteethudpstreamer0_user_port_sink_param_dst_port;
@@ -1800,7 +1794,6 @@ wire    [9:0] liteethudpstreamer1_rx_converter_source_source_payload_data;
 wire          liteethudpstreamer1_rx_converter_source_source_ready;
 wire          liteethudpstreamer1_rx_converter_source_source_valid;
 wire          liteethudpstreamer1_rx_converter_source_valid;
-reg           liteethudpstreamer1_rx_enable = 1'd1;
 reg     [3:0] liteethudpstreamer1_rx_fifo_consume = 4'd0;
 wire          liteethudpstreamer1_rx_fifo_do_read;
 wire          liteethudpstreamer1_rx_fifo_fifo_in_first;
@@ -1859,7 +1852,6 @@ wire    [7:0] liteethudpstreamer1_rx_source_source_payload_data;
 wire          liteethudpstreamer1_rx_source_source_payload_error;
 wire          liteethudpstreamer1_rx_source_source_ready;
 wire          liteethudpstreamer1_rx_source_source_valid;
-reg    [15:0] liteethudpstreamer1_rx_udp_port = udp1_udp_port;
 reg           liteethudpstreamer1_rx_valid = 1'd1;
 reg           liteethudpstreamer1_state = 1'd0;
 wire          liteethudpstreamer1_tx_cdc_sink_first;
@@ -1925,7 +1917,6 @@ wire          liteethudpstreamer1_tx_converter_source_valid;
 reg     [4:0] liteethudpstreamer1_tx_counter = 5'd0;
 reg     [4:0] liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value0 = 5'd0;
 reg           liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value_ce0 = 1'd0;
-reg           liteethudpstreamer1_tx_enable = 1'd1;
 reg     [3:0] liteethudpstreamer1_tx_fifo_consume = 4'd0;
 wire          liteethudpstreamer1_tx_fifo_do_read;
 wire          liteethudpstreamer1_tx_fifo_fifo_in_first;
@@ -1963,14 +1954,12 @@ reg     [3:0] liteethudpstreamer1_tx_fifo_wrport_adr = 4'd0;
 wire    [9:0] liteethudpstreamer1_tx_fifo_wrport_dat_r;
 wire    [9:0] liteethudpstreamer1_tx_fifo_wrport_dat_w;
 wire          liteethudpstreamer1_tx_fifo_wrport_we;
-reg    [31:0] liteethudpstreamer1_tx_ip_address0 = udp1_ip_address;
-reg    [31:0] liteethudpstreamer1_tx_ip_address1 = 32'd0;
-reg    [31:0] liteethudpstreamer1_tx_ip_address1_liteethudpstreamer1_next_value1 = 32'd0;
-reg           liteethudpstreamer1_tx_ip_address1_liteethudpstreamer1_next_value_ce1 = 1'd0;
+reg    [31:0] liteethudpstreamer1_tx_ip_address = 32'd0;
+reg    [31:0] liteethudpstreamer1_tx_ip_address_liteethudpstreamer1_next_value1 = 32'd0;
+reg           liteethudpstreamer1_tx_ip_address_liteethudpstreamer1_next_value_ce1 = 1'd0;
 reg     [4:0] liteethudpstreamer1_tx_level = 5'd0;
 reg     [4:0] liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value3 = 5'd0;
 reg           liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value_ce3 = 1'd0;
-wire          liteethudpstreamer1_tx_reset;
 reg           liteethudpstreamer1_tx_sink_sink_first = 1'd0;
 wire          liteethudpstreamer1_tx_sink_sink_last;
 wire    [7:0] liteethudpstreamer1_tx_sink_sink_payload_data;
@@ -1987,10 +1976,9 @@ reg           liteethudpstreamer1_tx_source_source_payload_error = 1'd0;
 reg           liteethudpstreamer1_tx_source_source_payload_last_be = 1'd0;
 wire          liteethudpstreamer1_tx_source_source_ready;
 reg           liteethudpstreamer1_tx_source_source_valid = 1'd0;
-reg    [15:0] liteethudpstreamer1_tx_udp_port0 = udp1_udp_port;
-reg    [15:0] liteethudpstreamer1_tx_udp_port1 = 16'd0;
-reg    [15:0] liteethudpstreamer1_tx_udp_port1_liteethudpstreamer1_next_value2 = 16'd0;
-reg           liteethudpstreamer1_tx_udp_port1_liteethudpstreamer1_next_value_ce2 = 1'd0;
+reg    [15:0] liteethudpstreamer1_tx_udp_port = 16'd0;
+reg    [15:0] liteethudpstreamer1_tx_udp_port_liteethudpstreamer1_next_value2 = 16'd0;
+reg           liteethudpstreamer1_tx_udp_port_liteethudpstreamer1_next_value_ce2 = 1'd0;
 wire          liteethudpstreamer1_user_port_sink_first;
 wire          liteethudpstreamer1_user_port_sink_last;
 wire   [15:0] liteethudpstreamer1_user_port_sink_param_dst_port;
@@ -2753,7 +2741,7 @@ reg           udpcore_soc_rst = 1'd0;
 wire          we;
 reg           wishbone2csr_next_state = 1'd0;
 reg           wishbone2csr_state = 1'd0;
-wire          xilinxasyncresetsynchronizerimpl0_async_reset;
+wire          xilinxasyncresetsynchronizerimpl0;
 wire          xilinxasyncresetsynchronizerimpl0_expr;
 wire          xilinxasyncresetsynchronizerimpl0_rst_meta;
 wire          xilinxasyncresetsynchronizerimpl1_rst_meta;
@@ -6706,7 +6694,6 @@ assign liteethudpstreamer0_tx_sink_sink_ready = liteethudpstreamer0_tx_fifo_sink
 assign liteethudpstreamer0_tx_fifo_sink_first = liteethudpstreamer0_tx_sink_sink_first;
 assign liteethudpstreamer0_tx_fifo_sink_last = liteethudpstreamer0_tx_sink_sink_last;
 assign liteethudpstreamer0_tx_fifo_sink_payload_data = liteethudpstreamer0_tx_sink_sink_payload_data;
-assign liteethudpstreamer0_tx_reset = (~liteethudpstreamer0_tx_enable);
 assign liteethudpstreamer0_tx_fifo_syncfifo0_din = {liteethudpstreamer0_tx_fifo_fifo_in_last, liteethudpstreamer0_tx_fifo_fifo_in_first, liteethudpstreamer0_tx_fifo_fifo_in_payload_data};
 assign {liteethudpstreamer0_tx_fifo_fifo_out_last, liteethudpstreamer0_tx_fifo_fifo_out_first, liteethudpstreamer0_tx_fifo_fifo_out_payload_data} = liteethudpstreamer0_tx_fifo_syncfifo0_dout;
 assign liteethudpstreamer0_tx_fifo_sink_ready = liteethudpstreamer0_tx_fifo_syncfifo0_writable;
@@ -6742,8 +6729,8 @@ always @(*) begin
     liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value0 <= 5'd0;
     liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value_ce0 <= 1'd0;
     liteethudpstreamer0_tx_fifo_source_ready <= 1'd0;
-    liteethudpstreamer0_tx_ip_address1_liteethudpstreamer0_next_value1 <= 32'd0;
-    liteethudpstreamer0_tx_ip_address1_liteethudpstreamer0_next_value_ce1 <= 1'd0;
+    liteethudpstreamer0_tx_ip_address_liteethudpstreamer0_next_value1 <= 32'd0;
+    liteethudpstreamer0_tx_ip_address_liteethudpstreamer0_next_value_ce1 <= 1'd0;
     liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value3 <= 5'd0;
     liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value_ce3 <= 1'd0;
     liteethudpstreamer0_tx_source_source_last <= 1'd0;
@@ -6754,16 +6741,16 @@ always @(*) begin
     liteethudpstreamer0_tx_source_source_payload_data <= 8'd0;
     liteethudpstreamer0_tx_source_source_payload_last_be <= 1'd0;
     liteethudpstreamer0_tx_source_source_valid <= 1'd0;
-    liteethudpstreamer0_tx_udp_port1_liteethudpstreamer0_next_value2 <= 16'd0;
-    liteethudpstreamer0_tx_udp_port1_liteethudpstreamer0_next_value_ce2 <= 1'd0;
+    liteethudpstreamer0_tx_udp_port_liteethudpstreamer0_next_value2 <= 16'd0;
+    liteethudpstreamer0_tx_udp_port_liteethudpstreamer0_next_value_ce2 <= 1'd0;
     liteethudpstreamer0_next_state <= liteethudpstreamer0_state;
     case (liteethudpstreamer0_state)
         1'd1: begin
             liteethudpstreamer0_tx_source_source_valid <= 1'd1;
             liteethudpstreamer0_tx_source_source_last <= (liteethudpstreamer0_tx_counter == (liteethudpstreamer0_tx_level - 1'd1));
-            liteethudpstreamer0_tx_source_source_param_src_port <= liteethudpstreamer0_tx_udp_port1;
-            liteethudpstreamer0_tx_source_source_param_dst_port <= liteethudpstreamer0_tx_udp_port1;
-            liteethudpstreamer0_tx_source_source_param_ip_address <= liteethudpstreamer0_tx_ip_address1;
+            liteethudpstreamer0_tx_source_source_param_src_port <= liteethudpstreamer0_tx_udp_port;
+            liteethudpstreamer0_tx_source_source_param_dst_port <= liteethudpstreamer0_tx_udp_port;
+            liteethudpstreamer0_tx_source_source_param_ip_address <= liteethudpstreamer0_tx_ip_address;
             liteethudpstreamer0_tx_source_source_param_length <= (liteethudpstreamer0_tx_level * 1'd1);
             liteethudpstreamer0_tx_source_source_payload_data <= liteethudpstreamer0_tx_fifo_source_payload_data;
             if (liteethudpstreamer0_tx_source_source_last) begin
@@ -6781,10 +6768,10 @@ always @(*) begin
         default: begin
             liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value0 <= 1'd0;
             liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value_ce0 <= 1'd1;
-            liteethudpstreamer0_tx_ip_address1_liteethudpstreamer0_next_value1 <= liteethudpstreamer0_tx_ip_address0;
-            liteethudpstreamer0_tx_ip_address1_liteethudpstreamer0_next_value_ce1 <= 1'd1;
-            liteethudpstreamer0_tx_udp_port1_liteethudpstreamer0_next_value2 <= liteethudpstreamer0_tx_udp_port0;
-            liteethudpstreamer0_tx_udp_port1_liteethudpstreamer0_next_value_ce2 <= 1'd1;
+            liteethudpstreamer0_tx_ip_address_liteethudpstreamer0_next_value1 <= udp0_ip_address;
+            liteethudpstreamer0_tx_ip_address_liteethudpstreamer0_next_value_ce1 <= 1'd1;
+            liteethudpstreamer0_tx_udp_port_liteethudpstreamer0_next_value2 <= udp0_udp_port;
+            liteethudpstreamer0_tx_udp_port_liteethudpstreamer0_next_value_ce2 <= 1'd1;
             if (((liteethudpstreamer0_tx_fifo_sink_valid & liteethudpstreamer0_tx_fifo_sink_ready) & liteethudpstreamer0_tx_fifo_sink_last)) begin
                 liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value3 <= (liteethudpstreamer0_tx_fifo_level1 + 1'd1);
                 liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value_ce3 <= 1'd1;
@@ -6800,10 +6787,7 @@ always @(*) begin
 end
 always @(*) begin
     liteethudpstreamer0_rx_valid <= 1'd1;
-    if ((~liteethudpstreamer0_rx_enable)) begin
-        liteethudpstreamer0_rx_valid <= 1'd0;
-    end
-    if ((liteethudpstreamer0_rx_sink_sink_param_dst_port != liteethudpstreamer0_rx_udp_port)) begin
+    if ((liteethudpstreamer0_rx_sink_sink_param_dst_port != udp0_udp_port)) begin
         liteethudpstreamer0_rx_valid <= 1'd0;
     end
 end
@@ -6877,7 +6861,6 @@ assign liteethudpstreamer1_tx_sink_sink_ready = liteethudpstreamer1_tx_fifo_sink
 assign liteethudpstreamer1_tx_fifo_sink_first = liteethudpstreamer1_tx_sink_sink_first;
 assign liteethudpstreamer1_tx_fifo_sink_last = liteethudpstreamer1_tx_sink_sink_last;
 assign liteethudpstreamer1_tx_fifo_sink_payload_data = liteethudpstreamer1_tx_sink_sink_payload_data;
-assign liteethudpstreamer1_tx_reset = (~liteethudpstreamer1_tx_enable);
 assign liteethudpstreamer1_tx_fifo_syncfifo1_din = {liteethudpstreamer1_tx_fifo_fifo_in_last, liteethudpstreamer1_tx_fifo_fifo_in_first, liteethudpstreamer1_tx_fifo_fifo_in_payload_data};
 assign {liteethudpstreamer1_tx_fifo_fifo_out_last, liteethudpstreamer1_tx_fifo_fifo_out_first, liteethudpstreamer1_tx_fifo_fifo_out_payload_data} = liteethudpstreamer1_tx_fifo_syncfifo1_dout;
 assign liteethudpstreamer1_tx_fifo_sink_ready = liteethudpstreamer1_tx_fifo_syncfifo1_writable;
@@ -6913,8 +6896,8 @@ always @(*) begin
     liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value0 <= 5'd0;
     liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value_ce0 <= 1'd0;
     liteethudpstreamer1_tx_fifo_source_ready <= 1'd0;
-    liteethudpstreamer1_tx_ip_address1_liteethudpstreamer1_next_value1 <= 32'd0;
-    liteethudpstreamer1_tx_ip_address1_liteethudpstreamer1_next_value_ce1 <= 1'd0;
+    liteethudpstreamer1_tx_ip_address_liteethudpstreamer1_next_value1 <= 32'd0;
+    liteethudpstreamer1_tx_ip_address_liteethudpstreamer1_next_value_ce1 <= 1'd0;
     liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value3 <= 5'd0;
     liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value_ce3 <= 1'd0;
     liteethudpstreamer1_tx_source_source_last <= 1'd0;
@@ -6925,16 +6908,16 @@ always @(*) begin
     liteethudpstreamer1_tx_source_source_payload_data <= 8'd0;
     liteethudpstreamer1_tx_source_source_payload_last_be <= 1'd0;
     liteethudpstreamer1_tx_source_source_valid <= 1'd0;
-    liteethudpstreamer1_tx_udp_port1_liteethudpstreamer1_next_value2 <= 16'd0;
-    liteethudpstreamer1_tx_udp_port1_liteethudpstreamer1_next_value_ce2 <= 1'd0;
+    liteethudpstreamer1_tx_udp_port_liteethudpstreamer1_next_value2 <= 16'd0;
+    liteethudpstreamer1_tx_udp_port_liteethudpstreamer1_next_value_ce2 <= 1'd0;
     liteethudpstreamer1_next_state <= liteethudpstreamer1_state;
     case (liteethudpstreamer1_state)
         1'd1: begin
             liteethudpstreamer1_tx_source_source_valid <= 1'd1;
             liteethudpstreamer1_tx_source_source_last <= (liteethudpstreamer1_tx_counter == (liteethudpstreamer1_tx_level - 1'd1));
-            liteethudpstreamer1_tx_source_source_param_src_port <= liteethudpstreamer1_tx_udp_port1;
-            liteethudpstreamer1_tx_source_source_param_dst_port <= liteethudpstreamer1_tx_udp_port1;
-            liteethudpstreamer1_tx_source_source_param_ip_address <= liteethudpstreamer1_tx_ip_address1;
+            liteethudpstreamer1_tx_source_source_param_src_port <= liteethudpstreamer1_tx_udp_port;
+            liteethudpstreamer1_tx_source_source_param_dst_port <= liteethudpstreamer1_tx_udp_port;
+            liteethudpstreamer1_tx_source_source_param_ip_address <= liteethudpstreamer1_tx_ip_address;
             liteethudpstreamer1_tx_source_source_param_length <= (liteethudpstreamer1_tx_level * 1'd1);
             liteethudpstreamer1_tx_source_source_payload_data <= liteethudpstreamer1_tx_fifo_source_payload_data;
             if (liteethudpstreamer1_tx_source_source_last) begin
@@ -6952,10 +6935,10 @@ always @(*) begin
         default: begin
             liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value0 <= 1'd0;
             liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value_ce0 <= 1'd1;
-            liteethudpstreamer1_tx_ip_address1_liteethudpstreamer1_next_value1 <= liteethudpstreamer1_tx_ip_address0;
-            liteethudpstreamer1_tx_ip_address1_liteethudpstreamer1_next_value_ce1 <= 1'd1;
-            liteethudpstreamer1_tx_udp_port1_liteethudpstreamer1_next_value2 <= liteethudpstreamer1_tx_udp_port0;
-            liteethudpstreamer1_tx_udp_port1_liteethudpstreamer1_next_value_ce2 <= 1'd1;
+            liteethudpstreamer1_tx_ip_address_liteethudpstreamer1_next_value1 <= udp1_ip_address;
+            liteethudpstreamer1_tx_ip_address_liteethudpstreamer1_next_value_ce1 <= 1'd1;
+            liteethudpstreamer1_tx_udp_port_liteethudpstreamer1_next_value2 <= udp1_udp_port;
+            liteethudpstreamer1_tx_udp_port_liteethudpstreamer1_next_value_ce2 <= 1'd1;
             if (((liteethudpstreamer1_tx_fifo_sink_valid & liteethudpstreamer1_tx_fifo_sink_ready) & liteethudpstreamer1_tx_fifo_sink_last)) begin
                 liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value3 <= (liteethudpstreamer1_tx_fifo_level1 + 1'd1);
                 liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value_ce3 <= 1'd1;
@@ -6971,10 +6954,7 @@ always @(*) begin
 end
 always @(*) begin
     liteethudpstreamer1_rx_valid <= 1'd1;
-    if ((~liteethudpstreamer1_rx_enable)) begin
-        liteethudpstreamer1_rx_valid <= 1'd0;
-    end
-    if ((liteethudpstreamer1_rx_sink_sink_param_dst_port != liteethudpstreamer1_rx_udp_port)) begin
+    if ((liteethudpstreamer1_rx_sink_sink_param_dst_port != udp1_udp_port)) begin
         liteethudpstreamer1_rx_valid <= 1'd0;
     end
 end
@@ -7212,7 +7192,7 @@ assign rhs_slice_proxy72 = rx_depacketizer_header[47:32];
 assign rhs_slice_proxy73 = rx_depacketizer_header[47:32];
 assign rhs_slice_proxy74 = rx_depacketizer_header[15:0];
 assign rhs_slice_proxy75 = rx_depacketizer_header[15:0];
-assign xilinxasyncresetsynchronizerimpl0_async_reset = (~ethphy_locked);
+assign xilinxasyncresetsynchronizerimpl0 = (~ethphy_locked);
 always @(*) begin
     ethphy__r_status <= 1'd0;
     ethphy__r_status <= ethphy_r;
@@ -7915,21 +7895,14 @@ always @(posedge sys_clk) begin
     if (liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value_ce0) begin
         liteethudpstreamer0_tx_counter <= liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value0;
     end
-    if (liteethudpstreamer0_tx_ip_address1_liteethudpstreamer0_next_value_ce1) begin
-        liteethudpstreamer0_tx_ip_address1 <= liteethudpstreamer0_tx_ip_address1_liteethudpstreamer0_next_value1;
+    if (liteethudpstreamer0_tx_ip_address_liteethudpstreamer0_next_value_ce1) begin
+        liteethudpstreamer0_tx_ip_address <= liteethudpstreamer0_tx_ip_address_liteethudpstreamer0_next_value1;
     end
-    if (liteethudpstreamer0_tx_udp_port1_liteethudpstreamer0_next_value_ce2) begin
-        liteethudpstreamer0_tx_udp_port1 <= liteethudpstreamer0_tx_udp_port1_liteethudpstreamer0_next_value2;
+    if (liteethudpstreamer0_tx_udp_port_liteethudpstreamer0_next_value_ce2) begin
+        liteethudpstreamer0_tx_udp_port <= liteethudpstreamer0_tx_udp_port_liteethudpstreamer0_next_value2;
     end
     if (liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value_ce3) begin
         liteethudpstreamer0_tx_level <= liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value3;
-    end
-    if (liteethudpstreamer0_tx_reset) begin
-        liteethudpstreamer0_tx_level <= 5'd0;
-        liteethudpstreamer0_tx_counter <= 5'd0;
-        liteethudpstreamer0_tx_ip_address1 <= 32'd0;
-        liteethudpstreamer0_tx_udp_port1 <= 16'd0;
-        liteethudpstreamer0_state <= 1'd0;
     end
     if (liteethudpstreamer0_rx_fifo_syncfifo0_re) begin
         liteethudpstreamer0_rx_fifo_readable <= 1'd1;
@@ -7979,21 +7952,14 @@ always @(posedge sys_clk) begin
     if (liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value_ce0) begin
         liteethudpstreamer1_tx_counter <= liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value0;
     end
-    if (liteethudpstreamer1_tx_ip_address1_liteethudpstreamer1_next_value_ce1) begin
-        liteethudpstreamer1_tx_ip_address1 <= liteethudpstreamer1_tx_ip_address1_liteethudpstreamer1_next_value1;
+    if (liteethudpstreamer1_tx_ip_address_liteethudpstreamer1_next_value_ce1) begin
+        liteethudpstreamer1_tx_ip_address <= liteethudpstreamer1_tx_ip_address_liteethudpstreamer1_next_value1;
     end
-    if (liteethudpstreamer1_tx_udp_port1_liteethudpstreamer1_next_value_ce2) begin
-        liteethudpstreamer1_tx_udp_port1 <= liteethudpstreamer1_tx_udp_port1_liteethudpstreamer1_next_value2;
+    if (liteethudpstreamer1_tx_udp_port_liteethudpstreamer1_next_value_ce2) begin
+        liteethudpstreamer1_tx_udp_port <= liteethudpstreamer1_tx_udp_port_liteethudpstreamer1_next_value2;
     end
     if (liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value_ce3) begin
         liteethudpstreamer1_tx_level <= liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value3;
-    end
-    if (liteethudpstreamer1_tx_reset) begin
-        liteethudpstreamer1_tx_level <= 5'd0;
-        liteethudpstreamer1_tx_counter <= 5'd0;
-        liteethudpstreamer1_tx_ip_address1 <= 32'd0;
-        liteethudpstreamer1_tx_udp_port1 <= 16'd0;
-        liteethudpstreamer1_state <= 1'd0;
     end
     if (liteethudpstreamer1_rx_fifo_syncfifo1_re) begin
         liteethudpstreamer1_rx_fifo_readable <= 1'd1;
@@ -8143,8 +8109,8 @@ always @(posedge sys_clk) begin
         rx_count <= 16'd0;
         liteethudpstreamer0_tx_level <= 5'd0;
         liteethudpstreamer0_tx_counter <= 5'd0;
-        liteethudpstreamer0_tx_ip_address1 <= 32'd0;
-        liteethudpstreamer0_tx_udp_port1 <= 16'd0;
+        liteethudpstreamer0_tx_ip_address <= 32'd0;
+        liteethudpstreamer0_tx_udp_port <= 16'd0;
         liteethudpstreamer0_tx_fifo_readable <= 1'd0;
         liteethudpstreamer0_tx_fifo_level0 <= 5'd0;
         liteethudpstreamer0_tx_fifo_produce <= 4'd0;
@@ -8155,8 +8121,8 @@ always @(posedge sys_clk) begin
         liteethudpstreamer0_rx_fifo_consume <= 4'd0;
         liteethudpstreamer1_tx_level <= 5'd0;
         liteethudpstreamer1_tx_counter <= 5'd0;
-        liteethudpstreamer1_tx_ip_address1 <= 32'd0;
-        liteethudpstreamer1_tx_udp_port1 <= 16'd0;
+        liteethudpstreamer1_tx_ip_address <= 32'd0;
+        liteethudpstreamer1_tx_udp_port <= 16'd0;
         liteethudpstreamer1_tx_fifo_readable <= 1'd0;
         liteethudpstreamer1_tx_fifo_level0 <= 5'd0;
         liteethudpstreamer1_tx_fifo_produce <= 4'd0;
@@ -9096,7 +9062,7 @@ FDPE #(
 	.C   (eth_tx_delayed_clk),
 	.CE  (1'd1),
 	.D   (1'd0),
-	.PRE (xilinxasyncresetsynchronizerimpl0_async_reset),
+	.PRE (xilinxasyncresetsynchronizerimpl0),
 
 	// Outputs.
 	.Q   (xilinxasyncresetsynchronizerimpl0_rst_meta)
@@ -9114,7 +9080,7 @@ FDPE #(
 	.C   (eth_tx_delayed_clk),
 	.CE  (1'd1),
 	.D   (xilinxasyncresetsynchronizerimpl0_rst_meta),
-	.PRE (xilinxasyncresetsynchronizerimpl0_async_reset),
+	.PRE (xilinxasyncresetsynchronizerimpl0),
 
 	// Outputs.
 	.Q   (xilinxasyncresetsynchronizerimpl0_expr)
@@ -9195,5 +9161,5 @@ FDPE #(
 endmodule
 
 // -----------------------------------------------------------------------------
-//  Auto-Generated by LiteX on 2026-05-11 15:12:26.
+//  Auto-Generated by LiteX on 2026-05-12 13:38:30.
 //------------------------------------------------------------------------------
