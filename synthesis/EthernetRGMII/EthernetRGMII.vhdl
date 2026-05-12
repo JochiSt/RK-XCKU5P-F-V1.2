@@ -118,10 +118,10 @@ BEGIN
         rgmii_mdio  => rgmii_mdio,
         rgmii_rst_n => rgmii_rst_n,
 
-        rgmii_rx_ctl  => eth_rxc,
+        rgmii_rx_ctl  => eth_rx_ctl,
         rgmii_rx_data => eth_rxd,
 
-        rgmii_tx_ctl  => eth_txc,
+        rgmii_tx_ctl  => eth_tx_ctl,
         rgmii_tx_data => eth_txd,
 
         sys_clock => sys_clk_200MHz,
