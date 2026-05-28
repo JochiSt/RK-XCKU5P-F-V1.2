@@ -66,4 +66,5 @@ modules = {
 files = [
     "commands.tcl",
     "EthernetRGMII.vhdl",
+    "delay_ref_clock.vhdl",
     ]
