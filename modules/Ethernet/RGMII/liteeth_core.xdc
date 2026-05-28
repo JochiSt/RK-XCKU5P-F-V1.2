@@ -490,23 +490,25 @@ set_property LOC X [get_ports {udp1_source_error}]
 ################################################################################
 
 
-create_clock -name eth_rx_clk -period 8.0 [get_nets eth_rx_clk]
+create_clock -name eth_rx_clk -period 8.0 [get_nets liteeth_core_0/eth_rx_clk]
 
-create_clock -name eth_tx_clk -period 8.0 [get_nets eth_tx_clk]
+create_clock -name eth_tx_clk -period 8.0 [get_nets liteeth_core_0/eth_tx_clk]
 
 ################################################################################
 # False path constraints
 ################################################################################
 
 
-set_false_path -quiet -through [get_nets -hierarchical -filter {mr_ff == TRUE}]
+set_false_path -quiet -through [get_nets liteeth_core_0/-hierarchical -filter {mr_ff == TRUE}]
 
 set_false_path -quiet -to [get_pins -filter {REF_PIN_NAME == PRE} -of_objects [get_cells -hierarchical -filter {ars_ff1 == TRUE || ars_ff2 == TRUE}]]
 
 set_max_delay 2 -quiet -from [get_pins -filter {REF_PIN_NAME == C} -of_objects [get_cells -hierarchical -filter {ars_ff1 == TRUE}]] -to [get_pins -filter {REF_PIN_NAME == D} -of_objects [get_cells -hierarchical -filter {ars_ff2 == TRUE}]]
 
-set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets sys_clk]] -group [get_clocks -include_generated_clocks -of [get_nets eth_rx_clk]] -asynchronous
+set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets liteeth_core_0/sys_clk]] -group [get_clocks -include_generated_clocks -of [get_nets liteeth_core_0/eth_rx_clk]] -asynchronous
 
-set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets sys_clk]] -group [get_clocks -include_generated_clocks -of [get_nets eth_tx_clk]] -asynchronous
+set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets liteeth_core_0/sys_clk]] -group [get_clocks -include_generated_clocks -of [get_nets liteeth_core_0/eth_tx_clk]] -asynchronous
 
-set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets eth_rx_clk]] -group [get_clocks -include_generated_clocks -of [get_nets eth_tx_clk]] -asynchronous
+set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets liteeth_core_0/eth_rx_clk]] -group [get_clocks -include_generated_clocks -of [get_nets liteeth_core_0/eth_tx_clk]] -asynchronous
+
+set_property UNAVAILABLE_DURING_CALIBRATION TRUE [get_ports eth_txd[1]]
