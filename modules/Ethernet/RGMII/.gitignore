@@ -1,3 +1,5 @@
+.python-version
 build/
 build*
 liteeth_core.vhdl
+
