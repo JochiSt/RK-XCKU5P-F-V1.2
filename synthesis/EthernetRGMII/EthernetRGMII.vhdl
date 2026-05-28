@@ -2,6 +2,9 @@ LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.STD_LOGIC_ARITH.ALL;
 
+library unisim;
+use UNISIM.vcomponents.all;
+
 ENTITY EthernetRGMII IS
     PORT (
         eth_txd    : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -21,12 +24,7 @@ ENTITY EthernetRGMII IS
 END EthernetRGMII;
 
 ARCHITECTURE behaviour OF EthernetRGMII IS
-
-    SIGNAL sys_clk_200MHz : STD_LOGIC; -- system clock 200MHz
-    SIGNAL sys_reset      : STD_LOGIC := '0';
-
     ----------------------------------------------------------------------------
-
     COMPONENT liteeth_core IS
         PORT (
             rgmii_clocks_rx   : IN STD_LOGIC;
@@ -66,6 +64,7 @@ ARCHITECTURE behaviour OF EthernetRGMII IS
         );
     END COMPONENT; -- liteeth_core
     ----------------------------------------------------------------------------
+    SIGNAL sys_reset   : STD_LOGIC := '0';
     SIGNAL rgmii_mdc   : STD_LOGIC;
     SIGNAL rgmii_mdio  : STD_LOGIC;
     SIGNAL rgmii_rst_n : STD_LOGIC := '1';
@@ -94,19 +93,62 @@ ARCHITECTURE behaviour OF EthernetRGMII IS
     SIGNAL udp1_source_ready : STD_LOGIC                     := '0';
     SIGNAL udp1_source_valid : STD_LOGIC                     := '0';
     SIGNAL udp1_udp_port     : STD_LOGIC_VECTOR(15 DOWNTO 0) := (OTHERS => '0');
+
+    ----------------------------------------------------------------------------
+    -- PLL
+    SIGNAL sys_clk_200MHz : STD_LOGIC;        -- system clock 200MHz
+    SIGNAL pll_200MHz     : STD_LOGIC := '0'; -- PLL clock 200 MHz
+    SIGNAL pll_300MHz     : STD_LOGIC := '0'; -- PLL clock 300 MHz
+
+    SIGNAL pll_locked : STD_LOGIC := '0';
+    SIGNAL pll_reset  : STD_LOGIC := '0';
+    ----------------------------------------------------------------------------
+    -- IDELAYCTRL
+    SIGNAL idelayctrl_ready : STD_LOGIC := '0';
+    SIGNAL idelayctrl_reset : STD_LOGIC := '0';
 BEGIN
 
     -- create differential clock buffer
-    IBUFGDS_0 : ENTITY work.IBUFGDS
+    IBUFGDS_0 : IBUFGDS
         PORT MAP(
             I  => sys_clk_p,     -- normal input
             IB => sys_clk_n,     -- inverted input
             O  => sys_clk_200MHz -- output
         );
 
-    --------------------------------------------------------------------------------
-    -- Instantiation template
-    --------------------------------------------------------------------------------
+    delay_ref_clock_0 : ENTITY work.delay_ref_clock
+        PORT MAP(
+            clk_in_200MHz  => sys_clk_200MHz,
+            clk_out_200MHz => pll_200MHz,
+            clk_out_300MHz => pll_300MHz,
+
+            locked => pll_locked,
+            reset  => pll_reset
+        );
+
+    ----------------------------------------------------------------------------
+    -- IDELAYCTRL
+    ----------------------------------------------------------------------------
+    PROCESS
+    BEGIN
+        WAIT UNTIL rising_edge(pll_300MHz);
+        idelayctrl_reset <= NOT pll_locked;
+    END PROCESS;
+
+    IDELAYCTRL_inst : IDELAYCTRL
+        GENERIC MAP(
+            SIM_DEVICE => "ULTRASCALE"
+        )
+        PORT MAP(
+            RDY    => idelayctrl_ready, -- 1-bit output: Ready-Signal
+            REFCLK => pll_300MHz,       -- 1-bit input: Referenztakt (stabile Frequenz erforderlich)
+            RST    => idelayctrl_reset  -- 1-bit input: Reset
+        );
+
+    ----------------------------------------------------------------------------
+    -- RGMII Ethernet
+    ----------------------------------------------------------------------------
+    sys_reset <= NOT pll_locked;
     liteeth_core_0 : liteeth_core
     PORT MAP(
         rgmii_clocks_rx => eth_rxc,
@@ -124,8 +166,8 @@ BEGIN
         rgmii_tx_ctl  => eth_tx_ctl,
         rgmii_tx_data => eth_txd,
 
-        sys_clock => sys_clk_200MHz,
-        sys_reset => '0',
+        sys_clock => pll_200MHz,
+        sys_reset => sys_reset,
 
         udp0_ip_address   => udp0_ip_address,
         udp0_sink_data    => udp0_sink_data,
