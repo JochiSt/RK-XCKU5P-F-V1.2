@@ -24,6 +24,7 @@ bitstream
 *.ip_user_files/
 *.runs/
 *.sim/
+*.srcs/
 
 # vivado project
 *.xpr
