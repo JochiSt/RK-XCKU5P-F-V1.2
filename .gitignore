@@ -5,6 +5,7 @@
 
 # generated Makefiles
 Makefile
+synthesis/*/run.py
 
 # generated targets
 project
