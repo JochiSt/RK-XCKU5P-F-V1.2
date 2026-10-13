@@ -2,12 +2,20 @@
 vendor: xilinx
 toolchain: vivado
 device: xcku5p-ffvb676-2-i
-#phy: LiteEthUSPHYRGMII
-phy: LiteEthS7PHYRGMII
+phy: LiteEthUSPHYRGMII
+
+phy_hw_init_reset: False
+# delays of 2ns are active on RTL8211F
+phy_rx_delay: 0
+phy_tx_delay: 0
+
+# IOdelay clock freq 300MHz
+iodelay_clk_freq: 300e6   
+# Ultrascale plus
+usp: True
 
 # Core -------------------------------------------------------------------------
 clk_freq: 2e+8
-
 core: udp
 mac_address: 0x10e2d5000016
 ip_address: 192.168.1.16
