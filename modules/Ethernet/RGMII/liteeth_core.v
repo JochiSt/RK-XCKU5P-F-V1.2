@@ -7,9 +7,11 @@
 //                   https://github.com/enjoy-digital/litex
 //
 // Filename   : liteeth_core.v
-// Device     : xcku3p-ffvb676-2-i
-// LiteX sha1 : --------
-// Date       : 2026-05-28 20:01:06
+// Top        : UDPCore
+// Device     : xcku5p-ffvb676-2-i
+// Hierarchy  : disabled
+// LiteX sha1 : b2759f69b
+// Date       : 2026-10-13 16:03:24
 //------------------------------------------------------------------------------
 
 `timescale 1ns / 1ps
@@ -33,22 +35,26 @@ module liteeth_core (
     input  wire          sys_reset,
     input  wire   [31:0] udp0_ip_address,
     input  wire    [7:0] udp0_sink_data,
+    input  wire          udp0_sink_keep,
     input  wire          udp0_sink_last,
     output wire          udp0_sink_ready,
     input  wire          udp0_sink_valid,
     output wire    [7:0] udp0_source_data,
     output wire          udp0_source_error,
+    output wire          udp0_source_keep,
     output wire          udp0_source_last,
     input  wire          udp0_source_ready,
     output wire          udp0_source_valid,
     input  wire   [15:0] udp0_udp_port,
     input  wire   [31:0] udp1_ip_address,
     input  wire    [7:0] udp1_sink_data,
+    input  wire          udp1_sink_keep,
     input  wire          udp1_sink_last,
     output wire          udp1_sink_ready,
     input  wire          udp1_sink_valid,
     output wire    [7:0] udp1_source_data,
     output wire          udp1_source_error,
+    output wire          udp1_source_keep,
     output wire          udp1_source_last,
     input  wire          udp1_source_ready,
     output wire          udp1_source_valid,
@@ -62,248 +68,243 @@ module liteeth_core (
 
 /*
 UDPCore
-└─── bus (SoCBusHandler)
-└─── csr (SoCCSRHandler)
-└─── irq (SoCIRQHandler)
-└─── ctrl (SoCController)
-└─── cpu (CPUNone)
-└─── crg (CRG)
-└─── ethphy (LiteEthPHYRGMII)
-│    └─── crg (LiteEthPHYRGMIICRG)
-│    │    └─── pll (USPLL)
-│    │    │    └─── [FDCE]
-│    │    │    └─── [FDCE]
-│    │    │    └─── [FDCE]
-│    │    │    └─── [FDCE]
-│    │    │    └─── [FDCE]
-│    │    │    └─── [FDCE]
-│    │    │    └─── [FDCE]
-│    │    │    └─── [FDCE]
-│    │    │    └─── [PLLE2_ADV]
-│    │    │    └─── [BUFG]
-│    │    │    └─── [BUFG]
-│    │    └─── [IBUF]
-│    │    └─── [BUFG]
-│    │    └─── [ODDRE1]
-│    │    └─── [OBUF]
-│    └─── tx (LiteEthPHYRGMIITX)
-│    │    └─── [ODDRE1]
-│    │    └─── [OBUF]
-│    │    └─── [ODDRE1]
-│    │    └─── [OBUF]
-│    │    └─── [ODDRE1]
-│    │    └─── [OBUF]
-│    │    └─── [ODDRE1]
-│    │    └─── [OBUF]
-│    │    └─── [ODDRE1]
-│    │    └─── [OBUF]
-│    └─── rx (LiteEthPHYRGMIIRX)
-│    │    └─── [IBUF]
-│    │    └─── [IDELAYE3]
-│    │    └─── [IDDRE1]
-│    │    └─── [IBUF]
-│    │    └─── [IDELAYE3]
-│    │    └─── [IDDRE1]
-│    │    └─── [IBUF]
-│    │    └─── [IDELAYE3]
-│    │    └─── [IDDRE1]
-│    │    └─── [IBUF]
-│    │    └─── [IDELAYE3]
-│    │    └─── [IDDRE1]
-│    │    └─── [IBUF]
-│    │    └─── [IDELAYE3]
-│    │    └─── [IDDRE1]
-│    └─── mdio (LiteEthPHYMDIO)
-└─── core (LiteEthUDPIPCore)
-│    └─── mac (LiteEthMAC)
-│    │    └─── core (LiteEthMACCore)
-│    │    │    └─── tx_datapath (TXDatapath)
-│    │    │    │    └─── clockdomaincrossing_0* (ClockDomainCrossing)
-│    │    │    │    │    └─── asyncfifo_0* (AsyncFIFO)
-│    │    │    │    │    │    └─── fifo (AsyncFIFO)
-│    │    │    │    │    │    │    └─── graycounter_0* (GrayCounter)
-│    │    │    │    │    │    │    └─── graycounter_1* (GrayCounter)
-│    │    │    │    └─── liteethmacpaddinginserter_0* (LiteEthMACPaddingInserter)
-│    │    │    │    │    └─── fsm (FSM)
-│    │    │    │    └─── liteethmaccrc32inserter_0* (LiteEthMACCRC32Inserter)
-│    │    │    │    │    └─── crc (LiteEthMACCRC32)
-│    │    │    │    │    │    └─── liteethmaccrcengine_0* (LiteEthMACCRCEngine)
-│    │    │    │    │    └─── fsm (FSM)
-│    │    │    │    │    └─── buffer_0* (Buffer)
-│    │    │    │    │    │    └─── pipe_valid (PipeValid)
-│    │    │    │    │    │    └─── pipeline (Pipeline)
-│    │    │    │    └─── liteethmacpreambleinserter_0* (LiteEthMACPreambleInserter)
-│    │    │    │    │    └─── fsm (FSM)
-│    │    │    │    └─── liteethmacgap_0* (LiteEthMACGap)
-│    │    │    │    │    └─── fsm (FSM)
-│    │    │    │    └─── pipeline_0* (Pipeline)
-│    │    │    └─── rx_datapath (RXDatapath)
-│    │    │    │    └─── liteethmacpreamblechecker_0* (LiteEthMACPreambleChecker)
-│    │    │    │    │    └─── fsm (FSM)
-│    │    │    │    └─── pulsesynchronizer_0* (PulseSynchronizer)
-│    │    │    │    └─── liteethmaccrc32checker_0* (LiteEthMACCRC32Checker)
-│    │    │    │    │    └─── crc (LiteEthMACCRC32)
-│    │    │    │    │    │    └─── liteethmaccrcengine_0* (LiteEthMACCRCEngine)
-│    │    │    │    │    └─── fifo (SyncFIFO)
-│    │    │    │    │    │    └─── fifo (SyncFIFO)
-│    │    │    │    │    └─── fsm (FSM)
-│    │    │    │    │    └─── buffer_0* (Buffer)
-│    │    │    │    │    │    └─── pipe_valid (PipeValid)
-│    │    │    │    │    │    └─── pipeline (Pipeline)
-│    │    │    │    └─── pulsesynchronizer_1* (PulseSynchronizer)
-│    │    │    │    └─── liteethmacpaddingchecker_0* (LiteEthMACPaddingChecker)
-│    │    │    │    └─── clockdomaincrossing_0* (ClockDomainCrossing)
-│    │    │    │    │    └─── asyncfifo_0* (AsyncFIFO)
-│    │    │    │    │    │    └─── fifo (AsyncFIFO)
-│    │    │    │    │    │    │    └─── graycounter_0* (GrayCounter)
-│    │    │    │    │    │    │    └─── graycounter_1* (GrayCounter)
-│    │    │    │    └─── pipeline_0* (Pipeline)
-│    │    └─── crossbar (LiteEthMACCrossbar)
-│    │    │    └─── arbiter (Arbiter)
-│    │    │    │    └─── rr (RoundRobin)
-│    │    │    │    └─── status_0* (Status)
-│    │    │    │    └─── status_1* (Status)
-│    │    │    └─── dispatcher (Dispatcher)
-│    │    │    │    └─── status_0* (Status)
-│    │    └─── packetizer (LiteEthMACPacketizer)
-│    │    │    └─── fsm (FSM)
-│    │    │    └─── last_be_fsm (FSM)
-│    │    └─── depacketizer (LiteEthMACDepacketizer)
-│    │    │    └─── fsm (FSM)
-│    │    │    └─── last_be_fsm (FSM)
-│    └─── arp (LiteEthARP)
-│    │    └─── tx (LiteEthARPTX)
-│    │    │    └─── packetizer (LiteEthARPPacketizer)
-│    │    │    │    └─── fsm (FSM)
-│    │    │    │    └─── last_be_fsm (FSM)
-│    │    │    └─── fsm (FSM)
-│    │    └─── rx (LiteEthARPRX)
-│    │    │    └─── depacketizer (LiteEthARPDepacketizer)
-│    │    │    │    └─── fsm (FSM)
-│    │    │    │    └─── last_be_fsm (FSM)
-│    │    │    └─── fsm (FSM)
-│    │    └─── table (LiteEthARPTable)
-│    │    │    └─── request_timer (WaitTimer)
-│    │    │    └─── cache (LiteEthARPCache)
-│    │    │    │    └─── clear_timer (WaitTimer)
-│    │    │    │    └─── fsm (FSM)
-│    │    │    └─── fsm (FSM)
-│    └─── ip (LiteEthIP)
-│    │    └─── tx (LiteEthIPTX)
-│    │    │    └─── buffer (Buffer)
-│    │    │    │    └─── pipe_valid (PipeValid)
-│    │    │    │    └─── pipeline (Pipeline)
-│    │    │    └─── checksum (LiteEthIPV4Checksum)
-│    │    │    └─── packetizer (LiteEthIPV4Packetizer)
-│    │    │    │    └─── fsm (FSM)
-│    │    │    │    └─── last_be_fsm (FSM)
-│    │    │    └─── fsm (FSM)
-│    │    └─── rx (LiteEthIPRX)
-│    │    │    └─── depacketizer (LiteEthIPV4Depacketizer)
-│    │    │    │    └─── fsm (FSM)
-│    │    │    │    └─── last_be_fsm (FSM)
-│    │    │    └─── checksum (LiteEthIPV4Checksum)
-│    │    │    └─── fsm (FSM)
-│    │    └─── crossbar (LiteEthIPV4Crossbar)
-│    │    │    └─── arbiter (Arbiter)
-│    │    │    │    └─── rr (RoundRobin)
-│    │    │    │    └─── status_0* (Status)
-│    │    │    │    └─── status_1* (Status)
-│    │    │    └─── dispatcher (Dispatcher)
-│    │    │    │    └─── status_0* (Status)
-│    └─── icmp (LiteEthICMP)
-│    │    └─── tx (LiteEthICMPTX)
-│    │    │    └─── packetizer (LiteEthICMPPacketizer)
-│    │    │    │    └─── fsm (FSM)
-│    │    │    │    └─── last_be_fsm (FSM)
-│    │    │    └─── fsm (FSM)
-│    │    └─── rx (LiteEthICMPRX)
-│    │    │    └─── depacketizer (LiteEthICMPDepacketizer)
-│    │    │    │    └─── fsm (FSM)
-│    │    │    │    └─── last_be_fsm (FSM)
-│    │    │    └─── fsm (FSM)
-│    │    └─── echo (LiteEthICMPEcho)
-│    │    │    └─── buffer (PacketFIFO)
-│    │    │    │    └─── payload_fifo (SyncFIFO)
-│    │    │    │    │    └─── fifo (SyncFIFOBuffered)
-│    │    │    │    │    │    └─── fifo (SyncFIFO)
-│    │    │    │    └─── param_fifo (SyncFIFO)
-│    │    │    │    │    └─── fifo (SyncFIFOBuffered)
-│    │    │    │    │    │    └─── fifo (SyncFIFO)
-│    └─── udp (LiteEthUDP)
-│    │    └─── tx (LiteEthUDPTX)
-│    │    │    └─── packetizer (LiteEthUDPPacketizer)
-│    │    │    │    └─── fsm (FSM)
-│    │    │    │    └─── last_be_fsm (FSM)
-│    │    │    └─── fsm (FSM)
-│    │    └─── rx (LiteEthUDPRX)
-│    │    │    └─── depacketizer (LiteEthUDPDepacketizer)
-│    │    │    │    └─── fsm (FSM)
-│    │    │    │    └─── last_be_fsm (FSM)
-│    │    │    └─── fsm (FSM)
-│    │    └─── crossbar (LiteEthUDPCrossbar)
-│    │    │    └─── tx_cdc (ClockDomainCrossing)
-│    │    │    └─── tx_converter (StrideConverter)
-│    │    │    │    └─── converter_0* (Converter)
-│    │    │    │    │    └─── _identityconverter_0* (_IdentityConverter)
-│    │    │    └─── rx_converter (StrideConverter)
-│    │    │    │    └─── converter_0* (Converter)
-│    │    │    │    │    └─── _identityconverter_0* (_IdentityConverter)
-│    │    │    └─── rx_cdc (ClockDomainCrossing)
-│    │    │    └─── tx_cdc (ClockDomainCrossing)
-│    │    │    └─── tx_converter (StrideConverter)
-│    │    │    │    └─── converter_0* (Converter)
-│    │    │    │    │    └─── _identityconverter_0* (_IdentityConverter)
-│    │    │    └─── rx_converter (StrideConverter)
-│    │    │    │    └─── converter_0* (Converter)
-│    │    │    │    │    └─── _identityconverter_0* (_IdentityConverter)
-│    │    │    └─── rx_cdc (ClockDomainCrossing)
-│    │    │    └─── arbiter (Arbiter)
-│    │    │    │    └─── rr (RoundRobin)
-│    │    │    │    └─── status_0* (Status)
-│    │    │    │    └─── status_1* (Status)
-│    │    │    └─── dispatcher (Dispatcher)
-│    │    │    │    └─── status_0* (Status)
-└─── liteethudpstreamer_0* (LiteEthUDPStreamer)
-│    └─── tx (LiteEthStream2UDPTX)
-│    │    └─── fifo (SyncFIFO)
-│    │    │    └─── fifo (SyncFIFOBuffered)
-│    │    │    │    └─── fifo (SyncFIFO)
-│    │    └─── fsm (FSM)
-│    └─── rx (LiteEthUDP2StreamRX)
-│    │    └─── fifo (SyncFIFO)
-│    │    │    └─── fifo (SyncFIFOBuffered)
-│    │    │    │    └─── fifo (SyncFIFO)
-└─── liteethudpstreamer_1* (LiteEthUDPStreamer)
-│    └─── tx (LiteEthStream2UDPTX)
-│    │    └─── fifo (SyncFIFO)
-│    │    │    └─── fifo (SyncFIFOBuffered)
-│    │    │    │    └─── fifo (SyncFIFO)
-│    │    └─── fsm (FSM)
-│    └─── rx (LiteEthUDP2StreamRX)
-│    │    └─── fifo (SyncFIFO)
-│    │    │    └─── fifo (SyncFIFOBuffered)
-│    │    │    │    └─── fifo (SyncFIFO)
-└─── csr_bridge (Wishbone2CSR)
-│    └─── fsm (FSM)
-└─── csr_bankarray (CSRBankArray)
-│    └─── csrbank_0* (CSRBank)
-│    │    └─── csrstorage_0* (CSRStorage)
-│    │    └─── csrstorage_1* (CSRStorage)
-│    │    └─── csrstatus_0* (CSRStatus)
-│    └─── csrbank_1* (CSRBank)
-│    │    └─── csrstorage_0* (CSRStorage)
-│    │    └─── csrstorage_1* (CSRStorage)
-│    │    └─── csrstatus_0* (CSRStatus)
-└─── csr_interconnect (InterconnectShared)
-└─── [FDPE]
-└─── [FDPE]
-└─── [FDPE]
-└─── [FDPE]
-└─── [FDPE]
-└─── [FDPE]
-* : Generated name.
-[]: BlackBox.
+├── bus (SoCBusHandler)
+├── csr (SoCCSRHandler)
+├── irq (SoCIRQHandler)
+├── ctrl (SoCController)
+├── cpu (CPUNone)
+├── crg (CRG)
+├── ethphy (LiteEthPHYRGMII)
+│    ├── crg (LiteEthPHYRGMIICRG)
+│    │    ├── pll (USPLL)
+│    │    │    ├── [BB:FDCE]
+│    │    │    ├── [BB:FDCE]
+│    │    │    ├── [BB:FDCE]
+│    │    │    ├── [BB:FDCE]
+│    │    │    ├── [BB:FDCE]
+│    │    │    ├── [BB:FDCE]
+│    │    │    ├── [BB:FDCE]
+│    │    │    ├── [BB:FDCE]
+│    │    │    ├── [BB:PLLE2_ADV]
+│    │    │    ├── [BB:BUFG]
+│    │    │    └── [BB:BUFG]
+│    │    ├── [BB:ODDRE1]
+│    │    ├── [BB:OBUF]
+│    │    ├── [BB:BUFG]
+│    │    └── [BB:IBUF]
+│    ├── tx (LiteEthPHYRGMIITX)
+│    │    ├── [BB:ODDRE1]
+│    │    ├── [BB:OBUF]
+│    │    ├── [BB:ODDRE1]
+│    │    ├── [BB:OBUF]
+│    │    ├── [BB:OBUF]
+│    │    ├── [BB:ODDRE1]
+│    │    ├── [BB:ODDRE1]
+│    │    ├── [BB:OBUF]
+│    │    ├── [BB:ODDRE1]
+│    │    └── [BB:OBUF]
+│    ├── rx (LiteEthPHYRGMIIRX)
+│    │    ├── [BB:IBUF]
+│    │    ├── [BB:IDELAYE3]
+│    │    ├── [BB:IBUF]
+│    │    ├── [BB:IDDRE1]
+│    │    ├── [BB:IDELAYE3]
+│    │    ├── [BB:IDDRE1]
+│    │    ├── [BB:IBUF]
+│    │    ├── [BB:IDELAYE3]
+│    │    ├── [BB:IDDRE1]
+│    │    ├── [BB:IBUF]
+│    │    ├── [BB:IDELAYE3]
+│    │    ├── [BB:IDDRE1]
+│    │    ├── [BB:IBUF]
+│    │    ├── [BB:IDELAYE3]
+│    │    └── [BB:IDDRE1]
+│    └── mdio (LiteEthPHYMDIO)
+├── core (LiteEthUDPIPCore)
+│    ├── mac (LiteEthMAC)
+│    │    ├── core (LiteEthMACCore)
+│    │    │    ├── tx_datapath (TXDatapath)
+│    │    │    │    ├── clockdomaincrossing_0 (ClockDomainCrossing) [Gen]
+│    │    │    │    │    └── asyncfifo_0 (AsyncFIFO) [Gen]
+│    │    │    │    │         └── fifo (AsyncFIFO)
+│    │    │    │    │              ├── graycounter_0 (GrayCounter) [Gen]
+│    │    │    │    │              └── graycounter_1 (GrayCounter) [Gen]
+│    │    │    │    ├── liteethmacpaddinginserter_0 (LiteEthMACPaddingInserter) [Gen]
+│    │    │    │    │    └── fsm (FSM)
+│    │    │    │    ├── liteethmaccrc32inserter_0 (LiteEthMACCRC32Inserter) [Gen]
+│    │    │    │    │    ├── crc (LiteEthMACCRC32)
+│    │    │    │    │    │    └── liteethmaccrcengine_0 (LiteEthMACCRCEngine) [Gen]
+│    │    │    │    │    ├── fsm (FSM)
+│    │    │    │    │    └── buffer_0 (Buffer) [Gen]
+│    │    │    │    │         ├── pipe_valid (PipeValid)
+│    │    │    │    │         └── pipeline (Pipeline)
+│    │    │    │    ├── liteethmacpreambleinserter_0 (LiteEthMACPreambleInserter) [Gen]
+│    │    │    │    │    └── fsm (FSM)
+│    │    │    │    ├── liteethmacgap_0 (LiteEthMACGap) [Gen]
+│    │    │    │    │    └── fsm (FSM)
+│    │    │    │    └── pipeline_0 (Pipeline) [Gen]
+│    │    │    └── rx_datapath (RXDatapath)
+│    │    │         ├── liteethmacpreamblechecker_0 (LiteEthMACPreambleChecker) [Gen]
+│    │    │         │    └── fsm (FSM)
+│    │    │         ├── pulsesynchronizer_0 (PulseSynchronizer) [Gen]
+│    │    │         ├── liteethmaccrc32checker_0 (LiteEthMACCRC32Checker) [Gen]
+│    │    │         │    ├── crc (LiteEthMACCRC32Check)
+│    │    │         │    │    └── engine (LiteEthMACCRCEngine)
+│    │    │         │    ├── fifo (SyncFIFO)
+│    │    │         │    │    └── fifo (SyncFIFO)
+│    │    │         │    ├── fsm (FSM)
+│    │    │         │    └── buffer_0 (Buffer) [Gen]
+│    │    │         │         ├── pipe_valid (PipeValid)
+│    │    │         │         └── pipeline (Pipeline)
+│    │    │         ├── pulsesynchronizer_1 (PulseSynchronizer) [Gen]
+│    │    │         ├── liteethmacpaddingchecker_0 (LiteEthMACPaddingChecker) [Gen]
+│    │    │         ├── clockdomaincrossing_0 (ClockDomainCrossing) [Gen]
+│    │    │         │    └── asyncfifo_0 (AsyncFIFO) [Gen]
+│    │    │         │         └── fifo (AsyncFIFO)
+│    │    │         │              ├── graycounter_0 (GrayCounter) [Gen]
+│    │    │         │              └── graycounter_1 (GrayCounter) [Gen]
+│    │    │         └── pipeline_0 (Pipeline) [Gen]
+│    │    ├── crossbar (LiteEthMACCrossbar)
+│    │    │    ├── arbiter (Arbiter)
+│    │    │    │    ├── rr (RoundRobin)
+│    │    │    │    ├── status_0 (Status) [Gen]
+│    │    │    │    └── status_1 (Status) [Gen]
+│    │    │    └── dispatcher (Dispatcher)
+│    │    │         └── status_0 (Status) [Gen]
+│    │    ├── packetizer (LiteEthMACPacketizer)
+│    │    │    └── fsm (FSM)
+│    │    └── depacketizer (LiteEthMACDepacketizer)
+│    │         └── fsm (FSM)
+│    ├── arp (LiteEthARP)
+│    │    ├── tx (LiteEthARPTX)
+│    │    │    ├── packetizer (LiteEthARPPacketizer)
+│    │    │    │    └── fsm (FSM)
+│    │    │    └── fsm (FSM)
+│    │    ├── rx (LiteEthARPRX)
+│    │    │    ├── depacketizer (LiteEthARPDepacketizer)
+│    │    │    │    └── fsm (FSM)
+│    │    │    └── fsm (FSM)
+│    │    └── table (LiteEthARPTable)
+│    │         ├── request_timer (WaitTimer)
+│    │         ├── cache (LiteEthARPCache)
+│    │         │    ├── clear_timer (WaitTimer)
+│    │         │    └── fsm (FSM)
+│    │         └── fsm (FSM)
+│    ├── ip (LiteEthIP)
+│    │    ├── tx (LiteEthIPTX)
+│    │    │    ├── buffer (Buffer)
+│    │    │    │    ├── pipe_valid (PipeValid)
+│    │    │    │    └── pipeline (Pipeline)
+│    │    │    ├── checksum (LiteEthIPV4Checksum)
+│    │    │    ├── packetizer (LiteEthIPV4Packetizer)
+│    │    │    │    └── fsm (FSM)
+│    │    │    └── fsm (FSM)
+│    │    ├── rx (LiteEthIPRX)
+│    │    │    ├── depacketizer (LiteEthIPV4Depacketizer)
+│    │    │    │    └── fsm (FSM)
+│    │    │    ├── checksum (LiteEthIPV4Checksum)
+│    │    │    └── fsm (FSM)
+│    │    └── crossbar (LiteEthIPV4Crossbar)
+│    │         ├── arbiter (Arbiter)
+│    │         │    ├── rr (RoundRobin)
+│    │         │    ├── status_0 (Status) [Gen]
+│    │         │    └── status_1 (Status) [Gen]
+│    │         └── dispatcher (Dispatcher)
+│    │              └── status_0 (Status) [Gen]
+│    ├── icmp (LiteEthICMP)
+│    │    ├── tx (LiteEthICMPTX)
+│    │    │    └── packetizer (LiteEthICMPPacketizer)
+│    │    │         └── fsm (FSM)
+│    │    ├── rx (LiteEthICMPRX)
+│    │    │    ├── depacketizer (LiteEthICMPDepacketizer)
+│    │    │    │    └── fsm (FSM)
+│    │    │    └── fsm (FSM)
+│    │    └── echo (LiteEthICMPEcho)
+│    │         └── buffer (PacketDropFIFO)
+│    │              └── param_fifo (SyncFIFO)
+│    │                   └── buffer_0 (Buffer) [Gen]
+│    │                        ├── pipe_valid (PipeValid)
+│    │                        └── pipeline (Pipeline)
+│    └── udp (LiteEthUDP)
+│         ├── tx (LiteEthUDPTX)
+│         │    └── packetizer (LiteEthUDPPacketizer)
+│         │         └── fsm (FSM)
+│         ├── rx (LiteEthUDPRX)
+│         │    ├── depacketizer (LiteEthUDPDepacketizer)
+│         │    │    └── fsm (FSM)
+│         │    └── fsm (FSM)
+│         └── crossbar (LiteEthUDPCrossbar)
+│              ├── tx_cdc (ClockDomainCrossing)
+│              ├── tx_converter (StrideConverter)
+│              │    └── converter_0 (Converter) [Gen]
+│              │         └── _identityconverter_0 (_IdentityConverter) [Gen]
+│              ├── rx_converter (StrideConverter)
+│              │    └── converter_0 (Converter) [Gen]
+│              │         └── _identityconverter_0 (_IdentityConverter) [Gen]
+│              ├── rx_cdc (ClockDomainCrossing)
+│              ├── tx_cdc (ClockDomainCrossing)
+│              ├── tx_converter (StrideConverter)
+│              │    └── converter_0 (Converter) [Gen]
+│              │         └── _identityconverter_0 (_IdentityConverter) [Gen]
+│              ├── rx_converter (StrideConverter)
+│              │    └── converter_0 (Converter) [Gen]
+│              │         └── _identityconverter_0 (_IdentityConverter) [Gen]
+│              ├── rx_cdc (ClockDomainCrossing)
+│              ├── arbiter (Arbiter)
+│              │    ├── rr (RoundRobin)
+│              │    ├── status_0 (Status) [Gen]
+│              │    └── status_1 (Status) [Gen]
+│              └── dispatcher (Dispatcher)
+│                   └── status_0 (Status) [Gen]
+├── liteethudpstreamer_0 (LiteEthUDPStreamer) [Gen]
+│    ├── tx (LiteEthStream2UDPTX)
+│    │    └── fifo (PacketFIFO)
+│    │         ├── payload_fifo (SyncFIFO)
+│    │         │    └── fifo (SyncFIFOBuffered)
+│    │         │         └── fifo (SyncFIFO)
+│    │         └── param_fifo (SyncFIFO)
+│    │              └── fifo (SyncFIFOBuffered)
+│    │                   └── fifo (SyncFIFO)
+│    └── rx (LiteEthUDP2StreamRX)
+│         └── fifo (SyncFIFO)
+│              └── fifo (SyncFIFOBuffered)
+│                   └── fifo (SyncFIFO)
+├── liteethudpstreamer_1 (LiteEthUDPStreamer) [Gen]
+│    ├── tx (LiteEthStream2UDPTX)
+│    │    └── fifo (PacketFIFO)
+│    │         ├── payload_fifo (SyncFIFO)
+│    │         │    └── fifo (SyncFIFOBuffered)
+│    │         │         └── fifo (SyncFIFO)
+│    │         └── param_fifo (SyncFIFO)
+│    │              └── fifo (SyncFIFOBuffered)
+│    │                   └── fifo (SyncFIFO)
+│    └── rx (LiteEthUDP2StreamRX)
+│         └── fifo (SyncFIFO)
+│              └── fifo (SyncFIFOBuffered)
+│                   └── fifo (SyncFIFO)
+├── csr_bridge (Wishbone2CSR)
+│    └── fsm (FSM)
+├── csr_bankarray (CSRBankArray)
+│    ├── csrbank_0 (CSRBank) [Gen]
+│    │    ├── csrstorage_0 (CSRStorage) [Gen]
+│    │    ├── csrstorage_1 (CSRStorage) [Gen]
+│    │    └── csrstatus_0 (CSRStatus) [Gen]
+│    └── csrbank_1 (CSRBank) [Gen]
+│         ├── csrstorage_0 (CSRStorage) [Gen]
+│         ├── csrstorage_1 (CSRStorage) [Gen]
+│         └── csrstatus_0 (CSRStatus) [Gen]
+├── csr_interconnect (InterconnectShared)
+├── [BB:IOBUF]
+├── [BB:FDPE]
+├── [BB:FDPE]
+├── [BB:FDPE]
+├── [BB:FDPE]
+├── [BB:FDPE]
+└── [BB:FDPE]
+Legend:
+  [Gen]: Auto-generated instance name.
+  [BB:NAME]: Blackbox instance (verilog Instance).
+
 */
 
 //------------------------------------------------------------------------------
@@ -313,56 +314,48 @@ UDPCore
 wire   [13:0] adr;
 wire          arp_mac_port_sink_first;
 wire          arp_mac_port_sink_last;
+wire          arp_mac_port_sink_payload_be;
 wire    [7:0] arp_mac_port_sink_payload_data;
 wire          arp_mac_port_sink_payload_error;
 wire   [15:0] arp_mac_port_sink_payload_ethernet_type;
-wire          arp_mac_port_sink_payload_last_be;
 wire   [47:0] arp_mac_port_sink_payload_sender_mac;
 wire   [47:0] arp_mac_port_sink_payload_target_mac;
 reg           arp_mac_port_sink_ready = 1'd0;
 wire          arp_mac_port_sink_valid;
 reg           arp_mac_port_source_first = 1'd0;
 reg           arp_mac_port_source_last = 1'd0;
+reg           arp_mac_port_source_payload_be = 1'd0;
 reg     [7:0] arp_mac_port_source_payload_data = 8'd0;
 reg           arp_mac_port_source_payload_error = 1'd0;
 reg    [15:0] arp_mac_port_source_payload_ethernet_type = 16'd0;
-reg           arp_mac_port_source_payload_last_be = 1'd0;
 reg    [47:0] arp_mac_port_source_payload_sender_mac = 48'd0;
 reg    [47:0] arp_mac_port_source_payload_target_mac = 48'd0;
 wire          arp_mac_port_source_ready;
 reg           arp_mac_port_source_valid = 1'd0;
 reg     [4:0] arp_rx_depacketizer_count = 5'd0;
-reg     [4:0] arp_rx_depacketizer_count_liteetharp_fsm0_next_value2 = 5'd0;
-reg           arp_rx_depacketizer_count_liteetharp_fsm0_next_value_ce2 = 1'd0;
-reg           arp_rx_depacketizer_delayed_last_be = 1'd0;
-reg           arp_rx_depacketizer_delayed_last_be_liteetharp_fsm1_next_value1 = 1'd0;
-reg           arp_rx_depacketizer_delayed_last_be_liteetharp_fsm1_next_value_ce1 = 1'd0;
+reg     [4:0] arp_rx_depacketizer_count_liteetharp_next_value0 = 5'd0;
+reg           arp_rx_depacketizer_count_liteetharp_next_value_ce0 = 1'd0;
+reg           arp_rx_depacketizer_data_copy_first = 1'd0;
+reg           arp_rx_depacketizer_data_copy_first_liteetharp_next_value2 = 1'd0;
+reg           arp_rx_depacketizer_data_copy_first_liteetharp_next_value_ce2 = 1'd0;
 reg           arp_rx_depacketizer_fsm_from_idle = 1'd0;
-reg           arp_rx_depacketizer_fsm_from_idle_liteetharp_fsm0_next_value3 = 1'd0;
-reg           arp_rx_depacketizer_fsm_from_idle_liteetharp_fsm0_next_value_ce3 = 1'd0;
+reg           arp_rx_depacketizer_fsm_from_idle_liteetharp_next_value1 = 1'd0;
+reg           arp_rx_depacketizer_fsm_from_idle_liteetharp_next_value_ce1 = 1'd0;
 wire  [223:0] arp_rx_depacketizer_header;
-wire          arp_rx_depacketizer_is_in_copy;
-reg           arp_rx_depacketizer_is_ongoing0 = 1'd0;
-reg           arp_rx_depacketizer_is_ongoing1 = 1'd0;
-reg           arp_rx_depacketizer_is_ongoing2 = 1'd0;
-reg           arp_rx_depacketizer_is_ongoing3 = 1'd0;
-wire          arp_rx_depacketizer_new_last_be;
-reg           arp_rx_depacketizer_sink_d_last = 1'd0;
+wire          arp_rx_depacketizer_sink_be;
 wire          arp_rx_depacketizer_sink_first;
 wire          arp_rx_depacketizer_sink_last;
-wire          arp_rx_depacketizer_sink_last_be;
+wire          arp_rx_depacketizer_sink_payload_be;
 wire    [7:0] arp_rx_depacketizer_sink_payload_data;
 wire          arp_rx_depacketizer_sink_payload_error;
 wire   [15:0] arp_rx_depacketizer_sink_payload_ethernet_type;
-wire          arp_rx_depacketizer_sink_payload_last_be;
 wire   [47:0] arp_rx_depacketizer_sink_payload_sender_mac;
 wire   [47:0] arp_rx_depacketizer_sink_payload_target_mac;
 reg           arp_rx_depacketizer_sink_ready = 1'd0;
 wire          arp_rx_depacketizer_sink_valid;
+reg           arp_rx_depacketizer_source_be = 1'd1;
+reg           arp_rx_depacketizer_source_first = 1'd0;
 reg           arp_rx_depacketizer_source_last = 1'd0;
-reg           arp_rx_depacketizer_source_last_a = 1'd0;
-reg           arp_rx_depacketizer_source_last_b = 1'd0;
-reg           arp_rx_depacketizer_source_last_s = 1'd0;
 wire    [7:0] arp_rx_depacketizer_source_param_hwsize;
 wire   [15:0] arp_rx_depacketizer_source_param_hwtype;
 wire   [15:0] arp_rx_depacketizer_source_param_opcode;
@@ -372,23 +365,22 @@ wire   [31:0] arp_rx_depacketizer_source_param_sender_ip;
 wire   [47:0] arp_rx_depacketizer_source_param_sender_mac;
 wire   [31:0] arp_rx_depacketizer_source_param_target_ip;
 wire   [47:0] arp_rx_depacketizer_source_param_target_mac;
+wire          arp_rx_depacketizer_source_payload_be;
 reg     [7:0] arp_rx_depacketizer_source_payload_data = 8'd0;
 wire          arp_rx_depacketizer_source_payload_error;
-reg           arp_rx_depacketizer_source_payload_last_be = 1'd0;
 reg           arp_rx_depacketizer_source_ready = 1'd0;
 reg           arp_rx_depacketizer_source_valid = 1'd0;
 reg   [223:0] arp_rx_depacketizer_sr = 224'd0;
 reg           arp_rx_depacketizer_sr_shift = 1'd0;
 reg           arp_rx_depacketizer_sr_shift_leftover = 1'd0;
-reg           arp_rx_depacketizer_was_in_copy = 1'd0;
 reg           arp_rx_reply = 1'd0;
 reg           arp_rx_request = 1'd0;
 wire          arp_rx_sink_sink_first;
 wire          arp_rx_sink_sink_last;
+wire          arp_rx_sink_sink_payload_be;
 wire    [7:0] arp_rx_sink_sink_payload_data;
 wire          arp_rx_sink_sink_payload_error;
 wire   [15:0] arp_rx_sink_sink_payload_ethernet_type;
-wire          arp_rx_sink_sink_payload_last_be;
 wire   [47:0] arp_rx_sink_sink_payload_sender_mac;
 wire   [47:0] arp_rx_sink_sink_payload_target_mac;
 wire          arp_rx_sink_sink_ready;
@@ -403,12 +395,12 @@ wire          arp_rx_source_source_ready;
 reg           arp_rx_source_source_valid = 1'd0;
 reg           arp_rx_valid = 1'd0;
 reg           arp_table_cache_clear_enable = 1'd1;
-reg    [27:0] arp_table_cache_count = 28'd200000000;
+reg    [27:0] arp_table_cache_count = 28'hbebc200;
 wire          arp_table_cache_done;
 reg           arp_table_cache_enable = 1'd1;
 reg           arp_table_cache_error = 1'd0;
-reg           arp_table_cache_error_liteetharp_liteetharpcache_next_value2 = 1'd0;
-reg           arp_table_cache_error_liteetharp_liteetharpcache_next_value_ce2 = 1'd0;
+reg           arp_table_cache_error_liteetharp_liteetharptable_liteetharpcache_next_value2 = 1'd0;
+reg           arp_table_cache_error_liteetharp_liteetharptable_liteetharpcache_next_value_ce2 = 1'd0;
 reg           arp_table_cache_mem_rd_port_adr = 1'd0;
 wire   [80:0] arp_table_cache_mem_rd_port_dat_r;
 wire   [31:0] arp_table_cache_mem_rd_port_ip_address;
@@ -428,37 +420,37 @@ reg           arp_table_cache_response_payload_error = 1'd0;
 reg    [47:0] arp_table_cache_response_payload_mac_address = 48'd0;
 reg           arp_table_cache_response_valid = 1'd0;
 reg           arp_table_cache_search_count = 1'd0;
-reg           arp_table_cache_search_count_liteetharp_liteetharpcache_next_value1 = 1'd0;
-reg           arp_table_cache_search_count_liteetharp_liteetharpcache_next_value_ce1 = 1'd0;
+reg           arp_table_cache_search_count_liteetharp_liteetharptable_liteetharpcache_next_value1 = 1'd0;
+reg           arp_table_cache_search_count_liteetharp_liteetharptable_liteetharpcache_next_value_ce1 = 1'd0;
 reg           arp_table_cache_update_count = 1'd0;
-reg           arp_table_cache_update_count_liteetharp_liteetharpcache_next_value0 = 1'd0;
-reg           arp_table_cache_update_count_liteetharp_liteetharpcache_next_value_ce0 = 1'd0;
+reg           arp_table_cache_update_count_liteetharp_liteetharptable_liteetharpcache_next_value0 = 1'd0;
+reg           arp_table_cache_update_count_liteetharp_liteetharptable_liteetharpcache_next_value_ce0 = 1'd0;
 reg    [31:0] arp_table_cache_update_payload_ip_address = 32'd0;
 reg    [47:0] arp_table_cache_update_payload_mac_address = 48'd0;
 reg           arp_table_cache_update_ready = 1'd0;
 reg           arp_table_cache_update_valid = 1'd0;
 reg           arp_table_cache_wait = 1'd0;
 reg     [2:0] arp_table_request_counter = 3'd0;
-reg     [2:0] arp_table_request_counter_liteetharp_fsm_next_value3 = 3'd0;
-reg           arp_table_request_counter_liteetharp_fsm_next_value_ce3 = 1'd0;
+reg     [2:0] arp_table_request_counter_liteetharp_liteetharptable_fsm_next_value3 = 3'd0;
+reg           arp_table_request_counter_liteetharp_liteetharptable_fsm_next_value_ce3 = 1'd0;
 reg    [31:0] arp_table_request_ip_address = 32'd0;
-reg    [31:0] arp_table_request_ip_address_liteetharp_fsm_next_value4 = 32'd0;
-reg           arp_table_request_ip_address_liteetharp_fsm_next_value_ce4 = 1'd0;
+reg    [31:0] arp_table_request_ip_address_liteetharp_liteetharptable_fsm_next_value4 = 32'd0;
+reg           arp_table_request_ip_address_liteetharp_liteetharptable_fsm_next_value_ce4 = 1'd0;
 reg           arp_table_request_pending = 1'd0;
-reg           arp_table_request_pending_liteetharp_fsm_next_value0 = 1'd0;
-reg           arp_table_request_pending_liteetharp_fsm_next_value_ce0 = 1'd0;
+reg           arp_table_request_pending_liteetharp_liteetharptable_fsm_next_value0 = 1'd0;
+reg           arp_table_request_pending_liteetharp_liteetharptable_fsm_next_value_ce0 = 1'd0;
 wire   [31:0] arp_table_request_request_payload_ip_address;
 reg           arp_table_request_request_ready = 1'd0;
 reg           arp_table_request_request_valid = 1'd0;
-reg    [24:0] arp_table_request_timer_count = 25'd20000000;
+reg    [24:0] arp_table_request_timer_count = 25'h1312d00;
 wire          arp_table_request_timer_done;
 wire          arp_table_request_timer_wait;
 reg           arp_table_response_response_payload_failed = 1'd0;
-reg           arp_table_response_response_payload_failed_liteetharp_fsm_next_value2 = 1'd0;
-reg           arp_table_response_response_payload_failed_liteetharp_fsm_next_value_ce2 = 1'd0;
+reg           arp_table_response_response_payload_failed_liteetharp_liteetharptable_fsm_next_value2 = 1'd0;
+reg           arp_table_response_response_payload_failed_liteetharp_liteetharptable_fsm_next_value_ce2 = 1'd0;
 reg    [47:0] arp_table_response_response_payload_mac_address = 48'd0;
-reg    [47:0] arp_table_response_response_payload_mac_address_liteetharp_fsm_next_value1 = 48'd0;
-reg           arp_table_response_response_payload_mac_address_liteetharp_fsm_next_value_ce1 = 1'd0;
+reg    [47:0] arp_table_response_response_payload_mac_address_liteetharp_liteetharptable_fsm_next_value1 = 48'd0;
+reg           arp_table_response_response_payload_mac_address_liteetharp_liteetharptable_fsm_next_value_ce1 = 1'd0;
 reg           arp_table_response_response_ready = 1'd0;
 reg           arp_table_response_response_valid = 1'd0;
 wire          arp_table_sink_first;
@@ -477,26 +469,15 @@ reg           arp_table_source_payload_reply = 1'd0;
 reg           arp_table_source_payload_request = 1'd0;
 wire          arp_table_source_ready;
 reg           arp_table_source_valid = 1'd0;
-reg     [5:0] arp_tx_counter = 6'd0;
-reg     [5:0] arp_tx_counter_liteetharp_next_value = 6'd0;
-reg           arp_tx_counter_liteetharp_next_value_ce = 1'd0;
+reg     [4:0] arp_tx_counter = 5'd0;
+reg     [4:0] arp_tx_counter_liteetharp_liteetharptx_fsm_next_value = 5'd0;
+reg           arp_tx_counter_liteetharp_liteetharptx_fsm_next_value_ce = 1'd0;
 reg     [4:0] arp_tx_packetizer_count = 5'd0;
-reg     [4:0] arp_tx_packetizer_count_liteetharp_fsm0_next_value0 = 5'd0;
-reg           arp_tx_packetizer_count_liteetharp_fsm0_next_value_ce0 = 1'd0;
-reg           arp_tx_packetizer_delayed_last_be = 1'd0;
-reg           arp_tx_packetizer_delayed_last_be_liteetharp_fsm1_next_value0 = 1'd0;
-reg           arp_tx_packetizer_delayed_last_be_liteetharp_fsm1_next_value_ce0 = 1'd0;
-reg           arp_tx_packetizer_fsm_from_idle = 1'd0;
-reg           arp_tx_packetizer_fsm_from_idle_liteetharp_fsm0_next_value1 = 1'd0;
-reg           arp_tx_packetizer_fsm_from_idle_liteetharp_fsm0_next_value_ce1 = 1'd0;
+reg     [4:0] arp_tx_packetizer_count_liteetharp_liteetharptx_liteetharppacketizer_next_value = 5'd0;
+reg           arp_tx_packetizer_count_liteetharp_liteetharptx_liteetharppacketizer_next_value_ce = 1'd0;
 reg   [223:0] arp_tx_packetizer_header = 224'd0;
-wire          arp_tx_packetizer_in_data_copy;
-reg           arp_tx_packetizer_is_ongoing0 = 1'd0;
-reg           arp_tx_packetizer_is_ongoing1 = 1'd0;
-reg           arp_tx_packetizer_is_ongoing2 = 1'd0;
-wire          arp_tx_packetizer_new_last_be;
+reg           arp_tx_packetizer_is_ongoing = 1'd0;
 wire          arp_tx_packetizer_sink_last;
-wire          arp_tx_packetizer_sink_last_be;
 wire    [7:0] arp_tx_packetizer_sink_param_hwsize;
 wire   [15:0] arp_tx_packetizer_sink_param_hwtype;
 reg    [15:0] arp_tx_packetizer_sink_param_opcode = 16'd0;
@@ -506,27 +487,22 @@ wire   [31:0] arp_tx_packetizer_sink_param_sender_ip;
 wire   [47:0] arp_tx_packetizer_sink_param_sender_mac;
 wire   [31:0] arp_tx_packetizer_sink_param_target_ip;
 reg    [47:0] arp_tx_packetizer_sink_param_target_mac = 48'd0;
+wire          arp_tx_packetizer_sink_payload_be;
 reg     [7:0] arp_tx_packetizer_sink_payload_data = 8'd0;
 reg           arp_tx_packetizer_sink_payload_error = 1'd0;
-reg           arp_tx_packetizer_sink_payload_last_be = 1'd0;
 reg           arp_tx_packetizer_sink_ready = 1'd0;
 reg           arp_tx_packetizer_sink_valid = 1'd0;
+reg           arp_tx_packetizer_source_be = 1'd1;
 reg           arp_tx_packetizer_source_first = 1'd0;
 reg           arp_tx_packetizer_source_last = 1'd0;
-reg           arp_tx_packetizer_source_last_a = 1'd0;
-reg           arp_tx_packetizer_source_last_b = 1'd0;
-reg           arp_tx_packetizer_source_last_s = 1'd0;
+wire          arp_tx_packetizer_source_payload_be;
 reg     [7:0] arp_tx_packetizer_source_payload_data = 8'd0;
-wire          arp_tx_packetizer_source_payload_error;
+reg           arp_tx_packetizer_source_payload_error = 1'd0;
 reg    [15:0] arp_tx_packetizer_source_payload_ethernet_type = 16'd0;
-reg           arp_tx_packetizer_source_payload_last_be = 1'd0;
 reg    [47:0] arp_tx_packetizer_source_payload_sender_mac = 48'd0;
 reg    [47:0] arp_tx_packetizer_source_payload_target_mac = 48'd0;
 reg           arp_tx_packetizer_source_ready = 1'd0;
 reg           arp_tx_packetizer_source_valid = 1'd0;
-reg   [223:0] arp_tx_packetizer_sr = 224'd0;
-reg           arp_tx_packetizer_sr_load = 1'd0;
-reg           arp_tx_packetizer_sr_shift = 1'd0;
 wire          arp_tx_sink_sink_first;
 wire          arp_tx_sink_sink_last;
 wire   [31:0] arp_tx_sink_sink_payload_ip_address;
@@ -537,24 +513,23 @@ reg           arp_tx_sink_sink_ready = 1'd0;
 wire          arp_tx_sink_sink_valid;
 wire          arp_tx_source_source_first;
 wire          arp_tx_source_source_last;
+wire          arp_tx_source_source_payload_be;
 wire    [7:0] arp_tx_source_source_payload_data;
 wire          arp_tx_source_source_payload_error;
 reg    [15:0] arp_tx_source_source_payload_ethernet_type = 16'd0;
-wire          arp_tx_source_source_payload_last_be;
 reg    [47:0] arp_tx_source_source_payload_sender_mac = 48'd0;
 reg    [47:0] arp_tx_source_source_payload_target_mac = 48'd0;
 wire          arp_tx_source_source_ready;
 reg           arp_tx_source_source_valid = 1'd0;
-wire   [39:0] cases_slice_proxy;
 wire          crossbar_sink_first;
 wire          crossbar_sink_last;
 wire   [15:0] crossbar_sink_param_dst_port;
 wire   [31:0] crossbar_sink_param_ip_address;
 wire   [15:0] crossbar_sink_param_length;
 wire   [15:0] crossbar_sink_param_src_port;
+wire          crossbar_sink_payload_be;
 wire    [7:0] crossbar_sink_payload_data;
 wire          crossbar_sink_payload_error;
-wire          crossbar_sink_payload_last_be;
 reg           crossbar_sink_ready = 1'd0;
 wire          crossbar_sink_valid;
 reg           crossbar_source_first = 1'd0;
@@ -563,36 +538,37 @@ reg    [15:0] crossbar_source_param_dst_port = 16'd0;
 reg    [31:0] crossbar_source_param_ip_address = 32'd0;
 reg    [15:0] crossbar_source_param_length = 16'd0;
 reg    [15:0] crossbar_source_param_src_port = 16'd0;
+reg           crossbar_source_payload_be = 1'd0;
 reg     [7:0] crossbar_source_payload_data = 8'd0;
 reg           crossbar_source_payload_error = 1'd0;
-reg           crossbar_source_payload_last_be = 1'd0;
 wire          crossbar_source_ready;
 reg           crossbar_source_valid = 1'd0;
+reg           csr_data_width = 1'd0;
 wire   [31:0] csrbank0_bus_errors_r;
 reg           csrbank0_bus_errors_re = 1'd0;
 wire   [31:0] csrbank0_bus_errors_w;
 reg           csrbank0_bus_errors_we = 1'd0;
-wire    [1:0] csrbank0_reset0_r;
-reg           csrbank0_reset0_re = 1'd0;
-wire    [1:0] csrbank0_reset0_w;
-reg           csrbank0_reset0_we = 1'd0;
-wire   [31:0] csrbank0_scratch0_r;
-reg           csrbank0_scratch0_re = 1'd0;
-wire   [31:0] csrbank0_scratch0_w;
-reg           csrbank0_scratch0_we = 1'd0;
+wire    [1:0] csrbank0_reset_r;
+reg           csrbank0_reset_re = 1'd0;
+wire    [1:0] csrbank0_reset_w;
+reg           csrbank0_reset_we = 1'd0;
+wire   [31:0] csrbank0_scratch_r;
+reg           csrbank0_scratch_re = 1'd0;
+wire   [31:0] csrbank0_scratch_w;
+reg           csrbank0_scratch_we = 1'd0;
 wire          csrbank0_sel;
-wire          csrbank1_crg_reset0_r;
-reg           csrbank1_crg_reset0_re = 1'd0;
-wire          csrbank1_crg_reset0_w;
-reg           csrbank1_crg_reset0_we = 1'd0;
+wire          csrbank1_crg_reset_r;
+reg           csrbank1_crg_reset_re = 1'd0;
+wire          csrbank1_crg_reset_w;
+reg           csrbank1_crg_reset_we = 1'd0;
 wire          csrbank1_mdio_r_r;
 reg           csrbank1_mdio_r_re = 1'd0;
 wire          csrbank1_mdio_r_w;
 reg           csrbank1_mdio_r_we = 1'd0;
-wire    [2:0] csrbank1_mdio_w0_r;
-reg           csrbank1_mdio_w0_re = 1'd0;
-wire    [2:0] csrbank1_mdio_w0_w;
-reg           csrbank1_mdio_w0_we = 1'd0;
+wire    [2:0] csrbank1_mdio_w_r;
+reg           csrbank1_mdio_w_re = 1'd0;
+wire    [2:0] csrbank1_mdio_w_w;
+reg           csrbank1_mdio_w_we = 1'd0;
 wire          csrbank1_sel;
 wire   [31:0] dat_r;
 wire   [31:0] dat_w;
@@ -603,12 +579,12 @@ wire          eth_rx_rst;
 wire          eth_tx_clk;
 wire          eth_tx_delayed_clk;
 wire          eth_tx_rst;
-reg           ethphy__r_re = 1'd0;
-reg           ethphy__r_status = 1'd0;
-wire          ethphy__r_we;
-reg           ethphy__w_re = 1'd0;
+wire          ethphy__r_rd_stb;
+wire          ethphy__r_status;
+reg           ethphy__r_wr_stb = 1'd0;
 reg     [2:0] ethphy__w_storage = 3'd0;
-wire          ethphy_clkin;
+reg           ethphy__w_wr_stb = 1'd0;
+wire          ethphy_clkin_signal;
 wire          ethphy_clkout0;
 wire          ethphy_clkout1;
 wire          ethphy_clkout_buf0;
@@ -618,327 +594,271 @@ wire          ethphy_data_r;
 wire          ethphy_data_w;
 wire          ethphy_eth_rx_clk_ibuf;
 wire          ethphy_eth_tx_clk_obuf;
-wire          ethphy_liteethphyrgmiirx;
-wire          ethphy_liteethphyrgmiirx_last;
-wire          ethphy_liteethphyrgmiirx_rx_ctl;
-reg           ethphy_liteethphyrgmiirx_rx_ctl_d = 1'd0;
-wire          ethphy_liteethphyrgmiirx_rx_ctl_ibuf;
-wire          ethphy_liteethphyrgmiirx_rx_ctl_idelay;
-wire    [7:0] ethphy_liteethphyrgmiirx_rx_data;
-wire    [3:0] ethphy_liteethphyrgmiirx_rx_data_ibuf;
-wire    [3:0] ethphy_liteethphyrgmiirx_rx_data_idelay;
-reg           ethphy_liteethphyrgmiirx_source_first = 1'd0;
-wire          ethphy_liteethphyrgmiirx_source_last;
-reg     [7:0] ethphy_liteethphyrgmiirx_source_payload_data = 8'd0;
-reg           ethphy_liteethphyrgmiirx_source_payload_error = 1'd0;
-reg           ethphy_liteethphyrgmiirx_source_payload_last_be = 1'd0;
-wire          ethphy_liteethphyrgmiirx_source_ready;
-reg           ethphy_liteethphyrgmiirx_source_valid = 1'd0;
+wire          ethphy_last;
 wire          ethphy_locked;
 wire          ethphy_mdc;
 wire          ethphy_oe;
 reg           ethphy_power_down = 1'd0;
-reg           ethphy_r = 1'd0;
+wire          ethphy_r;
 reg           ethphy_reset0 = 1'd0;
 wire          ethphy_reset1;
-reg           ethphy_reset_re = 1'd0;
 reg           ethphy_reset_storage = 1'd0;
+reg           ethphy_reset_wr_stb = 1'd0;
+wire    [1:0] ethphy_rx_ctl;
+reg           ethphy_rx_ctl_d = 1'd0;
+wire          ethphy_rx_ctl_ibuf;
+wire          ethphy_rx_ctl_idelay;
+wire    [7:0] ethphy_rx_data;
+wire    [3:0] ethphy_rx_data_ibuf;
+wire    [3:0] ethphy_rx_data_idelay;
 wire          ethphy_sink_first;
 wire          ethphy_sink_last;
+wire          ethphy_sink_payload_be;
 wire    [7:0] ethphy_sink_payload_data;
 wire          ethphy_sink_payload_error;
-wire          ethphy_sink_payload_last_be;
 wire          ethphy_sink_ready;
 wire          ethphy_sink_valid;
+reg           ethphy_source_first = 1'd0;
+wire          ethphy_source_last;
+wire          ethphy_source_payload_be;
+reg     [7:0] ethphy_source_payload_data = 8'd0;
+reg           ethphy_source_payload_error = 1'd0;
+wire          ethphy_source_ready;
+reg           ethphy_source_valid = 1'd0;
 wire          ethphy_tx_ctl_obuf;
 wire    [3:0] ethphy_tx_data_obuf;
 wire          ethphy_w;
-reg     [2:0] fsm_next_state = 3'd0;
-reg     [2:0] fsm_state = 3'd0;
-reg           icmp_echo_param_fifo_consume = 1'd0;
-wire          icmp_echo_param_fifo_do_read;
-wire          icmp_echo_param_fifo_fifo_in_first;
-wire          icmp_echo_param_fifo_fifo_in_last;
-wire   [15:0] icmp_echo_param_fifo_fifo_in_param_checksum;
-wire    [7:0] icmp_echo_param_fifo_fifo_in_param_code;
-wire   [31:0] icmp_echo_param_fifo_fifo_in_param_ip_address;
-wire   [15:0] icmp_echo_param_fifo_fifo_in_param_length;
-wire    [7:0] icmp_echo_param_fifo_fifo_in_param_msgtype;
-wire   [31:0] icmp_echo_param_fifo_fifo_in_param_quench;
-wire          icmp_echo_param_fifo_fifo_out_first;
-wire          icmp_echo_param_fifo_fifo_out_last;
-wire   [15:0] icmp_echo_param_fifo_fifo_out_param_checksum;
-wire    [7:0] icmp_echo_param_fifo_fifo_out_param_code;
-wire   [31:0] icmp_echo_param_fifo_fifo_out_param_ip_address;
-wire   [15:0] icmp_echo_param_fifo_fifo_out_param_length;
-wire    [7:0] icmp_echo_param_fifo_fifo_out_param_msgtype;
-wire   [31:0] icmp_echo_param_fifo_fifo_out_param_quench;
-reg     [1:0] icmp_echo_param_fifo_level0 = 2'd0;
-wire    [1:0] icmp_echo_param_fifo_level1;
-reg           icmp_echo_param_fifo_produce = 1'd0;
-wire          icmp_echo_param_fifo_rdport_adr;
-wire  [113:0] icmp_echo_param_fifo_rdport_dat_r;
-wire          icmp_echo_param_fifo_rdport_re;
-wire          icmp_echo_param_fifo_re;
-reg           icmp_echo_param_fifo_readable = 1'd0;
-reg           icmp_echo_param_fifo_replace = 1'd0;
-reg           icmp_echo_param_fifo_sink_first = 1'd0;
-reg           icmp_echo_param_fifo_sink_last = 1'd0;
-wire   [15:0] icmp_echo_param_fifo_sink_param_checksum;
-wire    [7:0] icmp_echo_param_fifo_sink_param_code;
-wire   [31:0] icmp_echo_param_fifo_sink_param_ip_address;
-wire   [15:0] icmp_echo_param_fifo_sink_param_length;
-wire    [7:0] icmp_echo_param_fifo_sink_param_msgtype;
-wire   [31:0] icmp_echo_param_fifo_sink_param_quench;
-wire          icmp_echo_param_fifo_sink_ready;
-wire          icmp_echo_param_fifo_sink_valid;
-wire          icmp_echo_param_fifo_source_first;
-wire          icmp_echo_param_fifo_source_last;
-wire   [15:0] icmp_echo_param_fifo_source_param_checksum;
-wire    [7:0] icmp_echo_param_fifo_source_param_code;
-wire   [31:0] icmp_echo_param_fifo_source_param_ip_address;
-wire   [15:0] icmp_echo_param_fifo_source_param_length;
-wire    [7:0] icmp_echo_param_fifo_source_param_msgtype;
-wire   [31:0] icmp_echo_param_fifo_source_param_quench;
-wire          icmp_echo_param_fifo_source_ready;
-wire          icmp_echo_param_fifo_source_valid;
-wire  [113:0] icmp_echo_param_fifo_syncfifo_din;
-wire  [113:0] icmp_echo_param_fifo_syncfifo_dout;
-wire          icmp_echo_param_fifo_syncfifo_re;
-wire          icmp_echo_param_fifo_syncfifo_readable;
-wire          icmp_echo_param_fifo_syncfifo_we;
-wire          icmp_echo_param_fifo_syncfifo_writable;
-reg           icmp_echo_param_fifo_wrport_adr = 1'd0;
-wire  [113:0] icmp_echo_param_fifo_wrport_dat_r;
-wire  [113:0] icmp_echo_param_fifo_wrport_dat_w;
-wire          icmp_echo_param_fifo_wrport_we;
-reg     [6:0] icmp_echo_payload_fifo_consume = 7'd0;
-wire          icmp_echo_payload_fifo_do_read;
-wire          icmp_echo_payload_fifo_fifo_in_first;
-wire          icmp_echo_payload_fifo_fifo_in_last;
-wire    [7:0] icmp_echo_payload_fifo_fifo_in_payload_data;
-wire          icmp_echo_payload_fifo_fifo_in_payload_error;
-wire          icmp_echo_payload_fifo_fifo_in_payload_last_be;
-wire          icmp_echo_payload_fifo_fifo_out_first;
-wire          icmp_echo_payload_fifo_fifo_out_last;
-wire    [7:0] icmp_echo_payload_fifo_fifo_out_payload_data;
-wire          icmp_echo_payload_fifo_fifo_out_payload_error;
-wire          icmp_echo_payload_fifo_fifo_out_payload_last_be;
-reg     [7:0] icmp_echo_payload_fifo_level0 = 8'd0;
-wire    [7:0] icmp_echo_payload_fifo_level1;
-reg     [6:0] icmp_echo_payload_fifo_produce = 7'd0;
-wire    [6:0] icmp_echo_payload_fifo_rdport_adr;
-wire   [11:0] icmp_echo_payload_fifo_rdport_dat_r;
-wire          icmp_echo_payload_fifo_rdport_re;
-wire          icmp_echo_payload_fifo_re;
-reg           icmp_echo_payload_fifo_readable = 1'd0;
-reg           icmp_echo_payload_fifo_replace = 1'd0;
-reg           icmp_echo_payload_fifo_sink_first = 1'd0;
-wire          icmp_echo_payload_fifo_sink_last;
-wire    [7:0] icmp_echo_payload_fifo_sink_payload_data;
-wire          icmp_echo_payload_fifo_sink_payload_error;
-wire          icmp_echo_payload_fifo_sink_payload_last_be;
-wire          icmp_echo_payload_fifo_sink_ready;
-wire          icmp_echo_payload_fifo_sink_valid;
-wire          icmp_echo_payload_fifo_source_first;
-wire          icmp_echo_payload_fifo_source_last;
-wire    [7:0] icmp_echo_payload_fifo_source_payload_data;
-wire          icmp_echo_payload_fifo_source_payload_error;
-wire          icmp_echo_payload_fifo_source_payload_last_be;
-wire          icmp_echo_payload_fifo_source_ready;
-wire          icmp_echo_payload_fifo_source_valid;
-wire   [11:0] icmp_echo_payload_fifo_syncfifo_din;
-wire   [11:0] icmp_echo_payload_fifo_syncfifo_dout;
-wire          icmp_echo_payload_fifo_syncfifo_re;
-wire          icmp_echo_payload_fifo_syncfifo_readable;
-wire          icmp_echo_payload_fifo_syncfifo_we;
-wire          icmp_echo_payload_fifo_syncfifo_writable;
-reg     [6:0] icmp_echo_payload_fifo_wrport_adr = 7'd0;
-wire   [11:0] icmp_echo_payload_fifo_wrport_dat_r;
-wire   [11:0] icmp_echo_payload_fifo_wrport_dat_w;
-wire          icmp_echo_payload_fifo_wrport_we;
-wire          icmp_echo_sink_first;
-wire          icmp_echo_sink_last;
-wire   [15:0] icmp_echo_sink_param_checksum;
-wire    [7:0] icmp_echo_sink_param_code;
-wire   [31:0] icmp_echo_sink_param_ip_address;
-wire   [15:0] icmp_echo_sink_param_length;
-wire    [7:0] icmp_echo_sink_param_msgtype;
-wire   [31:0] icmp_echo_sink_param_quench;
-wire    [7:0] icmp_echo_sink_payload_data;
-wire          icmp_echo_sink_payload_error;
-wire          icmp_echo_sink_payload_last_be;
-reg           icmp_echo_sink_ready = 1'd0;
-reg           icmp_echo_sink_sink_first = 1'd0;
-reg           icmp_echo_sink_sink_last = 1'd0;
-reg    [15:0] icmp_echo_sink_sink_param_checksum = 16'd0;
-reg     [7:0] icmp_echo_sink_sink_param_code = 8'd0;
-reg    [31:0] icmp_echo_sink_sink_param_ip_address = 32'd0;
-reg    [15:0] icmp_echo_sink_sink_param_length = 16'd0;
-reg     [7:0] icmp_echo_sink_sink_param_msgtype = 8'd0;
-reg    [31:0] icmp_echo_sink_sink_param_quench = 32'd0;
-reg     [7:0] icmp_echo_sink_sink_payload_data = 8'd0;
-reg           icmp_echo_sink_sink_payload_error = 1'd0;
-reg           icmp_echo_sink_sink_payload_last_be = 1'd0;
+wire          icmp_echo_buffer_commit;
+reg     [7:0] icmp_echo_buffer_commit_ptr = 8'd0;
+wire          icmp_echo_buffer_discard;
+wire          icmp_echo_buffer_drop;
+wire          icmp_echo_buffer_fetch;
+wire          icmp_echo_buffer_full;
+reg           icmp_echo_buffer_invalid = 1'd0;
+wire          icmp_echo_buffer_level;
+reg           icmp_echo_buffer_out_valid = 1'd0;
+reg           icmp_echo_buffer_overflow = 1'd0;
+wire          icmp_echo_buffer_pipe_valid_sink_first;
+wire          icmp_echo_buffer_pipe_valid_sink_last;
+wire   [15:0] icmp_echo_buffer_pipe_valid_sink_param_checksum;
+wire    [7:0] icmp_echo_buffer_pipe_valid_sink_param_code;
+wire   [31:0] icmp_echo_buffer_pipe_valid_sink_param_ip_address;
+wire   [15:0] icmp_echo_buffer_pipe_valid_sink_param_length;
+wire    [7:0] icmp_echo_buffer_pipe_valid_sink_param_msgtype;
+wire   [31:0] icmp_echo_buffer_pipe_valid_sink_param_quench;
+wire          icmp_echo_buffer_pipe_valid_sink_ready;
+wire          icmp_echo_buffer_pipe_valid_sink_valid;
+reg           icmp_echo_buffer_pipe_valid_source_first = 1'd0;
+reg           icmp_echo_buffer_pipe_valid_source_last = 1'd0;
+reg    [15:0] icmp_echo_buffer_pipe_valid_source_param_checksum = 16'd0;
+reg     [7:0] icmp_echo_buffer_pipe_valid_source_param_code = 8'd0;
+reg    [31:0] icmp_echo_buffer_pipe_valid_source_param_ip_address = 32'd0;
+reg    [15:0] icmp_echo_buffer_pipe_valid_source_param_length = 16'd0;
+reg     [7:0] icmp_echo_buffer_pipe_valid_source_param_msgtype = 8'd0;
+reg    [31:0] icmp_echo_buffer_pipe_valid_source_param_quench = 32'd0;
+wire          icmp_echo_buffer_pipe_valid_source_ready;
+reg           icmp_echo_buffer_pipe_valid_source_valid = 1'd0;
+wire    [6:0] icmp_echo_buffer_rd_port_adr;
+wire   [11:0] icmp_echo_buffer_rd_port_dat_r;
+wire          icmp_echo_buffer_rd_port_re;
+reg     [7:0] icmp_echo_buffer_rd_ptr = 8'd0;
+wire          icmp_echo_buffer_sink_first;
+wire          icmp_echo_buffer_sink_last;
+wire   [15:0] icmp_echo_buffer_sink_param_checksum;
+wire    [7:0] icmp_echo_buffer_sink_param_code;
+wire   [31:0] icmp_echo_buffer_sink_param_ip_address;
+wire   [15:0] icmp_echo_buffer_sink_param_length;
+wire    [7:0] icmp_echo_buffer_sink_param_msgtype;
+wire   [31:0] icmp_echo_buffer_sink_param_quench;
+wire          icmp_echo_buffer_sink_payload_be;
+wire    [7:0] icmp_echo_buffer_sink_payload_data;
+wire          icmp_echo_buffer_sink_payload_error;
+wire          icmp_echo_buffer_sink_ready;
+reg           icmp_echo_buffer_sink_sink_first = 1'd0;
+wire          icmp_echo_buffer_sink_sink_last;
+wire   [15:0] icmp_echo_buffer_sink_sink_param_checksum;
+wire    [7:0] icmp_echo_buffer_sink_sink_param_code;
+wire   [31:0] icmp_echo_buffer_sink_sink_param_ip_address;
+wire   [15:0] icmp_echo_buffer_sink_sink_param_length;
+wire    [7:0] icmp_echo_buffer_sink_sink_param_msgtype;
+wire   [31:0] icmp_echo_buffer_sink_sink_param_quench;
+wire          icmp_echo_buffer_sink_sink_ready;
+wire          icmp_echo_buffer_sink_sink_valid;
+wire          icmp_echo_buffer_sink_valid;
+wire          icmp_echo_buffer_source_first;
+wire          icmp_echo_buffer_source_last;
+wire   [15:0] icmp_echo_buffer_source_param_checksum;
+wire    [7:0] icmp_echo_buffer_source_param_code;
+wire   [31:0] icmp_echo_buffer_source_param_ip_address;
+wire   [15:0] icmp_echo_buffer_source_param_length;
+wire    [7:0] icmp_echo_buffer_source_param_msgtype;
+wire   [31:0] icmp_echo_buffer_source_param_quench;
+wire          icmp_echo_buffer_source_payload_be;
+wire    [7:0] icmp_echo_buffer_source_payload_data;
+wire          icmp_echo_buffer_source_payload_error;
+wire          icmp_echo_buffer_source_ready;
+wire          icmp_echo_buffer_source_source_first;
+wire          icmp_echo_buffer_source_source_last;
+wire   [15:0] icmp_echo_buffer_source_source_param_checksum;
+wire    [7:0] icmp_echo_buffer_source_source_param_code;
+wire   [31:0] icmp_echo_buffer_source_source_param_ip_address;
+wire   [15:0] icmp_echo_buffer_source_source_param_length;
+wire    [7:0] icmp_echo_buffer_source_source_param_msgtype;
+wire   [31:0] icmp_echo_buffer_source_source_param_quench;
+wire          icmp_echo_buffer_source_source_ready;
+wire          icmp_echo_buffer_source_source_valid;
+wire          icmp_echo_buffer_source_valid;
+wire    [7:0] icmp_echo_buffer_used;
+wire    [6:0] icmp_echo_buffer_wr_port_adr;
+wire   [11:0] icmp_echo_buffer_wr_port_dat_r;
+wire   [11:0] icmp_echo_buffer_wr_port_dat_w;
+wire          icmp_echo_buffer_wr_port_we;
+reg     [7:0] icmp_echo_buffer_wr_ptr = 8'd0;
+reg           icmp_echo_busy = 1'd0;
+reg     [7:0] icmp_echo_count = 8'd0;
+reg           icmp_echo_receiving = 1'd0;
+wire          icmp_echo_sink_sink_first;
+wire          icmp_echo_sink_sink_last;
+wire   [15:0] icmp_echo_sink_sink_param_checksum;
+wire    [7:0] icmp_echo_sink_sink_param_code;
+wire   [31:0] icmp_echo_sink_sink_param_ip_address;
+wire   [15:0] icmp_echo_sink_sink_param_length;
+wire    [7:0] icmp_echo_sink_sink_param_msgtype;
+wire   [31:0] icmp_echo_sink_sink_param_quench;
+wire          icmp_echo_sink_sink_payload_be;
+wire    [7:0] icmp_echo_sink_sink_payload_data;
+wire          icmp_echo_sink_sink_payload_error;
 wire          icmp_echo_sink_sink_ready;
-reg           icmp_echo_sink_sink_valid = 1'd0;
-wire          icmp_echo_sink_valid;
-wire          icmp_echo_source_first;
-wire          icmp_echo_source_last;
-wire   [15:0] icmp_echo_source_param_checksum;
-wire    [7:0] icmp_echo_source_param_code;
-wire   [31:0] icmp_echo_source_param_ip_address;
-wire   [15:0] icmp_echo_source_param_length;
-reg     [7:0] icmp_echo_source_param_msgtype = 8'd0;
-wire   [31:0] icmp_echo_source_param_quench;
-wire    [7:0] icmp_echo_source_payload_data;
-wire          icmp_echo_source_payload_error;
-wire          icmp_echo_source_payload_last_be;
-wire          icmp_echo_source_ready;
-reg           icmp_echo_source_source_first = 1'd0;
+wire          icmp_echo_sink_sink_valid;
+wire    [7:0] icmp_echo_size;
+wire          icmp_echo_source_source_first;
 wire          icmp_echo_source_source_last;
 wire   [15:0] icmp_echo_source_source_param_checksum;
 wire    [7:0] icmp_echo_source_source_param_code;
 wire   [31:0] icmp_echo_source_source_param_ip_address;
 wire   [15:0] icmp_echo_source_source_param_length;
-wire    [7:0] icmp_echo_source_source_param_msgtype;
+reg     [7:0] icmp_echo_source_source_param_msgtype = 8'd0;
 wire   [31:0] icmp_echo_source_source_param_quench;
+wire          icmp_echo_source_source_payload_be;
 wire    [7:0] icmp_echo_source_source_payload_data;
 wire          icmp_echo_source_source_payload_error;
-wire          icmp_echo_source_source_payload_last_be;
 wire          icmp_echo_source_source_ready;
 wire          icmp_echo_source_source_valid;
-wire          icmp_echo_source_valid;
-wire          icmp_ip_port_sink_first;
-wire          icmp_ip_port_sink_last;
-wire   [31:0] icmp_ip_port_sink_param_ip_address;
-wire   [15:0] icmp_ip_port_sink_param_length;
-wire    [7:0] icmp_ip_port_sink_param_protocol;
-wire    [7:0] icmp_ip_port_sink_payload_data;
-wire          icmp_ip_port_sink_payload_error;
-wire          icmp_ip_port_sink_payload_last_be;
-reg           icmp_ip_port_sink_ready = 1'd0;
-wire          icmp_ip_port_sink_valid;
-reg           icmp_ip_port_source_first = 1'd0;
-reg           icmp_ip_port_source_last = 1'd0;
-reg    [31:0] icmp_ip_port_source_param_ip_address = 32'd0;
-reg    [15:0] icmp_ip_port_source_param_length = 16'd0;
-reg     [7:0] icmp_ip_port_source_param_protocol = 8'd0;
-reg     [7:0] icmp_ip_port_source_payload_data = 8'd0;
-reg           icmp_ip_port_source_payload_error = 1'd0;
-reg           icmp_ip_port_source_payload_last_be = 1'd0;
-wire          icmp_ip_port_source_ready;
-reg           icmp_ip_port_source_valid = 1'd0;
+reg           icmp_rx_active = 1'd0;
+reg    [16:0] icmp_rx_count = 17'd0;
+reg    [16:0] icmp_rx_count_liteethicmp_fsm_next_value = 17'd0;
+reg           icmp_rx_count_liteethicmp_fsm_next_value_ce = 1'd0;
 reg     [2:0] icmp_rx_depacketizer_count = 3'd0;
-reg     [2:0] icmp_rx_depacketizer_count_fsm0_next_value2 = 3'd0;
-reg           icmp_rx_depacketizer_count_fsm0_next_value_ce2 = 1'd0;
-reg           icmp_rx_depacketizer_delayed_last_be = 1'd0;
-reg           icmp_rx_depacketizer_delayed_last_be_fsm1_next_value1 = 1'd0;
-reg           icmp_rx_depacketizer_delayed_last_be_fsm1_next_value_ce1 = 1'd0;
+reg     [2:0] icmp_rx_depacketizer_count_liteethicmp_liteethicmpdepacketizer_next_value0 = 3'd0;
+reg           icmp_rx_depacketizer_count_liteethicmp_liteethicmpdepacketizer_next_value_ce0 = 1'd0;
+reg           icmp_rx_depacketizer_data_copy_first = 1'd0;
+reg           icmp_rx_depacketizer_data_copy_first_liteethicmp_liteethicmpdepacketizer_next_value2 = 1'd0;
+reg           icmp_rx_depacketizer_data_copy_first_liteethicmp_liteethicmpdepacketizer_next_value_ce2 = 1'd0;
 reg           icmp_rx_depacketizer_fsm_from_idle = 1'd0;
-reg           icmp_rx_depacketizer_fsm_from_idle_fsm0_next_value3 = 1'd0;
-reg           icmp_rx_depacketizer_fsm_from_idle_fsm0_next_value_ce3 = 1'd0;
+reg           icmp_rx_depacketizer_fsm_from_idle_liteethicmp_liteethicmpdepacketizer_next_value1 = 1'd0;
+reg           icmp_rx_depacketizer_fsm_from_idle_liteethicmp_liteethicmpdepacketizer_next_value_ce1 = 1'd0;
 wire   [63:0] icmp_rx_depacketizer_header;
-wire          icmp_rx_depacketizer_is_in_copy;
-reg           icmp_rx_depacketizer_is_ongoing0 = 1'd0;
-reg           icmp_rx_depacketizer_is_ongoing1 = 1'd0;
-reg           icmp_rx_depacketizer_is_ongoing2 = 1'd0;
-reg           icmp_rx_depacketizer_is_ongoing3 = 1'd0;
-wire          icmp_rx_depacketizer_new_last_be;
-reg           icmp_rx_depacketizer_sink_d_last = 1'd0;
+wire          icmp_rx_depacketizer_sink_be;
 wire          icmp_rx_depacketizer_sink_first;
 wire          icmp_rx_depacketizer_sink_last;
-wire          icmp_rx_depacketizer_sink_last_be;
 wire   [31:0] icmp_rx_depacketizer_sink_param_ip_address;
 wire   [15:0] icmp_rx_depacketizer_sink_param_length;
 wire    [7:0] icmp_rx_depacketizer_sink_param_protocol;
+wire          icmp_rx_depacketizer_sink_payload_be;
 wire    [7:0] icmp_rx_depacketizer_sink_payload_data;
 wire          icmp_rx_depacketizer_sink_payload_error;
-wire          icmp_rx_depacketizer_sink_payload_last_be;
 reg           icmp_rx_depacketizer_sink_ready = 1'd0;
 wire          icmp_rx_depacketizer_sink_valid;
+reg           icmp_rx_depacketizer_source_be = 1'd1;
+reg           icmp_rx_depacketizer_source_first = 1'd0;
 reg           icmp_rx_depacketizer_source_last = 1'd0;
-reg           icmp_rx_depacketizer_source_last_a = 1'd0;
-reg           icmp_rx_depacketizer_source_last_b = 1'd0;
-reg           icmp_rx_depacketizer_source_last_s = 1'd0;
 wire   [15:0] icmp_rx_depacketizer_source_param_checksum;
 wire    [7:0] icmp_rx_depacketizer_source_param_code;
 wire    [7:0] icmp_rx_depacketizer_source_param_msgtype;
 wire   [31:0] icmp_rx_depacketizer_source_param_quench;
+wire          icmp_rx_depacketizer_source_payload_be;
 reg     [7:0] icmp_rx_depacketizer_source_payload_data = 8'd0;
 wire          icmp_rx_depacketizer_source_payload_error;
-reg           icmp_rx_depacketizer_source_payload_last_be = 1'd0;
-reg           icmp_rx_depacketizer_source_ready = 1'd0;
+wire          icmp_rx_depacketizer_source_ready;
 reg           icmp_rx_depacketizer_source_valid = 1'd0;
 reg    [63:0] icmp_rx_depacketizer_sr = 64'd0;
 reg           icmp_rx_depacketizer_sr_shift = 1'd0;
 reg           icmp_rx_depacketizer_sr_shift_leftover = 1'd0;
-reg           icmp_rx_depacketizer_was_in_copy = 1'd0;
+reg    [31:0] icmp_rx_ip_address = 32'd0;
+reg           icmp_rx_is_ongoing0 = 1'd0;
+reg           icmp_rx_is_ongoing1 = 1'd0;
+reg           icmp_rx_is_ongoing2 = 1'd0;
+reg    [15:0] icmp_rx_length = 16'd0;
+reg     [7:0] icmp_rx_protocol = 8'd0;
 wire          icmp_rx_sink_sink_first;
 wire          icmp_rx_sink_sink_last;
 wire   [31:0] icmp_rx_sink_sink_param_ip_address;
 wire   [15:0] icmp_rx_sink_sink_param_length;
 wire    [7:0] icmp_rx_sink_sink_param_protocol;
+wire          icmp_rx_sink_sink_payload_be;
 wire    [7:0] icmp_rx_sink_sink_payload_data;
 wire          icmp_rx_sink_sink_payload_error;
-wire          icmp_rx_sink_sink_payload_last_be;
 wire          icmp_rx_sink_sink_ready;
 wire          icmp_rx_sink_sink_valid;
 reg           icmp_rx_source_source_first = 1'd0;
-wire          icmp_rx_source_source_last;
+reg           icmp_rx_source_source_last = 1'd0;
 wire   [15:0] icmp_rx_source_source_param_checksum;
 wire    [7:0] icmp_rx_source_source_param_code;
 wire   [31:0] icmp_rx_source_source_param_ip_address;
 wire   [15:0] icmp_rx_source_source_param_length;
 wire    [7:0] icmp_rx_source_source_param_msgtype;
 wire   [31:0] icmp_rx_source_source_param_quench;
+reg           icmp_rx_source_source_payload_be = 1'd0;
 wire    [7:0] icmp_rx_source_source_payload_data;
-wire          icmp_rx_source_source_payload_error;
-wire          icmp_rx_source_source_payload_last_be;
+reg           icmp_rx_source_source_payload_error = 1'd0;
 wire          icmp_rx_source_source_ready;
-reg           icmp_rx_source_source_valid = 1'd0;
+wire          icmp_rx_source_source_valid;
+wire          icmp_sink_first;
+wire          icmp_sink_last;
+wire   [31:0] icmp_sink_param_ip_address;
+wire   [15:0] icmp_sink_param_length;
+wire    [7:0] icmp_sink_param_protocol;
+wire          icmp_sink_payload_be;
+wire    [7:0] icmp_sink_payload_data;
+wire          icmp_sink_payload_error;
+reg           icmp_sink_ready = 1'd0;
+wire          icmp_sink_valid;
+reg           icmp_source_first = 1'd0;
+reg           icmp_source_last = 1'd0;
+reg    [31:0] icmp_source_param_ip_address = 32'd0;
+reg    [15:0] icmp_source_param_length = 16'd0;
+reg     [7:0] icmp_source_param_protocol = 8'd0;
+reg           icmp_source_payload_be = 1'd0;
+reg     [7:0] icmp_source_payload_data = 8'd0;
+reg           icmp_source_payload_error = 1'd0;
+wire          icmp_source_ready;
+reg           icmp_source_valid = 1'd0;
+reg           icmp_tx_active = 1'd0;
+reg    [31:0] icmp_tx_ip_address = 32'd0;
+reg    [15:0] icmp_tx_length = 16'd0;
 reg     [2:0] icmp_tx_packetizer_count = 3'd0;
-reg     [2:0] icmp_tx_packetizer_count_fsm0_next_value0 = 3'd0;
-reg           icmp_tx_packetizer_count_fsm0_next_value_ce0 = 1'd0;
-reg           icmp_tx_packetizer_delayed_last_be = 1'd0;
-reg           icmp_tx_packetizer_delayed_last_be_fsm1_next_value0 = 1'd0;
-reg           icmp_tx_packetizer_delayed_last_be_fsm1_next_value_ce0 = 1'd0;
-reg           icmp_tx_packetizer_fsm_from_idle = 1'd0;
-reg           icmp_tx_packetizer_fsm_from_idle_fsm0_next_value1 = 1'd0;
-reg           icmp_tx_packetizer_fsm_from_idle_fsm0_next_value_ce1 = 1'd0;
+reg     [2:0] icmp_tx_packetizer_count_liteethicmp_next_value = 3'd0;
+reg           icmp_tx_packetizer_count_liteethicmp_next_value_ce = 1'd0;
 reg    [63:0] icmp_tx_packetizer_header = 64'd0;
-wire          icmp_tx_packetizer_in_data_copy;
-reg           icmp_tx_packetizer_is_ongoing0 = 1'd0;
-reg           icmp_tx_packetizer_is_ongoing1 = 1'd0;
-reg           icmp_tx_packetizer_is_ongoing2 = 1'd0;
-wire          icmp_tx_packetizer_new_last_be;
+reg           icmp_tx_packetizer_is_ongoing = 1'd0;
 wire          icmp_tx_packetizer_sink_last;
-wire          icmp_tx_packetizer_sink_last_be;
 wire   [15:0] icmp_tx_packetizer_sink_param_checksum;
 wire    [7:0] icmp_tx_packetizer_sink_param_code;
 wire    [7:0] icmp_tx_packetizer_sink_param_msgtype;
 wire   [31:0] icmp_tx_packetizer_sink_param_quench;
+wire          icmp_tx_packetizer_sink_payload_be;
 wire    [7:0] icmp_tx_packetizer_sink_payload_data;
 reg           icmp_tx_packetizer_sink_payload_error = 1'd0;
-wire          icmp_tx_packetizer_sink_payload_last_be;
 reg           icmp_tx_packetizer_sink_ready = 1'd0;
 wire          icmp_tx_packetizer_sink_valid;
+reg           icmp_tx_packetizer_source_be = 1'd1;
 reg           icmp_tx_packetizer_source_first = 1'd0;
 reg           icmp_tx_packetizer_source_last = 1'd0;
-reg           icmp_tx_packetizer_source_last_a = 1'd0;
-reg           icmp_tx_packetizer_source_last_b = 1'd0;
-reg           icmp_tx_packetizer_source_last_s = 1'd0;
-reg    [31:0] icmp_tx_packetizer_source_param_ip_address = 32'd0;
-reg    [15:0] icmp_tx_packetizer_source_param_length = 16'd0;
-reg     [7:0] icmp_tx_packetizer_source_param_protocol = 8'd0;
+wire          icmp_tx_packetizer_source_payload_be;
 reg     [7:0] icmp_tx_packetizer_source_payload_data = 8'd0;
-wire          icmp_tx_packetizer_source_payload_error;
-reg           icmp_tx_packetizer_source_payload_last_be = 1'd0;
-reg           icmp_tx_packetizer_source_ready = 1'd0;
+reg           icmp_tx_packetizer_source_payload_error = 1'd0;
+wire          icmp_tx_packetizer_source_ready;
 reg           icmp_tx_packetizer_source_valid = 1'd0;
-reg    [63:0] icmp_tx_packetizer_sr = 64'd0;
-reg           icmp_tx_packetizer_sr_load = 1'd0;
-reg           icmp_tx_packetizer_sr_shift = 1'd0;
 wire          icmp_tx_sink_sink_first;
 wire          icmp_tx_sink_sink_last;
 wire   [15:0] icmp_tx_sink_sink_param_checksum;
@@ -947,21 +867,21 @@ wire   [31:0] icmp_tx_sink_sink_param_ip_address;
 wire   [15:0] icmp_tx_sink_sink_param_length;
 wire    [7:0] icmp_tx_sink_sink_param_msgtype;
 wire   [31:0] icmp_tx_sink_sink_param_quench;
+wire          icmp_tx_sink_sink_payload_be;
 wire    [7:0] icmp_tx_sink_sink_payload_data;
 wire          icmp_tx_sink_sink_payload_error;
-wire          icmp_tx_sink_sink_payload_last_be;
 wire          icmp_tx_sink_sink_ready;
 wire          icmp_tx_sink_sink_valid;
 wire          icmp_tx_source_source_first;
 wire          icmp_tx_source_source_last;
-reg    [31:0] icmp_tx_source_source_param_ip_address = 32'd0;
-reg    [15:0] icmp_tx_source_source_param_length = 16'd0;
-reg     [7:0] icmp_tx_source_source_param_protocol = 8'd0;
+wire   [31:0] icmp_tx_source_source_param_ip_address;
+wire   [15:0] icmp_tx_source_source_param_length;
+wire    [7:0] icmp_tx_source_source_param_protocol;
+wire          icmp_tx_source_source_payload_be;
 wire    [7:0] icmp_tx_source_source_payload_data;
 wire          icmp_tx_source_source_payload_error;
-wire          icmp_tx_source_source_payload_last_be;
 wire          icmp_tx_source_source_ready;
-reg           icmp_tx_source_source_valid = 1'd0;
+wire          icmp_tx_source_source_valid;
 reg           int_rst = 1'd1;
 reg           interface0_ack = 1'd0;
 reg    [29:0] interface0_adr = 30'd0;
@@ -991,9 +911,9 @@ wire          ip_crossbar_sink_last;
 wire   [31:0] ip_crossbar_sink_param_ip_address;
 wire   [15:0] ip_crossbar_sink_param_length;
 wire    [7:0] ip_crossbar_sink_param_protocol;
+wire          ip_crossbar_sink_payload_be;
 wire    [7:0] ip_crossbar_sink_payload_data;
 wire          ip_crossbar_sink_payload_error;
-wire          ip_crossbar_sink_payload_last_be;
 reg           ip_crossbar_sink_ready = 1'd0;
 wire          ip_crossbar_sink_valid;
 reg           ip_crossbar_source_first = 1'd0;
@@ -1001,27 +921,27 @@ reg           ip_crossbar_source_last = 1'd0;
 reg    [31:0] ip_crossbar_source_param_ip_address = 32'd0;
 reg    [15:0] ip_crossbar_source_param_length = 16'd0;
 reg     [7:0] ip_crossbar_source_param_protocol = 8'd0;
+reg           ip_crossbar_source_payload_be = 1'd0;
 reg     [7:0] ip_crossbar_source_payload_data = 8'd0;
 reg           ip_crossbar_source_payload_error = 1'd0;
-reg           ip_crossbar_source_payload_last_be = 1'd0;
 wire          ip_crossbar_source_ready;
 reg           ip_crossbar_source_valid = 1'd0;
 wire          ip_mac_port_sink_first;
 wire          ip_mac_port_sink_last;
+wire          ip_mac_port_sink_payload_be;
 wire    [7:0] ip_mac_port_sink_payload_data;
 wire          ip_mac_port_sink_payload_error;
 wire   [15:0] ip_mac_port_sink_payload_ethernet_type;
-wire          ip_mac_port_sink_payload_last_be;
 wire   [47:0] ip_mac_port_sink_payload_sender_mac;
 wire   [47:0] ip_mac_port_sink_payload_target_mac;
 reg           ip_mac_port_sink_ready = 1'd0;
 wire          ip_mac_port_sink_valid;
 reg           ip_mac_port_source_first = 1'd0;
 reg           ip_mac_port_source_last = 1'd0;
+reg           ip_mac_port_source_payload_be = 1'd0;
 reg     [7:0] ip_mac_port_source_payload_data = 8'd0;
 reg           ip_mac_port_source_payload_error = 1'd0;
 reg    [15:0] ip_mac_port_source_payload_ethernet_type = 16'd0;
-reg           ip_mac_port_source_payload_last_be = 1'd0;
 reg    [47:0] ip_mac_port_source_payload_sender_mac = 48'd0;
 reg    [47:0] ip_mac_port_source_payload_target_mac = 48'd0;
 wire          ip_mac_port_source_ready;
@@ -1031,9 +951,9 @@ wire          ip_port_sink_last;
 wire   [31:0] ip_port_sink_param_ip_address;
 wire   [15:0] ip_port_sink_param_length;
 wire    [7:0] ip_port_sink_param_protocol;
+wire          ip_port_sink_payload_be;
 wire    [7:0] ip_port_sink_payload_data;
 wire          ip_port_sink_payload_error;
-wire          ip_port_sink_payload_last_be;
 reg           ip_port_sink_ready = 1'd0;
 wire          ip_port_sink_valid;
 reg           ip_port_source_first = 1'd0;
@@ -1041,45 +961,39 @@ reg           ip_port_source_last = 1'd0;
 reg    [31:0] ip_port_source_param_ip_address = 32'd0;
 reg    [15:0] ip_port_source_param_length = 16'd0;
 reg     [7:0] ip_port_source_param_protocol = 8'd0;
+reg           ip_port_source_payload_be = 1'd0;
 reg     [7:0] ip_port_source_payload_data = 8'd0;
 reg           ip_port_source_payload_error = 1'd0;
-reg           ip_port_source_payload_last_be = 1'd0;
 wire          ip_port_source_ready;
 reg           ip_port_source_valid = 1'd0;
+wire          ip_rx_accepted;
 wire          ip_rx_ce;
 reg     [4:0] ip_rx_depacketizer_count = 5'd0;
-reg     [4:0] ip_rx_depacketizer_count_liteethip_fsm0_next_value2 = 5'd0;
-reg           ip_rx_depacketizer_count_liteethip_fsm0_next_value_ce2 = 1'd0;
-reg           ip_rx_depacketizer_delayed_last_be = 1'd0;
-reg           ip_rx_depacketizer_delayed_last_be_liteethip_fsm1_next_value1 = 1'd0;
-reg           ip_rx_depacketizer_delayed_last_be_liteethip_fsm1_next_value_ce1 = 1'd0;
+reg     [4:0] ip_rx_depacketizer_count_liteethip_next_value0 = 5'd0;
+reg           ip_rx_depacketizer_count_liteethip_next_value_ce0 = 1'd0;
+reg           ip_rx_depacketizer_data_copy_first = 1'd0;
+reg           ip_rx_depacketizer_data_copy_first_liteethip_next_value2 = 1'd0;
+reg           ip_rx_depacketizer_data_copy_first_liteethip_next_value_ce2 = 1'd0;
 reg           ip_rx_depacketizer_fsm_from_idle = 1'd0;
-reg           ip_rx_depacketizer_fsm_from_idle_liteethip_fsm0_next_value3 = 1'd0;
-reg           ip_rx_depacketizer_fsm_from_idle_liteethip_fsm0_next_value_ce3 = 1'd0;
+reg           ip_rx_depacketizer_fsm_from_idle_liteethip_next_value1 = 1'd0;
+reg           ip_rx_depacketizer_fsm_from_idle_liteethip_next_value_ce1 = 1'd0;
 wire  [159:0] ip_rx_depacketizer_header;
-wire          ip_rx_depacketizer_is_in_copy;
-reg           ip_rx_depacketizer_is_ongoing0 = 1'd0;
-reg           ip_rx_depacketizer_is_ongoing1 = 1'd0;
-reg           ip_rx_depacketizer_is_ongoing2 = 1'd0;
-reg           ip_rx_depacketizer_is_ongoing3 = 1'd0;
-wire          ip_rx_depacketizer_new_last_be;
-reg           ip_rx_depacketizer_sink_d_last = 1'd0;
+wire          ip_rx_depacketizer_sink_be;
 wire          ip_rx_depacketizer_sink_first;
 wire          ip_rx_depacketizer_sink_last;
-wire          ip_rx_depacketizer_sink_last_be;
+wire          ip_rx_depacketizer_sink_payload_be;
 wire    [7:0] ip_rx_depacketizer_sink_payload_data;
 wire          ip_rx_depacketizer_sink_payload_error;
 wire   [15:0] ip_rx_depacketizer_sink_payload_ethernet_type;
-wire          ip_rx_depacketizer_sink_payload_last_be;
 wire   [47:0] ip_rx_depacketizer_sink_payload_sender_mac;
 wire   [47:0] ip_rx_depacketizer_sink_payload_target_mac;
 reg           ip_rx_depacketizer_sink_ready = 1'd0;
 wire          ip_rx_depacketizer_sink_valid;
+reg           ip_rx_depacketizer_source_be = 1'd1;
+reg           ip_rx_depacketizer_source_first = 1'd0;
 reg           ip_rx_depacketizer_source_last = 1'd0;
-reg           ip_rx_depacketizer_source_last_a = 1'd0;
-reg           ip_rx_depacketizer_source_last_b = 1'd0;
-reg           ip_rx_depacketizer_source_last_s = 1'd0;
 wire   [15:0] ip_rx_depacketizer_source_param_checksum;
+wire   [15:0] ip_rx_depacketizer_source_param_flags_offset;
 wire   [15:0] ip_rx_depacketizer_source_param_identification;
 wire    [3:0] ip_rx_depacketizer_source_param_ihl;
 wire    [7:0] ip_rx_depacketizer_source_param_protocol;
@@ -1088,15 +1002,16 @@ wire   [31:0] ip_rx_depacketizer_source_param_target_ip;
 wire   [15:0] ip_rx_depacketizer_source_param_total_length;
 wire    [7:0] ip_rx_depacketizer_source_param_ttl;
 wire    [3:0] ip_rx_depacketizer_source_param_version;
+wire          ip_rx_depacketizer_source_payload_be;
 reg     [7:0] ip_rx_depacketizer_source_payload_data = 8'd0;
 wire          ip_rx_depacketizer_source_payload_error;
-reg           ip_rx_depacketizer_source_payload_last_be = 1'd0;
-reg           ip_rx_depacketizer_source_ready = 1'd0;
+wire          ip_rx_depacketizer_source_ready;
 reg           ip_rx_depacketizer_source_valid = 1'd0;
 reg   [159:0] ip_rx_depacketizer_sr = 160'd0;
 reg           ip_rx_depacketizer_sr_shift = 1'd0;
 reg           ip_rx_depacketizer_sr_shift_leftover = 1'd0;
-reg           ip_rx_depacketizer_was_in_copy = 1'd0;
+reg           ip_rx_is_ongoing0 = 1'd0;
+reg           ip_rx_is_ongoing1 = 1'd0;
 reg           ip_rx_liteethipv4checksum0 = 1'd0;
 reg           ip_rx_liteethipv4checksum1 = 1'd0;
 reg           ip_rx_liteethipv4checksum2 = 1'd0;
@@ -1133,13 +1048,14 @@ wire   [16:0] ip_rx_liteethipv4checksum_s_next7;
 wire   [16:0] ip_rx_liteethipv4checksum_s_next8;
 wire   [16:0] ip_rx_liteethipv4checksum_s_next9;
 wire   [15:0] ip_rx_liteethipv4checksum_value;
+wire          ip_rx_receiving;
 wire          ip_rx_reset;
 wire          ip_rx_sink_sink_first;
 wire          ip_rx_sink_sink_last;
+wire          ip_rx_sink_sink_payload_be;
 wire    [7:0] ip_rx_sink_sink_payload_data;
 wire          ip_rx_sink_sink_payload_error;
 wire   [15:0] ip_rx_sink_sink_payload_ethernet_type;
-wire          ip_rx_sink_sink_payload_last_be;
 wire   [47:0] ip_rx_sink_sink_payload_sender_mac;
 wire   [47:0] ip_rx_sink_sink_payload_target_mac;
 wire          ip_rx_sink_sink_ready;
@@ -1149,12 +1065,15 @@ wire          ip_rx_source_source_last;
 wire   [31:0] ip_rx_source_source_param_ip_address;
 wire   [15:0] ip_rx_source_source_param_length;
 wire    [7:0] ip_rx_source_source_param_protocol;
+wire          ip_rx_source_source_payload_be;
 wire    [7:0] ip_rx_source_source_payload_data;
 wire          ip_rx_source_source_payload_error;
-wire          ip_rx_source_source_payload_last_be;
 wire          ip_rx_source_source_ready;
-reg           ip_rx_source_source_valid = 1'd0;
+wire          ip_rx_source_source_valid;
 wire          ip_tx_ce;
+reg           ip_tx_fsm_is_ongoing0 = 1'd0;
+reg           ip_tx_fsm_is_ongoing1 = 1'd0;
+reg           ip_tx_fsm_is_ongoing2 = 1'd0;
 reg           ip_tx_liteethipv4checksum0 = 1'd0;
 reg           ip_tx_liteethipv4checksum1 = 1'd0;
 reg           ip_tx_liteethipv4checksum2 = 1'd0;
@@ -1189,23 +1108,13 @@ wire   [16:0] ip_tx_liteethipv4checksum_s_next7;
 wire   [16:0] ip_tx_liteethipv4checksum_s_next8;
 wire   [15:0] ip_tx_liteethipv4checksum_value;
 reg     [4:0] ip_tx_packetizer_count = 5'd0;
-reg     [4:0] ip_tx_packetizer_count_liteethip_fsm0_next_value0 = 5'd0;
-reg           ip_tx_packetizer_count_liteethip_fsm0_next_value_ce0 = 1'd0;
-reg           ip_tx_packetizer_delayed_last_be = 1'd0;
-reg           ip_tx_packetizer_delayed_last_be_liteethip_fsm1_next_value0 = 1'd0;
-reg           ip_tx_packetizer_delayed_last_be_liteethip_fsm1_next_value_ce0 = 1'd0;
-reg           ip_tx_packetizer_fsm_from_idle = 1'd0;
-reg           ip_tx_packetizer_fsm_from_idle_liteethip_fsm0_next_value1 = 1'd0;
-reg           ip_tx_packetizer_fsm_from_idle_liteethip_fsm0_next_value_ce1 = 1'd0;
+reg     [4:0] ip_tx_packetizer_count_liteethip_liteethipv4packetizer_next_value = 5'd0;
+reg           ip_tx_packetizer_count_liteethip_liteethipv4packetizer_next_value_ce = 1'd0;
 reg   [159:0] ip_tx_packetizer_header = 160'd0;
-wire          ip_tx_packetizer_in_data_copy;
-reg           ip_tx_packetizer_is_ongoing0 = 1'd0;
-reg           ip_tx_packetizer_is_ongoing1 = 1'd0;
-reg           ip_tx_packetizer_is_ongoing2 = 1'd0;
-wire          ip_tx_packetizer_new_last_be;
+reg           ip_tx_packetizer_is_ongoing = 1'd0;
 wire          ip_tx_packetizer_sink_last;
-wire          ip_tx_packetizer_sink_last_be;
 wire   [15:0] ip_tx_packetizer_sink_param_checksum;
+wire   [15:0] ip_tx_packetizer_sink_param_flags_offset;
 wire   [15:0] ip_tx_packetizer_sink_param_identification;
 wire    [3:0] ip_tx_packetizer_sink_param_ihl;
 wire    [7:0] ip_tx_packetizer_sink_param_protocol;
@@ -1214,35 +1123,27 @@ wire   [31:0] ip_tx_packetizer_sink_param_target_ip;
 wire   [15:0] ip_tx_packetizer_sink_param_total_length;
 wire    [7:0] ip_tx_packetizer_sink_param_ttl;
 wire    [3:0] ip_tx_packetizer_sink_param_version;
+wire          ip_tx_packetizer_sink_payload_be;
 wire    [7:0] ip_tx_packetizer_sink_payload_data;
 reg           ip_tx_packetizer_sink_payload_error = 1'd0;
-wire          ip_tx_packetizer_sink_payload_last_be;
 reg           ip_tx_packetizer_sink_ready = 1'd0;
 wire          ip_tx_packetizer_sink_valid;
+reg           ip_tx_packetizer_source_be = 1'd1;
 reg           ip_tx_packetizer_source_first = 1'd0;
 reg           ip_tx_packetizer_source_last = 1'd0;
-reg           ip_tx_packetizer_source_last_a = 1'd0;
-reg           ip_tx_packetizer_source_last_b = 1'd0;
-reg           ip_tx_packetizer_source_last_s = 1'd0;
+wire          ip_tx_packetizer_source_payload_be;
 reg     [7:0] ip_tx_packetizer_source_payload_data = 8'd0;
-wire          ip_tx_packetizer_source_payload_error;
-reg    [15:0] ip_tx_packetizer_source_payload_ethernet_type = 16'd0;
-reg           ip_tx_packetizer_source_payload_last_be = 1'd0;
-reg    [47:0] ip_tx_packetizer_source_payload_sender_mac = 48'd0;
-reg    [47:0] ip_tx_packetizer_source_payload_target_mac = 48'd0;
-reg           ip_tx_packetizer_source_ready = 1'd0;
+reg           ip_tx_packetizer_source_payload_error = 1'd0;
+wire          ip_tx_packetizer_source_ready;
 reg           ip_tx_packetizer_source_valid = 1'd0;
-reg   [159:0] ip_tx_packetizer_sr = 160'd0;
-reg           ip_tx_packetizer_sr_load = 1'd0;
-reg           ip_tx_packetizer_sr_shift = 1'd0;
 wire          ip_tx_pipe_valid_sink_first;
 wire          ip_tx_pipe_valid_sink_last;
 wire   [31:0] ip_tx_pipe_valid_sink_param_ip_address;
 wire   [15:0] ip_tx_pipe_valid_sink_param_length;
 wire    [7:0] ip_tx_pipe_valid_sink_param_protocol;
+wire          ip_tx_pipe_valid_sink_payload_be;
 wire    [7:0] ip_tx_pipe_valid_sink_payload_data;
 wire          ip_tx_pipe_valid_sink_payload_error;
-wire          ip_tx_pipe_valid_sink_payload_last_be;
 wire          ip_tx_pipe_valid_sink_ready;
 wire          ip_tx_pipe_valid_sink_valid;
 reg           ip_tx_pipe_valid_source_first = 1'd0;
@@ -1250,9 +1151,9 @@ reg           ip_tx_pipe_valid_source_last = 1'd0;
 reg    [31:0] ip_tx_pipe_valid_source_param_ip_address = 32'd0;
 reg    [15:0] ip_tx_pipe_valid_source_param_length = 16'd0;
 reg     [7:0] ip_tx_pipe_valid_source_param_protocol = 8'd0;
+reg           ip_tx_pipe_valid_source_payload_be = 1'd0;
 reg     [7:0] ip_tx_pipe_valid_source_payload_data = 8'd0;
 reg           ip_tx_pipe_valid_source_payload_error = 1'd0;
-reg           ip_tx_pipe_valid_source_payload_last_be = 1'd0;
 wire          ip_tx_pipe_valid_source_ready;
 reg           ip_tx_pipe_valid_source_valid = 1'd0;
 wire          ip_tx_reset;
@@ -1266,86 +1167,75 @@ wire   [15:0] ip_tx_sink_sink_param_length0;
 wire   [15:0] ip_tx_sink_sink_param_length1;
 wire    [7:0] ip_tx_sink_sink_param_protocol0;
 wire    [7:0] ip_tx_sink_sink_param_protocol1;
+wire          ip_tx_sink_sink_payload_be0;
+wire          ip_tx_sink_sink_payload_be1;
 wire    [7:0] ip_tx_sink_sink_payload_data0;
 wire    [7:0] ip_tx_sink_sink_payload_data1;
 wire          ip_tx_sink_sink_payload_error0;
 wire          ip_tx_sink_sink_payload_error1;
-wire          ip_tx_sink_sink_payload_last_be0;
-wire          ip_tx_sink_sink_payload_last_be1;
 wire          ip_tx_sink_sink_ready0;
 wire          ip_tx_sink_sink_ready1;
 wire          ip_tx_sink_sink_valid0;
 wire          ip_tx_sink_sink_valid1;
-reg           ip_tx_source_source_first0 = 1'd0;
+wire          ip_tx_source_source_first0;
 wire          ip_tx_source_source_first1;
-reg           ip_tx_source_source_last0 = 1'd0;
+wire          ip_tx_source_source_last0;
 wire          ip_tx_source_source_last1;
 wire   [31:0] ip_tx_source_source_param_ip_address;
 wire   [15:0] ip_tx_source_source_param_length;
 wire    [7:0] ip_tx_source_source_param_protocol;
-reg     [7:0] ip_tx_source_source_payload_data0 = 8'd0;
+wire          ip_tx_source_source_payload_be0;
+wire          ip_tx_source_source_payload_be1;
+wire    [7:0] ip_tx_source_source_payload_data0;
 wire    [7:0] ip_tx_source_source_payload_data1;
-reg           ip_tx_source_source_payload_error0 = 1'd0;
+wire          ip_tx_source_source_payload_error0;
 wire          ip_tx_source_source_payload_error1;
-reg    [15:0] ip_tx_source_source_payload_ethernet_type = 16'd0;
-reg           ip_tx_source_source_payload_last_be0 = 1'd0;
-wire          ip_tx_source_source_payload_last_be1;
-reg    [47:0] ip_tx_source_source_payload_sender_mac = 48'd0;
-reg    [47:0] ip_tx_source_source_payload_target_mac = 48'd0;
+wire   [15:0] ip_tx_source_source_payload_ethernet_type;
+wire   [47:0] ip_tx_source_source_payload_sender_mac;
+wire   [47:0] ip_tx_source_source_payload_target_mac;
 wire          ip_tx_source_source_ready0;
 wire          ip_tx_source_source_ready1;
-reg           ip_tx_source_source_valid0 = 1'd0;
+wire          ip_tx_source_source_valid0;
 wire          ip_tx_source_source_valid1;
 reg    [47:0] ip_tx_target_mac = 48'd0;
-reg    [47:0] ip_tx_target_mac_liteethip_next_value = 48'd0;
-reg           ip_tx_target_mac_liteethip_next_value_ce = 1'd0;
+reg    [47:0] ip_tx_target_mac_liteethip_fsm_next_value = 48'd0;
+reg           ip_tx_target_mac_liteethip_fsm_next_value_ce = 1'd0;
 reg           ip_tx_target_unreachable = 1'd0;
-reg     [2:0] liteetharpcache_next_state = 3'd0;
-reg     [2:0] liteetharpcache_state = 3'd0;
-reg     [1:0] liteetharprx_fsm0_next_state = 2'd0;
-reg     [1:0] liteetharprx_fsm0_state = 2'd0;
-reg           liteetharprx_fsm1_next_state = 1'd0;
-reg           liteetharprx_fsm1_state = 1'd0;
-reg     [1:0] liteetharprx_next_state = 2'd0;
-reg     [1:0] liteetharprx_state = 2'd0;
-reg     [1:0] liteetharptx_fsm0_next_state = 2'd0;
-reg     [1:0] liteetharptx_fsm0_state = 2'd0;
-reg           liteetharptx_fsm1_next_state = 1'd0;
-reg           liteetharptx_fsm1_state = 1'd0;
-reg           liteetharptx_next_state = 1'd0;
-reg           liteetharptx_state = 1'd0;
-reg     [1:0] liteethicmprx_fsm0_next_state = 2'd0;
-reg     [1:0] liteethicmprx_fsm0_state = 2'd0;
-reg           liteethicmprx_fsm1_next_state = 1'd0;
-reg           liteethicmprx_fsm1_state = 1'd0;
-reg     [1:0] liteethicmprx_next_state = 2'd0;
-reg     [1:0] liteethicmprx_state = 2'd0;
-reg     [1:0] liteethicmptx_fsm0_next_state = 2'd0;
-reg     [1:0] liteethicmptx_fsm0_state = 2'd0;
-reg           liteethicmptx_fsm1_next_state = 1'd0;
-reg           liteethicmptx_fsm1_state = 1'd0;
-reg           liteethicmptx_next_state = 1'd0;
-reg           liteethicmptx_state = 1'd0;
+reg     [1:0] liteetharprx_fsm_next_state = 2'd0;
+reg     [1:0] liteetharprx_fsm_state = 2'd0;
+reg     [1:0] liteetharprx_liteetharpdepacketizer_next_state = 2'd0;
+reg     [1:0] liteetharprx_liteetharpdepacketizer_state = 2'd0;
+reg     [2:0] liteetharptable_fsm_next_state = 3'd0;
+reg     [2:0] liteetharptable_fsm_state = 3'd0;
+reg     [2:0] liteetharptable_liteetharpcache_next_state = 3'd0;
+reg     [2:0] liteetharptable_liteetharpcache_state = 3'd0;
+reg           liteetharptx_fsm_next_state = 1'd0;
+reg           liteetharptx_fsm_state = 1'd0;
+reg           liteetharptx_liteetharppacketizer_next_state = 1'd0;
+reg           liteetharptx_liteetharppacketizer_state = 1'd1;
+reg     [1:0] liteethicmp_fsm_next_state = 2'd0;
+reg     [1:0] liteethicmp_fsm_state = 2'd2;
+reg     [1:0] liteethicmp_liteethicmpdepacketizer_next_state = 2'd0;
+reg     [1:0] liteethicmp_liteethicmpdepacketizer_state = 2'd0;
+reg           liteethicmp_next_state = 1'd0;
+reg           liteethicmp_state = 1'd1;
 reg           liteethip_first = 1'd1;
 reg           liteethip_grant = 1'd0;
 wire          liteethip_last;
-reg     [1:0] liteethip_liteethiprx_fsm0_next_state = 2'd0;
-reg     [1:0] liteethip_liteethiprx_fsm0_state = 2'd0;
-reg           liteethip_liteethiprx_fsm1_next_state = 1'd0;
-reg           liteethip_liteethiprx_fsm1_state = 1'd0;
-reg     [1:0] liteethip_liteethiprx_next_state = 2'd0;
-reg     [1:0] liteethip_liteethiprx_state = 2'd0;
-reg     [1:0] liteethip_liteethiptx_fsm0_next_state = 2'd0;
-reg     [1:0] liteethip_liteethiptx_fsm0_state = 2'd0;
-reg           liteethip_liteethiptx_fsm1_next_state = 1'd0;
-reg           liteethip_liteethiptx_fsm1_state = 1'd0;
-reg     [2:0] liteethip_liteethiptx_next_state = 3'd0;
-reg     [2:0] liteethip_liteethiptx_state = 3'd0;
+reg     [1:0] liteethip_liteethiprx_fsm_next_state = 2'd0;
+reg     [1:0] liteethip_liteethiprx_fsm_state = 2'd1;
+reg     [1:0] liteethip_liteethiprx_liteethipv4depacketizer_next_state = 2'd0;
+reg     [1:0] liteethip_liteethiprx_liteethipv4depacketizer_state = 2'd0;
+reg     [2:0] liteethip_liteethiptx_fsm_next_state = 3'd0;
+reg     [2:0] liteethip_liteethiptx_fsm_state = 3'd2;
+reg           liteethip_liteethiptx_liteethipv4packetizer_next_state = 1'd0;
+reg           liteethip_liteethiptx_liteethipv4packetizer_state = 1'd1;
 wire          liteethip_ongoing0;
 reg           liteethip_ongoing1 = 1'd0;
 reg     [1:0] liteethip_request = 2'd0;
 reg     [1:0] liteethip_sel0 = 2'd0;
 reg     [1:0] liteethip_sel1 = 2'd0;
+reg           liteethip_sel_locked = 1'd0;
 reg     [1:0] liteethip_sel_ongoing = 2'd0;
 reg           liteethip_status0_first = 1'd1;
 wire          liteethip_status0_last;
@@ -1356,16 +1246,12 @@ wire          liteethip_status1_last;
 wire          liteethip_status1_ongoing0;
 reg           liteethip_status1_ongoing1 = 1'd0;
 reg           liteethmac_first = 1'd1;
-reg     [1:0] liteethmac_fsm0_next_state0 = 2'd0;
-reg     [1:0] liteethmac_fsm0_next_state1 = 2'd0;
-reg     [1:0] liteethmac_fsm0_state0 = 2'd0;
-reg     [1:0] liteethmac_fsm0_state1 = 2'd0;
-reg           liteethmac_fsm1_next_state0 = 1'd0;
-reg           liteethmac_fsm1_next_state1 = 1'd0;
-reg           liteethmac_fsm1_state0 = 1'd0;
-reg           liteethmac_fsm1_state1 = 1'd0;
 reg           liteethmac_grant = 1'd0;
 wire          liteethmac_last;
+reg     [1:0] liteethmac_liteethmacdepacketizer_next_state = 2'd0;
+reg     [1:0] liteethmac_liteethmacdepacketizer_state = 2'd0;
+reg           liteethmac_liteethmacpacketizer_next_state = 1'd0;
+reg           liteethmac_liteethmacpacketizer_state = 1'd1;
 wire          liteethmac_ongoing0;
 reg           liteethmac_ongoing1 = 1'd0;
 reg     [1:0] liteethmac_request = 2'd0;
@@ -1375,6 +1261,7 @@ reg           liteethmac_rxdatapath_liteethmacpreamblechecker_next_state = 1'd0;
 reg           liteethmac_rxdatapath_liteethmacpreamblechecker_state = 1'd0;
 reg     [1:0] liteethmac_sel0 = 2'd0;
 reg     [1:0] liteethmac_sel1 = 2'd0;
+reg           liteethmac_sel_locked = 1'd0;
 reg     [1:0] liteethmac_sel_ongoing = 2'd0;
 reg           liteethmac_status0_first = 1'd1;
 wire          liteethmac_status0_last;
@@ -1393,26 +1280,21 @@ reg           liteethmac_txdatapath_liteethmacpaddinginserter_state = 1'd0;
 reg     [1:0] liteethmac_txdatapath_liteethmacpreambleinserter_next_state = 2'd0;
 reg     [1:0] liteethmac_txdatapath_liteethmacpreambleinserter_state = 2'd0;
 reg           liteethudp_first = 1'd1;
+reg     [1:0] liteethudp_fsm_next_state = 2'd0;
+reg     [1:0] liteethudp_fsm_state = 2'd2;
 reg           liteethudp_grant = 1'd0;
 wire          liteethudp_last;
-reg     [1:0] liteethudp_liteethudprx_fsm0_next_state = 2'd0;
-reg     [1:0] liteethudp_liteethudprx_fsm0_state = 2'd0;
-reg           liteethudp_liteethudprx_fsm1_next_state = 1'd0;
-reg           liteethudp_liteethudprx_fsm1_state = 1'd0;
-reg     [1:0] liteethudp_liteethudprx_next_state = 2'd0;
-reg     [1:0] liteethudp_liteethudprx_state = 2'd0;
-reg     [1:0] liteethudp_liteethudptx_fsm0_next_state = 2'd0;
-reg     [1:0] liteethudp_liteethudptx_fsm0_state = 2'd0;
-reg           liteethudp_liteethudptx_fsm1_next_state = 1'd0;
-reg           liteethudp_liteethudptx_fsm1_state = 1'd0;
-reg           liteethudp_liteethudptx_next_state = 1'd0;
-reg           liteethudp_liteethudptx_state = 1'd0;
+reg     [1:0] liteethudp_liteethudpdepacketizer_next_state = 2'd0;
+reg     [1:0] liteethudp_liteethudpdepacketizer_state = 2'd0;
+reg           liteethudp_next_state = 1'd0;
 wire          liteethudp_ongoing0;
 reg           liteethudp_ongoing1 = 1'd0;
 reg     [1:0] liteethudp_request = 2'd0;
 reg     [1:0] liteethudp_sel0 = 2'd0;
 reg     [1:0] liteethudp_sel1 = 2'd0;
+reg           liteethudp_sel_locked = 1'd0;
 reg     [1:0] liteethudp_sel_ongoing = 2'd0;
+reg           liteethudp_state = 1'd1;
 reg           liteethudp_status0_first = 1'd1;
 wire          liteethudp_status0_last;
 wire          liteethudp_status0_ongoing0;
@@ -1427,9 +1309,9 @@ wire   [15:0] liteethudpstreamer0_internal_port_sink_param_dst_port;
 wire   [31:0] liteethudpstreamer0_internal_port_sink_param_ip_address;
 wire   [15:0] liteethudpstreamer0_internal_port_sink_param_length;
 wire   [15:0] liteethudpstreamer0_internal_port_sink_param_src_port;
+wire          liteethudpstreamer0_internal_port_sink_payload_be;
 wire    [7:0] liteethudpstreamer0_internal_port_sink_payload_data;
 wire          liteethudpstreamer0_internal_port_sink_payload_error;
-wire          liteethudpstreamer0_internal_port_sink_payload_last_be;
 reg           liteethudpstreamer0_internal_port_sink_ready = 1'd0;
 wire          liteethudpstreamer0_internal_port_sink_valid;
 reg           liteethudpstreamer0_internal_port_source_first = 1'd0;
@@ -1438,21 +1320,21 @@ reg    [15:0] liteethudpstreamer0_internal_port_source_param_dst_port = 16'd0;
 reg    [31:0] liteethudpstreamer0_internal_port_source_param_ip_address = 32'd0;
 reg    [15:0] liteethudpstreamer0_internal_port_source_param_length = 16'd0;
 reg    [15:0] liteethudpstreamer0_internal_port_source_param_src_port = 16'd0;
+reg           liteethudpstreamer0_internal_port_source_payload_be = 1'd0;
 reg     [7:0] liteethudpstreamer0_internal_port_source_payload_data = 8'd0;
 reg           liteethudpstreamer0_internal_port_source_payload_error = 1'd0;
-reg           liteethudpstreamer0_internal_port_source_payload_last_be = 1'd0;
 wire          liteethudpstreamer0_internal_port_source_ready;
 reg           liteethudpstreamer0_internal_port_source_valid = 1'd0;
-reg           liteethudpstreamer0_next_state = 1'd0;
+wire          liteethudpstreamer0_rx_accept;
 wire          liteethudpstreamer0_rx_cdc_sink_first;
 wire          liteethudpstreamer0_rx_cdc_sink_last;
 wire   [15:0] liteethudpstreamer0_rx_cdc_sink_param_dst_port;
 wire   [31:0] liteethudpstreamer0_rx_cdc_sink_param_ip_address;
 wire   [15:0] liteethudpstreamer0_rx_cdc_sink_param_length;
 wire   [15:0] liteethudpstreamer0_rx_cdc_sink_param_src_port;
+wire          liteethudpstreamer0_rx_cdc_sink_payload_be;
 wire    [7:0] liteethudpstreamer0_rx_cdc_sink_payload_data;
 wire          liteethudpstreamer0_rx_cdc_sink_payload_error;
-wire          liteethudpstreamer0_rx_cdc_sink_payload_last_be;
 wire          liteethudpstreamer0_rx_cdc_sink_ready;
 wire          liteethudpstreamer0_rx_cdc_sink_valid;
 wire          liteethudpstreamer0_rx_cdc_source_first;
@@ -1461,9 +1343,9 @@ wire   [15:0] liteethudpstreamer0_rx_cdc_source_param_dst_port;
 wire   [31:0] liteethudpstreamer0_rx_cdc_source_param_ip_address;
 wire   [15:0] liteethudpstreamer0_rx_cdc_source_param_length;
 wire   [15:0] liteethudpstreamer0_rx_cdc_source_param_src_port;
+wire          liteethudpstreamer0_rx_cdc_source_payload_be;
 wire    [7:0] liteethudpstreamer0_rx_cdc_source_payload_data;
 wire          liteethudpstreamer0_rx_cdc_source_payload_error;
-wire          liteethudpstreamer0_rx_cdc_source_payload_last_be;
 wire          liteethudpstreamer0_rx_cdc_source_ready;
 wire          liteethudpstreamer0_rx_cdc_source_valid;
 wire          liteethudpstreamer0_rx_converter_converter_sink_first;
@@ -1477,102 +1359,106 @@ wire    [9:0] liteethudpstreamer0_rx_converter_converter_source_payload_data;
 wire          liteethudpstreamer0_rx_converter_converter_source_payload_valid_token_count;
 wire          liteethudpstreamer0_rx_converter_converter_source_ready;
 wire          liteethudpstreamer0_rx_converter_converter_source_valid;
-wire          liteethudpstreamer0_rx_converter_sink_first;
-wire          liteethudpstreamer0_rx_converter_sink_last;
-wire   [15:0] liteethudpstreamer0_rx_converter_sink_param_dst_port;
-wire   [31:0] liteethudpstreamer0_rx_converter_sink_param_ip_address;
-wire   [15:0] liteethudpstreamer0_rx_converter_sink_param_length;
-wire   [15:0] liteethudpstreamer0_rx_converter_sink_param_src_port;
-wire    [7:0] liteethudpstreamer0_rx_converter_sink_payload_data;
-wire          liteethudpstreamer0_rx_converter_sink_payload_error;
-wire          liteethudpstreamer0_rx_converter_sink_payload_last_be;
-wire          liteethudpstreamer0_rx_converter_sink_ready;
-wire          liteethudpstreamer0_rx_converter_sink_valid;
-wire          liteethudpstreamer0_rx_converter_source_first;
-wire          liteethudpstreamer0_rx_converter_source_last;
-wire   [15:0] liteethudpstreamer0_rx_converter_source_param_dst_port;
-wire   [31:0] liteethudpstreamer0_rx_converter_source_param_ip_address;
-wire   [15:0] liteethudpstreamer0_rx_converter_source_param_length;
-wire   [15:0] liteethudpstreamer0_rx_converter_source_param_src_port;
-wire    [7:0] liteethudpstreamer0_rx_converter_source_payload_data;
-wire          liteethudpstreamer0_rx_converter_source_payload_error;
-wire          liteethudpstreamer0_rx_converter_source_payload_last_be;
-wire          liteethudpstreamer0_rx_converter_source_ready;
+wire          liteethudpstreamer0_rx_converter_sink_sink_first;
+wire          liteethudpstreamer0_rx_converter_sink_sink_last;
+wire   [15:0] liteethudpstreamer0_rx_converter_sink_sink_param_dst_port;
+wire   [31:0] liteethudpstreamer0_rx_converter_sink_sink_param_ip_address;
+wire   [15:0] liteethudpstreamer0_rx_converter_sink_sink_param_length;
+wire   [15:0] liteethudpstreamer0_rx_converter_sink_sink_param_src_port;
+wire          liteethudpstreamer0_rx_converter_sink_sink_payload_be;
+wire    [7:0] liteethudpstreamer0_rx_converter_sink_sink_payload_data;
+wire          liteethudpstreamer0_rx_converter_sink_sink_payload_error;
+wire          liteethudpstreamer0_rx_converter_sink_sink_ready;
+wire          liteethudpstreamer0_rx_converter_sink_sink_valid;
 wire          liteethudpstreamer0_rx_converter_source_source_first;
 wire          liteethudpstreamer0_rx_converter_source_source_last;
-wire    [9:0] liteethudpstreamer0_rx_converter_source_source_payload_data;
+wire   [15:0] liteethudpstreamer0_rx_converter_source_source_param_dst_port;
+wire   [31:0] liteethudpstreamer0_rx_converter_source_source_param_ip_address;
+wire   [15:0] liteethudpstreamer0_rx_converter_source_source_param_length;
+wire   [15:0] liteethudpstreamer0_rx_converter_source_source_param_src_port;
+wire          liteethudpstreamer0_rx_converter_source_source_payload_be;
+wire    [7:0] liteethudpstreamer0_rx_converter_source_source_payload_data;
+wire          liteethudpstreamer0_rx_converter_source_source_payload_error;
 wire          liteethudpstreamer0_rx_converter_source_source_ready;
 wire          liteethudpstreamer0_rx_converter_source_source_valid;
-wire          liteethudpstreamer0_rx_converter_source_valid;
+reg           liteethudpstreamer0_rx_enable = 1'd1;
 reg     [3:0] liteethudpstreamer0_rx_fifo_consume = 4'd0;
 wire          liteethudpstreamer0_rx_fifo_do_read;
 wire          liteethudpstreamer0_rx_fifo_fifo_in_first;
 wire          liteethudpstreamer0_rx_fifo_fifo_in_last;
+wire          liteethudpstreamer0_rx_fifo_fifo_in_payload_be;
 wire    [7:0] liteethudpstreamer0_rx_fifo_fifo_in_payload_data;
 wire          liteethudpstreamer0_rx_fifo_fifo_in_payload_error;
 wire          liteethudpstreamer0_rx_fifo_fifo_out_first;
 wire          liteethudpstreamer0_rx_fifo_fifo_out_last;
+wire          liteethudpstreamer0_rx_fifo_fifo_out_payload_be;
 wire    [7:0] liteethudpstreamer0_rx_fifo_fifo_out_payload_data;
 wire          liteethudpstreamer0_rx_fifo_fifo_out_payload_error;
 reg     [4:0] liteethudpstreamer0_rx_fifo_level0 = 5'd0;
 wire    [4:0] liteethudpstreamer0_rx_fifo_level1;
 reg     [3:0] liteethudpstreamer0_rx_fifo_produce = 4'd0;
 wire    [3:0] liteethudpstreamer0_rx_fifo_rdport_adr;
-wire   [10:0] liteethudpstreamer0_rx_fifo_rdport_dat_r;
+wire   [11:0] liteethudpstreamer0_rx_fifo_rdport_dat_r;
 wire          liteethudpstreamer0_rx_fifo_rdport_re;
 wire          liteethudpstreamer0_rx_fifo_re;
 reg           liteethudpstreamer0_rx_fifo_readable = 1'd0;
 reg           liteethudpstreamer0_rx_fifo_replace = 1'd0;
 reg           liteethudpstreamer0_rx_fifo_sink_first = 1'd0;
 wire          liteethudpstreamer0_rx_fifo_sink_last;
+wire          liteethudpstreamer0_rx_fifo_sink_payload_be;
 wire    [7:0] liteethudpstreamer0_rx_fifo_sink_payload_data;
 wire          liteethudpstreamer0_rx_fifo_sink_payload_error;
 wire          liteethudpstreamer0_rx_fifo_sink_ready;
 wire          liteethudpstreamer0_rx_fifo_sink_valid;
 wire          liteethudpstreamer0_rx_fifo_source_first;
 wire          liteethudpstreamer0_rx_fifo_source_last;
+wire          liteethudpstreamer0_rx_fifo_source_payload_be;
 wire    [7:0] liteethudpstreamer0_rx_fifo_source_payload_data;
 wire          liteethudpstreamer0_rx_fifo_source_payload_error;
 wire          liteethudpstreamer0_rx_fifo_source_ready;
 wire          liteethudpstreamer0_rx_fifo_source_valid;
-wire   [10:0] liteethudpstreamer0_rx_fifo_syncfifo0_din;
-wire   [10:0] liteethudpstreamer0_rx_fifo_syncfifo0_dout;
+wire   [11:0] liteethudpstreamer0_rx_fifo_syncfifo0_din;
+wire   [11:0] liteethudpstreamer0_rx_fifo_syncfifo0_dout;
 wire          liteethudpstreamer0_rx_fifo_syncfifo0_re;
 wire          liteethudpstreamer0_rx_fifo_syncfifo0_readable;
 wire          liteethudpstreamer0_rx_fifo_syncfifo0_we;
 wire          liteethudpstreamer0_rx_fifo_syncfifo0_writable;
 reg     [3:0] liteethudpstreamer0_rx_fifo_wrport_adr = 4'd0;
-wire   [10:0] liteethudpstreamer0_rx_fifo_wrport_dat_r;
-wire   [10:0] liteethudpstreamer0_rx_fifo_wrport_dat_w;
+wire   [11:0] liteethudpstreamer0_rx_fifo_wrport_dat_r;
+wire   [11:0] liteethudpstreamer0_rx_fifo_wrport_dat_w;
 wire          liteethudpstreamer0_rx_fifo_wrport_we;
+reg           liteethudpstreamer0_rx_first = 1'd1;
+wire   [31:0] liteethudpstreamer0_rx_ip_address_sig;
+reg           liteethudpstreamer0_rx_selected = 1'd0;
 wire          liteethudpstreamer0_rx_sink_sink_first;
 wire          liteethudpstreamer0_rx_sink_sink_last;
 wire   [15:0] liteethudpstreamer0_rx_sink_sink_param_dst_port;
 wire   [31:0] liteethudpstreamer0_rx_sink_sink_param_ip_address;
 wire   [15:0] liteethudpstreamer0_rx_sink_sink_param_length;
 wire   [15:0] liteethudpstreamer0_rx_sink_sink_param_src_port;
+wire          liteethudpstreamer0_rx_sink_sink_payload_be;
 wire    [7:0] liteethudpstreamer0_rx_sink_sink_payload_data;
 wire          liteethudpstreamer0_rx_sink_sink_payload_error;
-wire          liteethudpstreamer0_rx_sink_sink_payload_last_be;
 wire          liteethudpstreamer0_rx_sink_sink_ready;
 wire          liteethudpstreamer0_rx_sink_sink_valid;
 wire          liteethudpstreamer0_rx_source_source_first;
 wire          liteethudpstreamer0_rx_source_source_last;
+wire          liteethudpstreamer0_rx_source_source_payload_be;
 wire    [7:0] liteethudpstreamer0_rx_source_source_payload_data;
 wire          liteethudpstreamer0_rx_source_source_payload_error;
 wire          liteethudpstreamer0_rx_source_source_ready;
 wire          liteethudpstreamer0_rx_source_source_valid;
+wire   [15:0] liteethudpstreamer0_rx_udp_port_sig;
 reg           liteethudpstreamer0_rx_valid = 1'd1;
-reg           liteethudpstreamer0_state = 1'd0;
 wire          liteethudpstreamer0_tx_cdc_sink_first;
 wire          liteethudpstreamer0_tx_cdc_sink_last;
 wire   [15:0] liteethudpstreamer0_tx_cdc_sink_param_dst_port;
 wire   [31:0] liteethudpstreamer0_tx_cdc_sink_param_ip_address;
 wire   [15:0] liteethudpstreamer0_tx_cdc_sink_param_length;
 wire   [15:0] liteethudpstreamer0_tx_cdc_sink_param_src_port;
+wire          liteethudpstreamer0_tx_cdc_sink_payload_be;
 wire    [7:0] liteethudpstreamer0_tx_cdc_sink_payload_data;
 wire          liteethudpstreamer0_tx_cdc_sink_payload_error;
-wire          liteethudpstreamer0_tx_cdc_sink_payload_last_be;
 wire          liteethudpstreamer0_tx_cdc_sink_ready;
 wire          liteethudpstreamer0_tx_cdc_sink_valid;
 wire          liteethudpstreamer0_tx_cdc_source_first;
@@ -1581,9 +1467,9 @@ wire   [15:0] liteethudpstreamer0_tx_cdc_source_param_dst_port;
 wire   [31:0] liteethudpstreamer0_tx_cdc_source_param_ip_address;
 wire   [15:0] liteethudpstreamer0_tx_cdc_source_param_length;
 wire   [15:0] liteethudpstreamer0_tx_cdc_source_param_src_port;
+wire          liteethudpstreamer0_tx_cdc_source_payload_be;
 wire    [7:0] liteethudpstreamer0_tx_cdc_source_payload_data;
 wire          liteethudpstreamer0_tx_cdc_source_payload_error;
-wire          liteethudpstreamer0_tx_cdc_source_payload_last_be;
 wire          liteethudpstreamer0_tx_cdc_source_ready;
 wire          liteethudpstreamer0_tx_cdc_source_valid;
 wire          liteethudpstreamer0_tx_converter_converter_sink_first;
@@ -1597,107 +1483,157 @@ wire    [9:0] liteethudpstreamer0_tx_converter_converter_source_payload_data;
 wire          liteethudpstreamer0_tx_converter_converter_source_payload_valid_token_count;
 wire          liteethudpstreamer0_tx_converter_converter_source_ready;
 wire          liteethudpstreamer0_tx_converter_converter_source_valid;
-wire          liteethudpstreamer0_tx_converter_sink_first;
-wire          liteethudpstreamer0_tx_converter_sink_last;
-wire   [15:0] liteethudpstreamer0_tx_converter_sink_param_dst_port;
-wire   [31:0] liteethudpstreamer0_tx_converter_sink_param_ip_address;
-wire   [15:0] liteethudpstreamer0_tx_converter_sink_param_length;
-wire   [15:0] liteethudpstreamer0_tx_converter_sink_param_src_port;
-wire    [7:0] liteethudpstreamer0_tx_converter_sink_payload_data;
-wire          liteethudpstreamer0_tx_converter_sink_payload_error;
-wire          liteethudpstreamer0_tx_converter_sink_payload_last_be;
-wire          liteethudpstreamer0_tx_converter_sink_ready;
-wire          liteethudpstreamer0_tx_converter_sink_valid;
-wire          liteethudpstreamer0_tx_converter_source_first;
-wire          liteethudpstreamer0_tx_converter_source_last;
-wire   [15:0] liteethudpstreamer0_tx_converter_source_param_dst_port;
-wire   [31:0] liteethudpstreamer0_tx_converter_source_param_ip_address;
-wire   [15:0] liteethudpstreamer0_tx_converter_source_param_length;
-wire   [15:0] liteethudpstreamer0_tx_converter_source_param_src_port;
-wire    [7:0] liteethudpstreamer0_tx_converter_source_payload_data;
-wire          liteethudpstreamer0_tx_converter_source_payload_error;
-wire          liteethudpstreamer0_tx_converter_source_payload_last_be;
-wire          liteethudpstreamer0_tx_converter_source_ready;
+wire          liteethudpstreamer0_tx_converter_sink_sink_first;
+wire          liteethudpstreamer0_tx_converter_sink_sink_last;
+wire   [15:0] liteethudpstreamer0_tx_converter_sink_sink_param_dst_port;
+wire   [31:0] liteethudpstreamer0_tx_converter_sink_sink_param_ip_address;
+wire   [15:0] liteethudpstreamer0_tx_converter_sink_sink_param_length;
+wire   [15:0] liteethudpstreamer0_tx_converter_sink_sink_param_src_port;
+wire          liteethudpstreamer0_tx_converter_sink_sink_payload_be;
+wire    [7:0] liteethudpstreamer0_tx_converter_sink_sink_payload_data;
+wire          liteethudpstreamer0_tx_converter_sink_sink_payload_error;
+wire          liteethudpstreamer0_tx_converter_sink_sink_ready;
+wire          liteethudpstreamer0_tx_converter_sink_sink_valid;
 wire          liteethudpstreamer0_tx_converter_source_source_first;
 wire          liteethudpstreamer0_tx_converter_source_source_last;
-wire    [9:0] liteethudpstreamer0_tx_converter_source_source_payload_data;
+wire   [15:0] liteethudpstreamer0_tx_converter_source_source_param_dst_port;
+wire   [31:0] liteethudpstreamer0_tx_converter_source_source_param_ip_address;
+wire   [15:0] liteethudpstreamer0_tx_converter_source_source_param_length;
+wire   [15:0] liteethudpstreamer0_tx_converter_source_source_param_src_port;
+wire          liteethudpstreamer0_tx_converter_source_source_payload_be;
+wire    [7:0] liteethudpstreamer0_tx_converter_source_source_payload_data;
+wire          liteethudpstreamer0_tx_converter_source_source_payload_error;
 wire          liteethudpstreamer0_tx_converter_source_source_ready;
 wire          liteethudpstreamer0_tx_converter_source_source_valid;
-wire          liteethudpstreamer0_tx_converter_source_valid;
 reg     [4:0] liteethudpstreamer0_tx_counter = 5'd0;
-reg     [4:0] liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value0 = 5'd0;
-reg           liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value_ce0 = 1'd0;
-reg     [3:0] liteethudpstreamer0_tx_fifo_consume = 4'd0;
-wire          liteethudpstreamer0_tx_fifo_do_read;
-wire          liteethudpstreamer0_tx_fifo_fifo_in_first;
-wire          liteethudpstreamer0_tx_fifo_fifo_in_last;
-wire    [7:0] liteethudpstreamer0_tx_fifo_fifo_in_payload_data;
-wire          liteethudpstreamer0_tx_fifo_fifo_out_first;
-wire          liteethudpstreamer0_tx_fifo_fifo_out_last;
-wire    [7:0] liteethudpstreamer0_tx_fifo_fifo_out_payload_data;
-reg     [4:0] liteethudpstreamer0_tx_fifo_level0 = 5'd0;
-wire    [4:0] liteethudpstreamer0_tx_fifo_level1;
-reg     [3:0] liteethudpstreamer0_tx_fifo_produce = 4'd0;
-wire    [3:0] liteethudpstreamer0_tx_fifo_rdport_adr;
-wire    [9:0] liteethudpstreamer0_tx_fifo_rdport_dat_r;
-wire          liteethudpstreamer0_tx_fifo_rdport_re;
-wire          liteethudpstreamer0_tx_fifo_re;
-reg           liteethudpstreamer0_tx_fifo_readable = 1'd0;
-reg           liteethudpstreamer0_tx_fifo_replace = 1'd0;
-wire          liteethudpstreamer0_tx_fifo_sink_first;
-wire          liteethudpstreamer0_tx_fifo_sink_last;
-wire    [7:0] liteethudpstreamer0_tx_fifo_sink_payload_data;
-wire          liteethudpstreamer0_tx_fifo_sink_ready;
-wire          liteethudpstreamer0_tx_fifo_sink_valid;
-wire          liteethudpstreamer0_tx_fifo_source_first;
-wire          liteethudpstreamer0_tx_fifo_source_last;
-wire    [7:0] liteethudpstreamer0_tx_fifo_source_payload_data;
-reg           liteethudpstreamer0_tx_fifo_source_ready = 1'd0;
-wire          liteethudpstreamer0_tx_fifo_source_valid;
-wire    [9:0] liteethudpstreamer0_tx_fifo_syncfifo0_din;
-wire    [9:0] liteethudpstreamer0_tx_fifo_syncfifo0_dout;
-wire          liteethudpstreamer0_tx_fifo_syncfifo0_re;
-wire          liteethudpstreamer0_tx_fifo_syncfifo0_readable;
-wire          liteethudpstreamer0_tx_fifo_syncfifo0_we;
-wire          liteethudpstreamer0_tx_fifo_syncfifo0_writable;
-reg     [3:0] liteethudpstreamer0_tx_fifo_wrport_adr = 4'd0;
-wire    [9:0] liteethudpstreamer0_tx_fifo_wrport_dat_r;
-wire    [9:0] liteethudpstreamer0_tx_fifo_wrport_dat_w;
-wire          liteethudpstreamer0_tx_fifo_wrport_we;
+reg           liteethudpstreamer0_tx_enable = 1'd1;
 reg    [31:0] liteethudpstreamer0_tx_ip_address = 32'd0;
-reg    [31:0] liteethudpstreamer0_tx_ip_address_liteethudpstreamer0_next_value1 = 32'd0;
-reg           liteethudpstreamer0_tx_ip_address_liteethudpstreamer0_next_value_ce1 = 1'd0;
-reg     [4:0] liteethudpstreamer0_tx_level = 5'd0;
-reg     [4:0] liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value3 = 5'd0;
-reg           liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value_ce3 = 1'd0;
+wire   [31:0] liteethudpstreamer0_tx_ip_address_sig;
+wire          liteethudpstreamer0_tx_packet_full;
+wire          liteethudpstreamer0_tx_packet_last;
+wire   [15:0] liteethudpstreamer0_tx_packet_length;
+reg     [4:0] liteethudpstreamer0_tx_param_fifo_consume = 5'd0;
+wire          liteethudpstreamer0_tx_param_fifo_do_read;
+wire          liteethudpstreamer0_tx_param_fifo_fifo_in_first;
+wire          liteethudpstreamer0_tx_param_fifo_fifo_in_last;
+wire   [15:0] liteethudpstreamer0_tx_param_fifo_fifo_in_param_length;
+wire          liteethudpstreamer0_tx_param_fifo_fifo_out_first;
+wire          liteethudpstreamer0_tx_param_fifo_fifo_out_last;
+wire   [15:0] liteethudpstreamer0_tx_param_fifo_fifo_out_param_length;
+reg     [4:0] liteethudpstreamer0_tx_param_fifo_level0 = 5'd0;
+wire    [4:0] liteethudpstreamer0_tx_param_fifo_level1;
+reg     [4:0] liteethudpstreamer0_tx_param_fifo_produce = 5'd0;
+wire    [4:0] liteethudpstreamer0_tx_param_fifo_rdport_adr;
+wire   [17:0] liteethudpstreamer0_tx_param_fifo_rdport_dat_r;
+wire          liteethudpstreamer0_tx_param_fifo_rdport_re;
+wire          liteethudpstreamer0_tx_param_fifo_re;
+reg           liteethudpstreamer0_tx_param_fifo_readable = 1'd0;
+reg           liteethudpstreamer0_tx_param_fifo_replace = 1'd0;
+reg           liteethudpstreamer0_tx_param_fifo_sink_first = 1'd0;
+reg           liteethudpstreamer0_tx_param_fifo_sink_last = 1'd0;
+wire   [15:0] liteethudpstreamer0_tx_param_fifo_sink_param_length;
+wire          liteethudpstreamer0_tx_param_fifo_sink_ready;
+wire          liteethudpstreamer0_tx_param_fifo_sink_valid;
+wire          liteethudpstreamer0_tx_param_fifo_source_first;
+wire          liteethudpstreamer0_tx_param_fifo_source_last;
+wire   [15:0] liteethudpstreamer0_tx_param_fifo_source_param_length;
+wire          liteethudpstreamer0_tx_param_fifo_source_ready;
+wire          liteethudpstreamer0_tx_param_fifo_source_valid;
+wire   [17:0] liteethudpstreamer0_tx_param_fifo_syncfifo0_din;
+wire   [17:0] liteethudpstreamer0_tx_param_fifo_syncfifo0_dout;
+wire          liteethudpstreamer0_tx_param_fifo_syncfifo0_re;
+wire          liteethudpstreamer0_tx_param_fifo_syncfifo0_readable;
+wire          liteethudpstreamer0_tx_param_fifo_syncfifo0_we;
+wire          liteethudpstreamer0_tx_param_fifo_syncfifo0_writable;
+reg     [4:0] liteethudpstreamer0_tx_param_fifo_wrport_adr = 5'd0;
+wire   [17:0] liteethudpstreamer0_tx_param_fifo_wrport_dat_r;
+wire   [17:0] liteethudpstreamer0_tx_param_fifo_wrport_dat_w;
+wire          liteethudpstreamer0_tx_param_fifo_wrport_we;
+reg     [3:0] liteethudpstreamer0_tx_payload_fifo_consume = 4'd0;
+wire          liteethudpstreamer0_tx_payload_fifo_do_read;
+wire          liteethudpstreamer0_tx_payload_fifo_fifo_in_first;
+wire          liteethudpstreamer0_tx_payload_fifo_fifo_in_last;
+wire          liteethudpstreamer0_tx_payload_fifo_fifo_in_payload_be;
+wire    [7:0] liteethudpstreamer0_tx_payload_fifo_fifo_in_payload_data;
+wire          liteethudpstreamer0_tx_payload_fifo_fifo_out_first;
+wire          liteethudpstreamer0_tx_payload_fifo_fifo_out_last;
+wire          liteethudpstreamer0_tx_payload_fifo_fifo_out_payload_be;
+wire    [7:0] liteethudpstreamer0_tx_payload_fifo_fifo_out_payload_data;
+reg     [4:0] liteethudpstreamer0_tx_payload_fifo_level0 = 5'd0;
+wire    [4:0] liteethudpstreamer0_tx_payload_fifo_level1;
+reg     [3:0] liteethudpstreamer0_tx_payload_fifo_produce = 4'd0;
+wire    [3:0] liteethudpstreamer0_tx_payload_fifo_rdport_adr;
+wire   [10:0] liteethudpstreamer0_tx_payload_fifo_rdport_dat_r;
+wire          liteethudpstreamer0_tx_payload_fifo_rdport_re;
+wire          liteethudpstreamer0_tx_payload_fifo_re;
+reg           liteethudpstreamer0_tx_payload_fifo_readable = 1'd0;
+reg           liteethudpstreamer0_tx_payload_fifo_replace = 1'd0;
+wire          liteethudpstreamer0_tx_payload_fifo_sink_first;
+wire          liteethudpstreamer0_tx_payload_fifo_sink_last;
+wire          liteethudpstreamer0_tx_payload_fifo_sink_payload_be;
+wire    [7:0] liteethudpstreamer0_tx_payload_fifo_sink_payload_data;
+wire          liteethudpstreamer0_tx_payload_fifo_sink_ready;
+wire          liteethudpstreamer0_tx_payload_fifo_sink_valid;
+wire          liteethudpstreamer0_tx_payload_fifo_source_first;
+wire          liteethudpstreamer0_tx_payload_fifo_source_last;
+wire          liteethudpstreamer0_tx_payload_fifo_source_payload_be;
+wire    [7:0] liteethudpstreamer0_tx_payload_fifo_source_payload_data;
+wire          liteethudpstreamer0_tx_payload_fifo_source_ready;
+wire          liteethudpstreamer0_tx_payload_fifo_source_valid;
+wire   [10:0] liteethudpstreamer0_tx_payload_fifo_syncfifo0_din;
+wire   [10:0] liteethudpstreamer0_tx_payload_fifo_syncfifo0_dout;
+wire          liteethudpstreamer0_tx_payload_fifo_syncfifo0_re;
+wire          liteethudpstreamer0_tx_payload_fifo_syncfifo0_readable;
+wire          liteethudpstreamer0_tx_payload_fifo_syncfifo0_we;
+wire          liteethudpstreamer0_tx_payload_fifo_syncfifo0_writable;
+reg     [3:0] liteethudpstreamer0_tx_payload_fifo_wrport_adr = 4'd0;
+wire   [10:0] liteethudpstreamer0_tx_payload_fifo_wrport_dat_r;
+wire   [10:0] liteethudpstreamer0_tx_payload_fifo_wrport_dat_w;
+wire          liteethudpstreamer0_tx_payload_fifo_wrport_we;
+wire          liteethudpstreamer0_tx_sink_be;
+wire          liteethudpstreamer0_tx_sink_bytes;
+wire          liteethudpstreamer0_tx_sink_last;
+wire          liteethudpstreamer0_tx_sink_payload_be;
+wire    [7:0] liteethudpstreamer0_tx_sink_payload_data;
+wire          liteethudpstreamer0_tx_sink_ready;
 reg           liteethudpstreamer0_tx_sink_sink_first = 1'd0;
 wire          liteethudpstreamer0_tx_sink_sink_last;
+wire   [15:0] liteethudpstreamer0_tx_sink_sink_param_length;
+wire          liteethudpstreamer0_tx_sink_sink_payload_be;
 wire    [7:0] liteethudpstreamer0_tx_sink_sink_payload_data;
 wire          liteethudpstreamer0_tx_sink_sink_ready;
 wire          liteethudpstreamer0_tx_sink_sink_valid;
+wire          liteethudpstreamer0_tx_sink_valid;
+reg           liteethudpstreamer0_tx_source_active = 1'd0;
+reg           liteethudpstreamer0_tx_source_first = 1'd0;
+wire          liteethudpstreamer0_tx_source_last;
+wire   [15:0] liteethudpstreamer0_tx_source_param_dst_port;
+wire   [31:0] liteethudpstreamer0_tx_source_param_ip_address;
+wire   [15:0] liteethudpstreamer0_tx_source_param_length;
+wire   [15:0] liteethudpstreamer0_tx_source_param_src_port;
+wire          liteethudpstreamer0_tx_source_payload_be;
+wire    [7:0] liteethudpstreamer0_tx_source_payload_data;
+reg           liteethudpstreamer0_tx_source_payload_error = 1'd0;
+wire          liteethudpstreamer0_tx_source_ready;
 reg           liteethudpstreamer0_tx_source_source_first = 1'd0;
-reg           liteethudpstreamer0_tx_source_source_last = 1'd0;
-reg    [15:0] liteethudpstreamer0_tx_source_source_param_dst_port = 16'd0;
-reg    [31:0] liteethudpstreamer0_tx_source_source_param_ip_address = 32'd0;
-reg    [15:0] liteethudpstreamer0_tx_source_source_param_length = 16'd0;
-reg    [15:0] liteethudpstreamer0_tx_source_source_param_src_port = 16'd0;
-reg     [7:0] liteethudpstreamer0_tx_source_source_payload_data = 8'd0;
-reg           liteethudpstreamer0_tx_source_source_payload_error = 1'd0;
-reg           liteethudpstreamer0_tx_source_source_payload_last_be = 1'd0;
+wire          liteethudpstreamer0_tx_source_source_last;
+wire   [15:0] liteethudpstreamer0_tx_source_source_param_length;
+wire          liteethudpstreamer0_tx_source_source_payload_be;
+wire    [7:0] liteethudpstreamer0_tx_source_source_payload_data;
 wire          liteethudpstreamer0_tx_source_source_ready;
-reg           liteethudpstreamer0_tx_source_source_valid = 1'd0;
+wire          liteethudpstreamer0_tx_source_source_valid;
+wire          liteethudpstreamer0_tx_source_valid;
 reg    [15:0] liteethudpstreamer0_tx_udp_port = 16'd0;
-reg    [15:0] liteethudpstreamer0_tx_udp_port_liteethudpstreamer0_next_value2 = 16'd0;
-reg           liteethudpstreamer0_tx_udp_port_liteethudpstreamer0_next_value_ce2 = 1'd0;
+wire   [15:0] liteethudpstreamer0_tx_udp_port_sig;
 wire          liteethudpstreamer0_user_port_sink_first;
 wire          liteethudpstreamer0_user_port_sink_last;
 wire   [15:0] liteethudpstreamer0_user_port_sink_param_dst_port;
 wire   [31:0] liteethudpstreamer0_user_port_sink_param_ip_address;
 wire   [15:0] liteethudpstreamer0_user_port_sink_param_length;
 wire   [15:0] liteethudpstreamer0_user_port_sink_param_src_port;
+wire          liteethudpstreamer0_user_port_sink_payload_be;
 wire    [7:0] liteethudpstreamer0_user_port_sink_payload_data;
 wire          liteethudpstreamer0_user_port_sink_payload_error;
-wire          liteethudpstreamer0_user_port_sink_payload_last_be;
 wire          liteethudpstreamer0_user_port_sink_ready;
 wire          liteethudpstreamer0_user_port_sink_valid;
 wire          liteethudpstreamer0_user_port_source_first;
@@ -1706,9 +1642,9 @@ wire   [15:0] liteethudpstreamer0_user_port_source_param_dst_port;
 wire   [31:0] liteethudpstreamer0_user_port_source_param_ip_address;
 wire   [15:0] liteethudpstreamer0_user_port_source_param_length;
 wire   [15:0] liteethudpstreamer0_user_port_source_param_src_port;
+wire          liteethudpstreamer0_user_port_source_payload_be;
 wire    [7:0] liteethudpstreamer0_user_port_source_payload_data;
 wire          liteethudpstreamer0_user_port_source_payload_error;
-wire          liteethudpstreamer0_user_port_source_payload_last_be;
 wire          liteethudpstreamer0_user_port_source_ready;
 wire          liteethudpstreamer0_user_port_source_valid;
 wire          liteethudpstreamer1_internal_port_sink_first;
@@ -1717,9 +1653,9 @@ wire   [15:0] liteethudpstreamer1_internal_port_sink_param_dst_port;
 wire   [31:0] liteethudpstreamer1_internal_port_sink_param_ip_address;
 wire   [15:0] liteethudpstreamer1_internal_port_sink_param_length;
 wire   [15:0] liteethudpstreamer1_internal_port_sink_param_src_port;
+wire          liteethudpstreamer1_internal_port_sink_payload_be;
 wire    [7:0] liteethudpstreamer1_internal_port_sink_payload_data;
 wire          liteethudpstreamer1_internal_port_sink_payload_error;
-wire          liteethudpstreamer1_internal_port_sink_payload_last_be;
 reg           liteethudpstreamer1_internal_port_sink_ready = 1'd0;
 wire          liteethudpstreamer1_internal_port_sink_valid;
 reg           liteethudpstreamer1_internal_port_source_first = 1'd0;
@@ -1728,21 +1664,21 @@ reg    [15:0] liteethudpstreamer1_internal_port_source_param_dst_port = 16'd0;
 reg    [31:0] liteethudpstreamer1_internal_port_source_param_ip_address = 32'd0;
 reg    [15:0] liteethudpstreamer1_internal_port_source_param_length = 16'd0;
 reg    [15:0] liteethudpstreamer1_internal_port_source_param_src_port = 16'd0;
+reg           liteethudpstreamer1_internal_port_source_payload_be = 1'd0;
 reg     [7:0] liteethudpstreamer1_internal_port_source_payload_data = 8'd0;
 reg           liteethudpstreamer1_internal_port_source_payload_error = 1'd0;
-reg           liteethudpstreamer1_internal_port_source_payload_last_be = 1'd0;
 wire          liteethudpstreamer1_internal_port_source_ready;
 reg           liteethudpstreamer1_internal_port_source_valid = 1'd0;
-reg           liteethudpstreamer1_next_state = 1'd0;
+wire          liteethudpstreamer1_rx_accept;
 wire          liteethudpstreamer1_rx_cdc_sink_first;
 wire          liteethudpstreamer1_rx_cdc_sink_last;
 wire   [15:0] liteethudpstreamer1_rx_cdc_sink_param_dst_port;
 wire   [31:0] liteethudpstreamer1_rx_cdc_sink_param_ip_address;
 wire   [15:0] liteethudpstreamer1_rx_cdc_sink_param_length;
 wire   [15:0] liteethudpstreamer1_rx_cdc_sink_param_src_port;
+wire          liteethudpstreamer1_rx_cdc_sink_payload_be;
 wire    [7:0] liteethudpstreamer1_rx_cdc_sink_payload_data;
 wire          liteethudpstreamer1_rx_cdc_sink_payload_error;
-wire          liteethudpstreamer1_rx_cdc_sink_payload_last_be;
 wire          liteethudpstreamer1_rx_cdc_sink_ready;
 wire          liteethudpstreamer1_rx_cdc_sink_valid;
 wire          liteethudpstreamer1_rx_cdc_source_first;
@@ -1751,9 +1687,9 @@ wire   [15:0] liteethudpstreamer1_rx_cdc_source_param_dst_port;
 wire   [31:0] liteethudpstreamer1_rx_cdc_source_param_ip_address;
 wire   [15:0] liteethudpstreamer1_rx_cdc_source_param_length;
 wire   [15:0] liteethudpstreamer1_rx_cdc_source_param_src_port;
+wire          liteethudpstreamer1_rx_cdc_source_payload_be;
 wire    [7:0] liteethudpstreamer1_rx_cdc_source_payload_data;
 wire          liteethudpstreamer1_rx_cdc_source_payload_error;
-wire          liteethudpstreamer1_rx_cdc_source_payload_last_be;
 wire          liteethudpstreamer1_rx_cdc_source_ready;
 wire          liteethudpstreamer1_rx_cdc_source_valid;
 wire          liteethudpstreamer1_rx_converter_converter_sink_first;
@@ -1767,102 +1703,106 @@ wire    [9:0] liteethudpstreamer1_rx_converter_converter_source_payload_data;
 wire          liteethudpstreamer1_rx_converter_converter_source_payload_valid_token_count;
 wire          liteethudpstreamer1_rx_converter_converter_source_ready;
 wire          liteethudpstreamer1_rx_converter_converter_source_valid;
-wire          liteethudpstreamer1_rx_converter_sink_first;
-wire          liteethudpstreamer1_rx_converter_sink_last;
-wire   [15:0] liteethudpstreamer1_rx_converter_sink_param_dst_port;
-wire   [31:0] liteethudpstreamer1_rx_converter_sink_param_ip_address;
-wire   [15:0] liteethudpstreamer1_rx_converter_sink_param_length;
-wire   [15:0] liteethudpstreamer1_rx_converter_sink_param_src_port;
-wire    [7:0] liteethudpstreamer1_rx_converter_sink_payload_data;
-wire          liteethudpstreamer1_rx_converter_sink_payload_error;
-wire          liteethudpstreamer1_rx_converter_sink_payload_last_be;
-wire          liteethudpstreamer1_rx_converter_sink_ready;
-wire          liteethudpstreamer1_rx_converter_sink_valid;
-wire          liteethudpstreamer1_rx_converter_source_first;
-wire          liteethudpstreamer1_rx_converter_source_last;
-wire   [15:0] liteethudpstreamer1_rx_converter_source_param_dst_port;
-wire   [31:0] liteethudpstreamer1_rx_converter_source_param_ip_address;
-wire   [15:0] liteethudpstreamer1_rx_converter_source_param_length;
-wire   [15:0] liteethudpstreamer1_rx_converter_source_param_src_port;
-wire    [7:0] liteethudpstreamer1_rx_converter_source_payload_data;
-wire          liteethudpstreamer1_rx_converter_source_payload_error;
-wire          liteethudpstreamer1_rx_converter_source_payload_last_be;
-wire          liteethudpstreamer1_rx_converter_source_ready;
+wire          liteethudpstreamer1_rx_converter_sink_sink_first;
+wire          liteethudpstreamer1_rx_converter_sink_sink_last;
+wire   [15:0] liteethudpstreamer1_rx_converter_sink_sink_param_dst_port;
+wire   [31:0] liteethudpstreamer1_rx_converter_sink_sink_param_ip_address;
+wire   [15:0] liteethudpstreamer1_rx_converter_sink_sink_param_length;
+wire   [15:0] liteethudpstreamer1_rx_converter_sink_sink_param_src_port;
+wire          liteethudpstreamer1_rx_converter_sink_sink_payload_be;
+wire    [7:0] liteethudpstreamer1_rx_converter_sink_sink_payload_data;
+wire          liteethudpstreamer1_rx_converter_sink_sink_payload_error;
+wire          liteethudpstreamer1_rx_converter_sink_sink_ready;
+wire          liteethudpstreamer1_rx_converter_sink_sink_valid;
 wire          liteethudpstreamer1_rx_converter_source_source_first;
 wire          liteethudpstreamer1_rx_converter_source_source_last;
-wire    [9:0] liteethudpstreamer1_rx_converter_source_source_payload_data;
+wire   [15:0] liteethudpstreamer1_rx_converter_source_source_param_dst_port;
+wire   [31:0] liteethudpstreamer1_rx_converter_source_source_param_ip_address;
+wire   [15:0] liteethudpstreamer1_rx_converter_source_source_param_length;
+wire   [15:0] liteethudpstreamer1_rx_converter_source_source_param_src_port;
+wire          liteethudpstreamer1_rx_converter_source_source_payload_be;
+wire    [7:0] liteethudpstreamer1_rx_converter_source_source_payload_data;
+wire          liteethudpstreamer1_rx_converter_source_source_payload_error;
 wire          liteethudpstreamer1_rx_converter_source_source_ready;
 wire          liteethudpstreamer1_rx_converter_source_source_valid;
-wire          liteethudpstreamer1_rx_converter_source_valid;
+reg           liteethudpstreamer1_rx_enable = 1'd1;
 reg     [3:0] liteethudpstreamer1_rx_fifo_consume = 4'd0;
 wire          liteethudpstreamer1_rx_fifo_do_read;
 wire          liteethudpstreamer1_rx_fifo_fifo_in_first;
 wire          liteethudpstreamer1_rx_fifo_fifo_in_last;
+wire          liteethudpstreamer1_rx_fifo_fifo_in_payload_be;
 wire    [7:0] liteethudpstreamer1_rx_fifo_fifo_in_payload_data;
 wire          liteethudpstreamer1_rx_fifo_fifo_in_payload_error;
 wire          liteethudpstreamer1_rx_fifo_fifo_out_first;
 wire          liteethudpstreamer1_rx_fifo_fifo_out_last;
+wire          liteethudpstreamer1_rx_fifo_fifo_out_payload_be;
 wire    [7:0] liteethudpstreamer1_rx_fifo_fifo_out_payload_data;
 wire          liteethudpstreamer1_rx_fifo_fifo_out_payload_error;
 reg     [4:0] liteethudpstreamer1_rx_fifo_level0 = 5'd0;
 wire    [4:0] liteethudpstreamer1_rx_fifo_level1;
 reg     [3:0] liteethudpstreamer1_rx_fifo_produce = 4'd0;
 wire    [3:0] liteethudpstreamer1_rx_fifo_rdport_adr;
-wire   [10:0] liteethudpstreamer1_rx_fifo_rdport_dat_r;
+wire   [11:0] liteethudpstreamer1_rx_fifo_rdport_dat_r;
 wire          liteethudpstreamer1_rx_fifo_rdport_re;
 wire          liteethudpstreamer1_rx_fifo_re;
 reg           liteethudpstreamer1_rx_fifo_readable = 1'd0;
 reg           liteethudpstreamer1_rx_fifo_replace = 1'd0;
 reg           liteethudpstreamer1_rx_fifo_sink_first = 1'd0;
 wire          liteethudpstreamer1_rx_fifo_sink_last;
+wire          liteethudpstreamer1_rx_fifo_sink_payload_be;
 wire    [7:0] liteethudpstreamer1_rx_fifo_sink_payload_data;
 wire          liteethudpstreamer1_rx_fifo_sink_payload_error;
 wire          liteethudpstreamer1_rx_fifo_sink_ready;
 wire          liteethudpstreamer1_rx_fifo_sink_valid;
 wire          liteethudpstreamer1_rx_fifo_source_first;
 wire          liteethudpstreamer1_rx_fifo_source_last;
+wire          liteethudpstreamer1_rx_fifo_source_payload_be;
 wire    [7:0] liteethudpstreamer1_rx_fifo_source_payload_data;
 wire          liteethudpstreamer1_rx_fifo_source_payload_error;
 wire          liteethudpstreamer1_rx_fifo_source_ready;
 wire          liteethudpstreamer1_rx_fifo_source_valid;
-wire   [10:0] liteethudpstreamer1_rx_fifo_syncfifo1_din;
-wire   [10:0] liteethudpstreamer1_rx_fifo_syncfifo1_dout;
+wire   [11:0] liteethudpstreamer1_rx_fifo_syncfifo1_din;
+wire   [11:0] liteethudpstreamer1_rx_fifo_syncfifo1_dout;
 wire          liteethudpstreamer1_rx_fifo_syncfifo1_re;
 wire          liteethudpstreamer1_rx_fifo_syncfifo1_readable;
 wire          liteethudpstreamer1_rx_fifo_syncfifo1_we;
 wire          liteethudpstreamer1_rx_fifo_syncfifo1_writable;
 reg     [3:0] liteethudpstreamer1_rx_fifo_wrport_adr = 4'd0;
-wire   [10:0] liteethudpstreamer1_rx_fifo_wrport_dat_r;
-wire   [10:0] liteethudpstreamer1_rx_fifo_wrport_dat_w;
+wire   [11:0] liteethudpstreamer1_rx_fifo_wrport_dat_r;
+wire   [11:0] liteethudpstreamer1_rx_fifo_wrport_dat_w;
 wire          liteethudpstreamer1_rx_fifo_wrport_we;
+reg           liteethudpstreamer1_rx_first = 1'd1;
+wire   [31:0] liteethudpstreamer1_rx_ip_address_sig;
+reg           liteethudpstreamer1_rx_selected = 1'd0;
 wire          liteethudpstreamer1_rx_sink_sink_first;
 wire          liteethudpstreamer1_rx_sink_sink_last;
 wire   [15:0] liteethudpstreamer1_rx_sink_sink_param_dst_port;
 wire   [31:0] liteethudpstreamer1_rx_sink_sink_param_ip_address;
 wire   [15:0] liteethudpstreamer1_rx_sink_sink_param_length;
 wire   [15:0] liteethudpstreamer1_rx_sink_sink_param_src_port;
+wire          liteethudpstreamer1_rx_sink_sink_payload_be;
 wire    [7:0] liteethudpstreamer1_rx_sink_sink_payload_data;
 wire          liteethudpstreamer1_rx_sink_sink_payload_error;
-wire          liteethudpstreamer1_rx_sink_sink_payload_last_be;
 wire          liteethudpstreamer1_rx_sink_sink_ready;
 wire          liteethudpstreamer1_rx_sink_sink_valid;
 wire          liteethudpstreamer1_rx_source_source_first;
 wire          liteethudpstreamer1_rx_source_source_last;
+wire          liteethudpstreamer1_rx_source_source_payload_be;
 wire    [7:0] liteethudpstreamer1_rx_source_source_payload_data;
 wire          liteethudpstreamer1_rx_source_source_payload_error;
 wire          liteethudpstreamer1_rx_source_source_ready;
 wire          liteethudpstreamer1_rx_source_source_valid;
+wire   [15:0] liteethudpstreamer1_rx_udp_port_sig;
 reg           liteethudpstreamer1_rx_valid = 1'd1;
-reg           liteethudpstreamer1_state = 1'd0;
 wire          liteethudpstreamer1_tx_cdc_sink_first;
 wire          liteethudpstreamer1_tx_cdc_sink_last;
 wire   [15:0] liteethudpstreamer1_tx_cdc_sink_param_dst_port;
 wire   [31:0] liteethudpstreamer1_tx_cdc_sink_param_ip_address;
 wire   [15:0] liteethudpstreamer1_tx_cdc_sink_param_length;
 wire   [15:0] liteethudpstreamer1_tx_cdc_sink_param_src_port;
+wire          liteethudpstreamer1_tx_cdc_sink_payload_be;
 wire    [7:0] liteethudpstreamer1_tx_cdc_sink_payload_data;
 wire          liteethudpstreamer1_tx_cdc_sink_payload_error;
-wire          liteethudpstreamer1_tx_cdc_sink_payload_last_be;
 wire          liteethudpstreamer1_tx_cdc_sink_ready;
 wire          liteethudpstreamer1_tx_cdc_sink_valid;
 wire          liteethudpstreamer1_tx_cdc_source_first;
@@ -1871,9 +1811,9 @@ wire   [15:0] liteethudpstreamer1_tx_cdc_source_param_dst_port;
 wire   [31:0] liteethudpstreamer1_tx_cdc_source_param_ip_address;
 wire   [15:0] liteethudpstreamer1_tx_cdc_source_param_length;
 wire   [15:0] liteethudpstreamer1_tx_cdc_source_param_src_port;
+wire          liteethudpstreamer1_tx_cdc_source_payload_be;
 wire    [7:0] liteethudpstreamer1_tx_cdc_source_payload_data;
 wire          liteethudpstreamer1_tx_cdc_source_payload_error;
-wire          liteethudpstreamer1_tx_cdc_source_payload_last_be;
 wire          liteethudpstreamer1_tx_cdc_source_ready;
 wire          liteethudpstreamer1_tx_cdc_source_valid;
 wire          liteethudpstreamer1_tx_converter_converter_sink_first;
@@ -1887,107 +1827,157 @@ wire    [9:0] liteethudpstreamer1_tx_converter_converter_source_payload_data;
 wire          liteethudpstreamer1_tx_converter_converter_source_payload_valid_token_count;
 wire          liteethudpstreamer1_tx_converter_converter_source_ready;
 wire          liteethudpstreamer1_tx_converter_converter_source_valid;
-wire          liteethudpstreamer1_tx_converter_sink_first;
-wire          liteethudpstreamer1_tx_converter_sink_last;
-wire   [15:0] liteethudpstreamer1_tx_converter_sink_param_dst_port;
-wire   [31:0] liteethudpstreamer1_tx_converter_sink_param_ip_address;
-wire   [15:0] liteethudpstreamer1_tx_converter_sink_param_length;
-wire   [15:0] liteethudpstreamer1_tx_converter_sink_param_src_port;
-wire    [7:0] liteethudpstreamer1_tx_converter_sink_payload_data;
-wire          liteethudpstreamer1_tx_converter_sink_payload_error;
-wire          liteethudpstreamer1_tx_converter_sink_payload_last_be;
-wire          liteethudpstreamer1_tx_converter_sink_ready;
-wire          liteethudpstreamer1_tx_converter_sink_valid;
-wire          liteethudpstreamer1_tx_converter_source_first;
-wire          liteethudpstreamer1_tx_converter_source_last;
-wire   [15:0] liteethudpstreamer1_tx_converter_source_param_dst_port;
-wire   [31:0] liteethudpstreamer1_tx_converter_source_param_ip_address;
-wire   [15:0] liteethudpstreamer1_tx_converter_source_param_length;
-wire   [15:0] liteethudpstreamer1_tx_converter_source_param_src_port;
-wire    [7:0] liteethudpstreamer1_tx_converter_source_payload_data;
-wire          liteethudpstreamer1_tx_converter_source_payload_error;
-wire          liteethudpstreamer1_tx_converter_source_payload_last_be;
-wire          liteethudpstreamer1_tx_converter_source_ready;
+wire          liteethudpstreamer1_tx_converter_sink_sink_first;
+wire          liteethudpstreamer1_tx_converter_sink_sink_last;
+wire   [15:0] liteethudpstreamer1_tx_converter_sink_sink_param_dst_port;
+wire   [31:0] liteethudpstreamer1_tx_converter_sink_sink_param_ip_address;
+wire   [15:0] liteethudpstreamer1_tx_converter_sink_sink_param_length;
+wire   [15:0] liteethudpstreamer1_tx_converter_sink_sink_param_src_port;
+wire          liteethudpstreamer1_tx_converter_sink_sink_payload_be;
+wire    [7:0] liteethudpstreamer1_tx_converter_sink_sink_payload_data;
+wire          liteethudpstreamer1_tx_converter_sink_sink_payload_error;
+wire          liteethudpstreamer1_tx_converter_sink_sink_ready;
+wire          liteethudpstreamer1_tx_converter_sink_sink_valid;
 wire          liteethudpstreamer1_tx_converter_source_source_first;
 wire          liteethudpstreamer1_tx_converter_source_source_last;
-wire    [9:0] liteethudpstreamer1_tx_converter_source_source_payload_data;
+wire   [15:0] liteethudpstreamer1_tx_converter_source_source_param_dst_port;
+wire   [31:0] liteethudpstreamer1_tx_converter_source_source_param_ip_address;
+wire   [15:0] liteethudpstreamer1_tx_converter_source_source_param_length;
+wire   [15:0] liteethudpstreamer1_tx_converter_source_source_param_src_port;
+wire          liteethudpstreamer1_tx_converter_source_source_payload_be;
+wire    [7:0] liteethudpstreamer1_tx_converter_source_source_payload_data;
+wire          liteethudpstreamer1_tx_converter_source_source_payload_error;
 wire          liteethudpstreamer1_tx_converter_source_source_ready;
 wire          liteethudpstreamer1_tx_converter_source_source_valid;
-wire          liteethudpstreamer1_tx_converter_source_valid;
 reg     [4:0] liteethudpstreamer1_tx_counter = 5'd0;
-reg     [4:0] liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value0 = 5'd0;
-reg           liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value_ce0 = 1'd0;
-reg     [3:0] liteethudpstreamer1_tx_fifo_consume = 4'd0;
-wire          liteethudpstreamer1_tx_fifo_do_read;
-wire          liteethudpstreamer1_tx_fifo_fifo_in_first;
-wire          liteethudpstreamer1_tx_fifo_fifo_in_last;
-wire    [7:0] liteethudpstreamer1_tx_fifo_fifo_in_payload_data;
-wire          liteethudpstreamer1_tx_fifo_fifo_out_first;
-wire          liteethudpstreamer1_tx_fifo_fifo_out_last;
-wire    [7:0] liteethudpstreamer1_tx_fifo_fifo_out_payload_data;
-reg     [4:0] liteethudpstreamer1_tx_fifo_level0 = 5'd0;
-wire    [4:0] liteethudpstreamer1_tx_fifo_level1;
-reg     [3:0] liteethudpstreamer1_tx_fifo_produce = 4'd0;
-wire    [3:0] liteethudpstreamer1_tx_fifo_rdport_adr;
-wire    [9:0] liteethudpstreamer1_tx_fifo_rdport_dat_r;
-wire          liteethudpstreamer1_tx_fifo_rdport_re;
-wire          liteethudpstreamer1_tx_fifo_re;
-reg           liteethudpstreamer1_tx_fifo_readable = 1'd0;
-reg           liteethudpstreamer1_tx_fifo_replace = 1'd0;
-wire          liteethudpstreamer1_tx_fifo_sink_first;
-wire          liteethudpstreamer1_tx_fifo_sink_last;
-wire    [7:0] liteethudpstreamer1_tx_fifo_sink_payload_data;
-wire          liteethudpstreamer1_tx_fifo_sink_ready;
-wire          liteethudpstreamer1_tx_fifo_sink_valid;
-wire          liteethudpstreamer1_tx_fifo_source_first;
-wire          liteethudpstreamer1_tx_fifo_source_last;
-wire    [7:0] liteethudpstreamer1_tx_fifo_source_payload_data;
-reg           liteethudpstreamer1_tx_fifo_source_ready = 1'd0;
-wire          liteethudpstreamer1_tx_fifo_source_valid;
-wire    [9:0] liteethudpstreamer1_tx_fifo_syncfifo1_din;
-wire    [9:0] liteethudpstreamer1_tx_fifo_syncfifo1_dout;
-wire          liteethudpstreamer1_tx_fifo_syncfifo1_re;
-wire          liteethudpstreamer1_tx_fifo_syncfifo1_readable;
-wire          liteethudpstreamer1_tx_fifo_syncfifo1_we;
-wire          liteethudpstreamer1_tx_fifo_syncfifo1_writable;
-reg     [3:0] liteethudpstreamer1_tx_fifo_wrport_adr = 4'd0;
-wire    [9:0] liteethudpstreamer1_tx_fifo_wrport_dat_r;
-wire    [9:0] liteethudpstreamer1_tx_fifo_wrport_dat_w;
-wire          liteethudpstreamer1_tx_fifo_wrport_we;
+reg           liteethudpstreamer1_tx_enable = 1'd1;
 reg    [31:0] liteethudpstreamer1_tx_ip_address = 32'd0;
-reg    [31:0] liteethudpstreamer1_tx_ip_address_liteethudpstreamer1_next_value1 = 32'd0;
-reg           liteethudpstreamer1_tx_ip_address_liteethudpstreamer1_next_value_ce1 = 1'd0;
-reg     [4:0] liteethudpstreamer1_tx_level = 5'd0;
-reg     [4:0] liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value3 = 5'd0;
-reg           liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value_ce3 = 1'd0;
+wire   [31:0] liteethudpstreamer1_tx_ip_address_sig;
+wire          liteethudpstreamer1_tx_packet_full;
+wire          liteethudpstreamer1_tx_packet_last;
+wire   [15:0] liteethudpstreamer1_tx_packet_length;
+reg     [4:0] liteethudpstreamer1_tx_param_fifo_consume = 5'd0;
+wire          liteethudpstreamer1_tx_param_fifo_do_read;
+wire          liteethudpstreamer1_tx_param_fifo_fifo_in_first;
+wire          liteethudpstreamer1_tx_param_fifo_fifo_in_last;
+wire   [15:0] liteethudpstreamer1_tx_param_fifo_fifo_in_param_length;
+wire          liteethudpstreamer1_tx_param_fifo_fifo_out_first;
+wire          liteethudpstreamer1_tx_param_fifo_fifo_out_last;
+wire   [15:0] liteethudpstreamer1_tx_param_fifo_fifo_out_param_length;
+reg     [4:0] liteethudpstreamer1_tx_param_fifo_level0 = 5'd0;
+wire    [4:0] liteethudpstreamer1_tx_param_fifo_level1;
+reg     [4:0] liteethudpstreamer1_tx_param_fifo_produce = 5'd0;
+wire    [4:0] liteethudpstreamer1_tx_param_fifo_rdport_adr;
+wire   [17:0] liteethudpstreamer1_tx_param_fifo_rdport_dat_r;
+wire          liteethudpstreamer1_tx_param_fifo_rdport_re;
+wire          liteethudpstreamer1_tx_param_fifo_re;
+reg           liteethudpstreamer1_tx_param_fifo_readable = 1'd0;
+reg           liteethudpstreamer1_tx_param_fifo_replace = 1'd0;
+reg           liteethudpstreamer1_tx_param_fifo_sink_first = 1'd0;
+reg           liteethudpstreamer1_tx_param_fifo_sink_last = 1'd0;
+wire   [15:0] liteethudpstreamer1_tx_param_fifo_sink_param_length;
+wire          liteethudpstreamer1_tx_param_fifo_sink_ready;
+wire          liteethudpstreamer1_tx_param_fifo_sink_valid;
+wire          liteethudpstreamer1_tx_param_fifo_source_first;
+wire          liteethudpstreamer1_tx_param_fifo_source_last;
+wire   [15:0] liteethudpstreamer1_tx_param_fifo_source_param_length;
+wire          liteethudpstreamer1_tx_param_fifo_source_ready;
+wire          liteethudpstreamer1_tx_param_fifo_source_valid;
+wire   [17:0] liteethudpstreamer1_tx_param_fifo_syncfifo1_din;
+wire   [17:0] liteethudpstreamer1_tx_param_fifo_syncfifo1_dout;
+wire          liteethudpstreamer1_tx_param_fifo_syncfifo1_re;
+wire          liteethudpstreamer1_tx_param_fifo_syncfifo1_readable;
+wire          liteethudpstreamer1_tx_param_fifo_syncfifo1_we;
+wire          liteethudpstreamer1_tx_param_fifo_syncfifo1_writable;
+reg     [4:0] liteethudpstreamer1_tx_param_fifo_wrport_adr = 5'd0;
+wire   [17:0] liteethudpstreamer1_tx_param_fifo_wrport_dat_r;
+wire   [17:0] liteethudpstreamer1_tx_param_fifo_wrport_dat_w;
+wire          liteethudpstreamer1_tx_param_fifo_wrport_we;
+reg     [3:0] liteethudpstreamer1_tx_payload_fifo_consume = 4'd0;
+wire          liteethudpstreamer1_tx_payload_fifo_do_read;
+wire          liteethudpstreamer1_tx_payload_fifo_fifo_in_first;
+wire          liteethudpstreamer1_tx_payload_fifo_fifo_in_last;
+wire          liteethudpstreamer1_tx_payload_fifo_fifo_in_payload_be;
+wire    [7:0] liteethudpstreamer1_tx_payload_fifo_fifo_in_payload_data;
+wire          liteethudpstreamer1_tx_payload_fifo_fifo_out_first;
+wire          liteethudpstreamer1_tx_payload_fifo_fifo_out_last;
+wire          liteethudpstreamer1_tx_payload_fifo_fifo_out_payload_be;
+wire    [7:0] liteethudpstreamer1_tx_payload_fifo_fifo_out_payload_data;
+reg     [4:0] liteethudpstreamer1_tx_payload_fifo_level0 = 5'd0;
+wire    [4:0] liteethudpstreamer1_tx_payload_fifo_level1;
+reg     [3:0] liteethudpstreamer1_tx_payload_fifo_produce = 4'd0;
+wire    [3:0] liteethudpstreamer1_tx_payload_fifo_rdport_adr;
+wire   [10:0] liteethudpstreamer1_tx_payload_fifo_rdport_dat_r;
+wire          liteethudpstreamer1_tx_payload_fifo_rdport_re;
+wire          liteethudpstreamer1_tx_payload_fifo_re;
+reg           liteethudpstreamer1_tx_payload_fifo_readable = 1'd0;
+reg           liteethudpstreamer1_tx_payload_fifo_replace = 1'd0;
+wire          liteethudpstreamer1_tx_payload_fifo_sink_first;
+wire          liteethudpstreamer1_tx_payload_fifo_sink_last;
+wire          liteethudpstreamer1_tx_payload_fifo_sink_payload_be;
+wire    [7:0] liteethudpstreamer1_tx_payload_fifo_sink_payload_data;
+wire          liteethudpstreamer1_tx_payload_fifo_sink_ready;
+wire          liteethudpstreamer1_tx_payload_fifo_sink_valid;
+wire          liteethudpstreamer1_tx_payload_fifo_source_first;
+wire          liteethudpstreamer1_tx_payload_fifo_source_last;
+wire          liteethudpstreamer1_tx_payload_fifo_source_payload_be;
+wire    [7:0] liteethudpstreamer1_tx_payload_fifo_source_payload_data;
+wire          liteethudpstreamer1_tx_payload_fifo_source_ready;
+wire          liteethudpstreamer1_tx_payload_fifo_source_valid;
+wire   [10:0] liteethudpstreamer1_tx_payload_fifo_syncfifo1_din;
+wire   [10:0] liteethudpstreamer1_tx_payload_fifo_syncfifo1_dout;
+wire          liteethudpstreamer1_tx_payload_fifo_syncfifo1_re;
+wire          liteethudpstreamer1_tx_payload_fifo_syncfifo1_readable;
+wire          liteethudpstreamer1_tx_payload_fifo_syncfifo1_we;
+wire          liteethudpstreamer1_tx_payload_fifo_syncfifo1_writable;
+reg     [3:0] liteethudpstreamer1_tx_payload_fifo_wrport_adr = 4'd0;
+wire   [10:0] liteethudpstreamer1_tx_payload_fifo_wrport_dat_r;
+wire   [10:0] liteethudpstreamer1_tx_payload_fifo_wrport_dat_w;
+wire          liteethudpstreamer1_tx_payload_fifo_wrport_we;
+wire          liteethudpstreamer1_tx_sink_be;
+wire          liteethudpstreamer1_tx_sink_bytes;
+wire          liteethudpstreamer1_tx_sink_last;
+wire          liteethudpstreamer1_tx_sink_payload_be;
+wire    [7:0] liteethudpstreamer1_tx_sink_payload_data;
+wire          liteethudpstreamer1_tx_sink_ready;
 reg           liteethudpstreamer1_tx_sink_sink_first = 1'd0;
 wire          liteethudpstreamer1_tx_sink_sink_last;
+wire   [15:0] liteethudpstreamer1_tx_sink_sink_param_length;
+wire          liteethudpstreamer1_tx_sink_sink_payload_be;
 wire    [7:0] liteethudpstreamer1_tx_sink_sink_payload_data;
 wire          liteethudpstreamer1_tx_sink_sink_ready;
 wire          liteethudpstreamer1_tx_sink_sink_valid;
+wire          liteethudpstreamer1_tx_sink_valid;
+reg           liteethudpstreamer1_tx_source_active = 1'd0;
+reg           liteethudpstreamer1_tx_source_first = 1'd0;
+wire          liteethudpstreamer1_tx_source_last;
+wire   [15:0] liteethudpstreamer1_tx_source_param_dst_port;
+wire   [31:0] liteethudpstreamer1_tx_source_param_ip_address;
+wire   [15:0] liteethudpstreamer1_tx_source_param_length;
+wire   [15:0] liteethudpstreamer1_tx_source_param_src_port;
+wire          liteethudpstreamer1_tx_source_payload_be;
+wire    [7:0] liteethudpstreamer1_tx_source_payload_data;
+reg           liteethudpstreamer1_tx_source_payload_error = 1'd0;
+wire          liteethudpstreamer1_tx_source_ready;
 reg           liteethudpstreamer1_tx_source_source_first = 1'd0;
-reg           liteethudpstreamer1_tx_source_source_last = 1'd0;
-reg    [15:0] liteethudpstreamer1_tx_source_source_param_dst_port = 16'd0;
-reg    [31:0] liteethudpstreamer1_tx_source_source_param_ip_address = 32'd0;
-reg    [15:0] liteethudpstreamer1_tx_source_source_param_length = 16'd0;
-reg    [15:0] liteethudpstreamer1_tx_source_source_param_src_port = 16'd0;
-reg     [7:0] liteethudpstreamer1_tx_source_source_payload_data = 8'd0;
-reg           liteethudpstreamer1_tx_source_source_payload_error = 1'd0;
-reg           liteethudpstreamer1_tx_source_source_payload_last_be = 1'd0;
+wire          liteethudpstreamer1_tx_source_source_last;
+wire   [15:0] liteethudpstreamer1_tx_source_source_param_length;
+wire          liteethudpstreamer1_tx_source_source_payload_be;
+wire    [7:0] liteethudpstreamer1_tx_source_source_payload_data;
 wire          liteethudpstreamer1_tx_source_source_ready;
-reg           liteethudpstreamer1_tx_source_source_valid = 1'd0;
+wire          liteethudpstreamer1_tx_source_source_valid;
+wire          liteethudpstreamer1_tx_source_valid;
 reg    [15:0] liteethudpstreamer1_tx_udp_port = 16'd0;
-reg    [15:0] liteethudpstreamer1_tx_udp_port_liteethudpstreamer1_next_value2 = 16'd0;
-reg           liteethudpstreamer1_tx_udp_port_liteethudpstreamer1_next_value_ce2 = 1'd0;
+wire   [15:0] liteethudpstreamer1_tx_udp_port_sig;
 wire          liteethudpstreamer1_user_port_sink_first;
 wire          liteethudpstreamer1_user_port_sink_last;
 wire   [15:0] liteethudpstreamer1_user_port_sink_param_dst_port;
 wire   [31:0] liteethudpstreamer1_user_port_sink_param_ip_address;
 wire   [15:0] liteethudpstreamer1_user_port_sink_param_length;
 wire   [15:0] liteethudpstreamer1_user_port_sink_param_src_port;
+wire          liteethudpstreamer1_user_port_sink_payload_be;
 wire    [7:0] liteethudpstreamer1_user_port_sink_payload_data;
 wire          liteethudpstreamer1_user_port_sink_payload_error;
-wire          liteethudpstreamer1_user_port_sink_payload_last_be;
 wire          liteethudpstreamer1_user_port_sink_ready;
 wire          liteethudpstreamer1_user_port_sink_valid;
 wire          liteethudpstreamer1_user_port_source_first;
@@ -1996,37 +1986,37 @@ wire   [15:0] liteethudpstreamer1_user_port_source_param_dst_port;
 wire   [31:0] liteethudpstreamer1_user_port_source_param_ip_address;
 wire   [15:0] liteethudpstreamer1_user_port_source_param_length;
 wire   [15:0] liteethudpstreamer1_user_port_source_param_src_port;
+wire          liteethudpstreamer1_user_port_source_payload_be;
 wire    [7:0] liteethudpstreamer1_user_port_source_payload_data;
 wire          liteethudpstreamer1_user_port_source_payload_error;
-wire          liteethudpstreamer1_user_port_source_payload_last_be;
 wire          liteethudpstreamer1_user_port_source_ready;
 wire          liteethudpstreamer1_user_port_source_valid;
 wire          mac_core_bufferizeendpoints_pipe_valid_sink_first;
 wire          mac_core_bufferizeendpoints_pipe_valid_sink_last;
+wire          mac_core_bufferizeendpoints_pipe_valid_sink_payload_be;
 wire    [7:0] mac_core_bufferizeendpoints_pipe_valid_sink_payload_data;
 wire          mac_core_bufferizeendpoints_pipe_valid_sink_payload_error;
-wire          mac_core_bufferizeendpoints_pipe_valid_sink_payload_last_be;
 wire          mac_core_bufferizeendpoints_pipe_valid_sink_ready;
 wire          mac_core_bufferizeendpoints_pipe_valid_sink_valid;
 reg           mac_core_bufferizeendpoints_pipe_valid_source_first = 1'd0;
 reg           mac_core_bufferizeendpoints_pipe_valid_source_last = 1'd0;
+reg           mac_core_bufferizeendpoints_pipe_valid_source_payload_be = 1'd0;
 reg     [7:0] mac_core_bufferizeendpoints_pipe_valid_source_payload_data = 8'd0;
 reg           mac_core_bufferizeendpoints_pipe_valid_source_payload_error = 1'd0;
-reg           mac_core_bufferizeendpoints_pipe_valid_source_payload_last_be = 1'd0;
 wire          mac_core_bufferizeendpoints_pipe_valid_source_ready;
 reg           mac_core_bufferizeendpoints_pipe_valid_source_valid = 1'd0;
 wire          mac_core_bufferizeendpoints_sink_sink_first;
 wire          mac_core_bufferizeendpoints_sink_sink_last;
+wire          mac_core_bufferizeendpoints_sink_sink_payload_be;
 wire    [7:0] mac_core_bufferizeendpoints_sink_sink_payload_data;
 wire          mac_core_bufferizeendpoints_sink_sink_payload_error;
-wire          mac_core_bufferizeendpoints_sink_sink_payload_last_be;
 wire          mac_core_bufferizeendpoints_sink_sink_ready;
 wire          mac_core_bufferizeendpoints_sink_sink_valid;
 wire          mac_core_bufferizeendpoints_source_source_first;
 wire          mac_core_bufferizeendpoints_source_source_last;
+wire          mac_core_bufferizeendpoints_source_source_payload_be;
 wire    [7:0] mac_core_bufferizeendpoints_source_source_payload_data;
 wire          mac_core_bufferizeendpoints_source_source_payload_error;
-wire          mac_core_bufferizeendpoints_source_source_payload_last_be;
 wire          mac_core_bufferizeendpoints_source_source_ready;
 wire          mac_core_bufferizeendpoints_source_source_valid;
 wire   [11:0] mac_core_cdc_asyncfifo_din;
@@ -2038,14 +2028,14 @@ wire          mac_core_cdc_asyncfifo_writable;
 wire    [5:0] mac_core_cdc_consume_wdomain;
 wire          mac_core_cdc_fifo_in_first;
 wire          mac_core_cdc_fifo_in_last;
+wire          mac_core_cdc_fifo_in_payload_be;
 wire    [7:0] mac_core_cdc_fifo_in_payload_data;
 wire          mac_core_cdc_fifo_in_payload_error;
-wire          mac_core_cdc_fifo_in_payload_last_be;
 wire          mac_core_cdc_fifo_out_first;
 wire          mac_core_cdc_fifo_out_last;
+wire          mac_core_cdc_fifo_out_payload_be;
 wire    [7:0] mac_core_cdc_fifo_out_payload_data;
 wire          mac_core_cdc_fifo_out_payload_error;
-wire          mac_core_cdc_fifo_out_payload_last_be;
 wire          mac_core_cdc_graycounter0_ce;
 (* dont_touch = "true" *)
 reg     [5:0] mac_core_cdc_graycounter0_q = 6'd0;
@@ -2063,16 +2053,16 @@ wire    [4:0] mac_core_cdc_rdport_adr;
 wire   [11:0] mac_core_cdc_rdport_dat_r;
 wire          mac_core_cdc_sink_first;
 wire          mac_core_cdc_sink_last;
+wire          mac_core_cdc_sink_payload_be;
 wire    [7:0] mac_core_cdc_sink_payload_data;
 wire          mac_core_cdc_sink_payload_error;
-wire          mac_core_cdc_sink_payload_last_be;
 wire          mac_core_cdc_sink_ready;
 wire          mac_core_cdc_sink_valid;
 wire          mac_core_cdc_source_first;
 wire          mac_core_cdc_source_last;
+wire          mac_core_cdc_source_payload_be;
 wire    [7:0] mac_core_cdc_source_payload_data;
 wire          mac_core_cdc_source_payload_error;
-wire          mac_core_cdc_source_payload_last_be;
 wire          mac_core_cdc_source_ready;
 wire          mac_core_cdc_source_valid;
 wire    [4:0] mac_core_cdc_wrport_adr;
@@ -2080,53 +2070,57 @@ wire   [11:0] mac_core_cdc_wrport_dat_r;
 wire   [11:0] mac_core_cdc_wrport_dat_w;
 wire          mac_core_cdc_wrport_we;
 reg    [31:0] mac_core_crc_errors_status = 32'd0;
+reg           mac_core_liteethmaccrc32checker_be = 1'd0;
+reg           mac_core_liteethmaccrc32checker_be_liteethmaccore_next_value0 = 1'd0;
+reg           mac_core_liteethmaccrc32checker_be_liteethmaccore_next_value_ce0 = 1'd0;
 wire          mac_core_liteethmaccrc32checker_crc_be;
 reg           mac_core_liteethmaccrc32checker_crc_ce = 1'd0;
 reg    [31:0] mac_core_liteethmaccrc32checker_crc_crc_next = 32'd0;
 wire   [31:0] mac_core_liteethmaccrc32checker_crc_crc_prev;
 wire    [7:0] mac_core_liteethmaccrc32checker_crc_data0;
-wire    [7:0] mac_core_liteethmaccrc32checker_crc_data1;
-reg           mac_core_liteethmaccrc32checker_crc_error0 = 1'd0;
-reg           mac_core_liteethmaccrc32checker_crc_error1 = 1'd0;
-reg           mac_core_liteethmaccrc32checker_crc_error1_liteethmac_next_value1 = 1'd0;
-reg           mac_core_liteethmaccrc32checker_crc_error1_liteethmac_next_value_ce1 = 1'd0;
-reg    [31:0] mac_core_liteethmaccrc32checker_crc_reg = 32'd4294967295;
+reg     [7:0] mac_core_liteethmaccrc32checker_crc_data1 = 8'd0;
+reg           mac_core_liteethmaccrc32checker_crc_error = 1'd0;
+reg    [31:0] mac_core_liteethmaccrc32checker_crc_reg = 32'hffffffff;
 reg           mac_core_liteethmaccrc32checker_crc_reset = 1'd0;
-reg    [31:0] mac_core_liteethmaccrc32checker_crc_value = 32'd0;
 reg           mac_core_liteethmaccrc32checker_error = 1'd0;
 wire          mac_core_liteethmaccrc32checker_fifo_full;
 wire          mac_core_liteethmaccrc32checker_fifo_in;
 wire          mac_core_liteethmaccrc32checker_fifo_out;
 reg           mac_core_liteethmaccrc32checker_fifo_reset = 1'd0;
-reg           mac_core_liteethmaccrc32checker_last_be = 1'd0;
-reg           mac_core_liteethmaccrc32checker_last_be_liteethmac_next_value0 = 1'd0;
-reg           mac_core_liteethmaccrc32checker_last_be_liteethmac_next_value_ce0 = 1'd0;
+reg           mac_core_liteethmaccrc32checker_is_ongoing0 = 1'd0;
+reg           mac_core_liteethmaccrc32checker_is_ongoing1 = 1'd0;
+reg           mac_core_liteethmaccrc32checker_is_ongoing2 = 1'd0;
+reg           mac_core_liteethmaccrc32checker_last_error = 1'd0;
+reg           mac_core_liteethmaccrc32checker_last_error_liteethmaccore_next_value1 = 1'd0;
+reg           mac_core_liteethmaccrc32checker_last_error_liteethmaccore_next_value_ce1 = 1'd0;
+wire          mac_core_liteethmaccrc32checker_last_word_error;
+reg           mac_core_liteethmaccrc32checker_packet_error = 1'd0;
 wire          mac_core_liteethmaccrc32checker_sink_sink_first;
 wire          mac_core_liteethmaccrc32checker_sink_sink_last;
+wire          mac_core_liteethmaccrc32checker_sink_sink_payload_be;
 wire    [7:0] mac_core_liteethmaccrc32checker_sink_sink_payload_data;
 wire          mac_core_liteethmaccrc32checker_sink_sink_payload_error;
-wire          mac_core_liteethmaccrc32checker_sink_sink_payload_last_be;
 reg           mac_core_liteethmaccrc32checker_sink_sink_ready = 1'd0;
 wire          mac_core_liteethmaccrc32checker_sink_sink_valid;
 wire          mac_core_liteethmaccrc32checker_source_source_first;
 reg           mac_core_liteethmaccrc32checker_source_source_last = 1'd0;
+reg           mac_core_liteethmaccrc32checker_source_source_payload_be = 1'd0;
 wire    [7:0] mac_core_liteethmaccrc32checker_source_source_payload_data;
 reg           mac_core_liteethmaccrc32checker_source_source_payload_error = 1'd0;
-reg           mac_core_liteethmaccrc32checker_source_source_payload_last_be = 1'd0;
 wire          mac_core_liteethmaccrc32checker_source_source_ready;
 reg           mac_core_liteethmaccrc32checker_source_source_valid = 1'd0;
 reg     [2:0] mac_core_liteethmaccrc32checker_syncfifo_consume = 3'd0;
 wire          mac_core_liteethmaccrc32checker_syncfifo_do_read;
 wire          mac_core_liteethmaccrc32checker_syncfifo_fifo_in_first;
 wire          mac_core_liteethmaccrc32checker_syncfifo_fifo_in_last;
+wire          mac_core_liteethmaccrc32checker_syncfifo_fifo_in_payload_be;
 wire    [7:0] mac_core_liteethmaccrc32checker_syncfifo_fifo_in_payload_data;
 wire          mac_core_liteethmaccrc32checker_syncfifo_fifo_in_payload_error;
-wire          mac_core_liteethmaccrc32checker_syncfifo_fifo_in_payload_last_be;
 wire          mac_core_liteethmaccrc32checker_syncfifo_fifo_out_first;
 wire          mac_core_liteethmaccrc32checker_syncfifo_fifo_out_last;
+wire          mac_core_liteethmaccrc32checker_syncfifo_fifo_out_payload_be;
 wire    [7:0] mac_core_liteethmaccrc32checker_syncfifo_fifo_out_payload_data;
 wire          mac_core_liteethmaccrc32checker_syncfifo_fifo_out_payload_error;
-wire          mac_core_liteethmaccrc32checker_syncfifo_fifo_out_payload_last_be;
 reg     [2:0] mac_core_liteethmaccrc32checker_syncfifo_level = 3'd0;
 reg     [2:0] mac_core_liteethmaccrc32checker_syncfifo_produce = 3'd0;
 wire    [2:0] mac_core_liteethmaccrc32checker_syncfifo_rdport_adr;
@@ -2134,16 +2128,16 @@ wire   [11:0] mac_core_liteethmaccrc32checker_syncfifo_rdport_dat_r;
 reg           mac_core_liteethmaccrc32checker_syncfifo_replace = 1'd0;
 wire          mac_core_liteethmaccrc32checker_syncfifo_sink_first;
 wire          mac_core_liteethmaccrc32checker_syncfifo_sink_last;
+wire          mac_core_liteethmaccrc32checker_syncfifo_sink_payload_be;
 wire    [7:0] mac_core_liteethmaccrc32checker_syncfifo_sink_payload_data;
 wire          mac_core_liteethmaccrc32checker_syncfifo_sink_payload_error;
-wire          mac_core_liteethmaccrc32checker_syncfifo_sink_payload_last_be;
 wire          mac_core_liteethmaccrc32checker_syncfifo_sink_ready;
 reg           mac_core_liteethmaccrc32checker_syncfifo_sink_valid = 1'd0;
 wire          mac_core_liteethmaccrc32checker_syncfifo_source_first;
 wire          mac_core_liteethmaccrc32checker_syncfifo_source_last;
+wire          mac_core_liteethmaccrc32checker_syncfifo_source_payload_be;
 wire    [7:0] mac_core_liteethmaccrc32checker_syncfifo_source_payload_data;
 wire          mac_core_liteethmaccrc32checker_syncfifo_source_payload_error;
-wire          mac_core_liteethmaccrc32checker_syncfifo_source_payload_last_be;
 reg           mac_core_liteethmaccrc32checker_syncfifo_source_ready = 1'd0;
 wire          mac_core_liteethmaccrc32checker_syncfifo_source_valid;
 wire   [11:0] mac_core_liteethmaccrc32checker_syncfifo_syncfifo_din;
@@ -2167,297 +2161,290 @@ wire          mac_core_pulsesynchronizer1_o;
 reg           mac_core_pulsesynchronizer1_toggle_i = 1'd0;
 wire          mac_core_pulsesynchronizer1_toggle_o;
 reg           mac_core_pulsesynchronizer1_toggle_o_r = 1'd0;
+reg    [10:0] mac_core_rx_padding_length = 11'd0;
+wire    [3:0] mac_core_rx_padding_length_inc;
 wire          mac_core_rx_padding_sink_first;
 wire          mac_core_rx_padding_sink_last;
+wire          mac_core_rx_padding_sink_payload_be;
 wire    [7:0] mac_core_rx_padding_sink_payload_data;
 wire          mac_core_rx_padding_sink_payload_error;
-wire          mac_core_rx_padding_sink_payload_last_be;
 wire          mac_core_rx_padding_sink_ready;
 wire          mac_core_rx_padding_sink_valid;
 wire          mac_core_rx_padding_source_first;
 wire          mac_core_rx_padding_source_last;
+wire          mac_core_rx_padding_source_payload_be;
 wire    [7:0] mac_core_rx_padding_source_payload_data;
-wire          mac_core_rx_padding_source_payload_error;
-wire          mac_core_rx_padding_source_payload_last_be;
+reg           mac_core_rx_padding_source_payload_error = 1'd0;
 wire          mac_core_rx_padding_source_ready;
 wire          mac_core_rx_padding_source_valid;
 reg           mac_core_rx_preamble_error = 1'd0;
-reg    [63:0] mac_core_rx_preamble_preamble = 64'd15372286728091293013;
+reg    [63:0] mac_core_rx_preamble_preamble = 64'hd555555555555555;
 wire          mac_core_rx_preamble_sink_first;
 wire          mac_core_rx_preamble_sink_last;
+wire          mac_core_rx_preamble_sink_payload_be;
 wire    [7:0] mac_core_rx_preamble_sink_payload_data;
 wire          mac_core_rx_preamble_sink_payload_error;
-wire          mac_core_rx_preamble_sink_payload_last_be;
 reg           mac_core_rx_preamble_sink_ready = 1'd0;
 wire          mac_core_rx_preamble_sink_valid;
 reg           mac_core_rx_preamble_source_first = 1'd0;
 reg           mac_core_rx_preamble_source_last = 1'd0;
+wire          mac_core_rx_preamble_source_payload_be;
 wire    [7:0] mac_core_rx_preamble_source_payload_data;
 reg           mac_core_rx_preamble_source_payload_error = 1'd0;
-wire          mac_core_rx_preamble_source_payload_last_be;
 wire          mac_core_rx_preamble_source_ready;
 reg           mac_core_rx_preamble_source_valid = 1'd0;
 wire          mac_core_sink_first;
 wire          mac_core_sink_last;
+wire          mac_core_sink_payload_be;
 wire    [7:0] mac_core_sink_payload_data;
 wire          mac_core_sink_payload_error;
-wire          mac_core_sink_payload_last_be;
 wire          mac_core_sink_ready;
 wire          mac_core_sink_sink_first;
 wire          mac_core_sink_sink_last;
+wire          mac_core_sink_sink_payload_be;
 wire    [7:0] mac_core_sink_sink_payload_data;
 wire          mac_core_sink_sink_payload_error;
-wire          mac_core_sink_sink_payload_last_be;
 wire          mac_core_sink_sink_ready;
 wire          mac_core_sink_sink_valid;
 wire          mac_core_sink_valid;
 wire          mac_core_source_first;
 wire          mac_core_source_last;
+wire          mac_core_source_payload_be;
 wire    [7:0] mac_core_source_payload_data;
 wire          mac_core_source_payload_error;
-wire          mac_core_source_payload_last_be;
 wire          mac_core_source_ready;
 wire          mac_core_source_source_first;
 wire          mac_core_source_source_last;
+wire          mac_core_source_source_payload_be;
 wire    [7:0] mac_core_source_source_payload_data;
 wire          mac_core_source_source_payload_error;
-wire          mac_core_source_source_payload_last_be;
 wire          mac_core_source_source_ready;
 wire          mac_core_source_source_valid;
 wire          mac_core_source_valid;
-wire   [11:0] mac_core_tx_cdc_cdc_asyncfifo_din;
-wire   [11:0] mac_core_tx_cdc_cdc_asyncfifo_dout;
-wire          mac_core_tx_cdc_cdc_asyncfifo_re;
-wire          mac_core_tx_cdc_cdc_asyncfifo_readable;
-wire          mac_core_tx_cdc_cdc_asyncfifo_we;
-wire          mac_core_tx_cdc_cdc_asyncfifo_writable;
-wire    [5:0] mac_core_tx_cdc_cdc_consume_wdomain;
-wire          mac_core_tx_cdc_cdc_fifo_in_first;
-wire          mac_core_tx_cdc_cdc_fifo_in_last;
-wire    [7:0] mac_core_tx_cdc_cdc_fifo_in_payload_data;
-wire          mac_core_tx_cdc_cdc_fifo_in_payload_error;
-wire          mac_core_tx_cdc_cdc_fifo_in_payload_last_be;
-wire          mac_core_tx_cdc_cdc_fifo_out_first;
-wire          mac_core_tx_cdc_cdc_fifo_out_last;
-wire    [7:0] mac_core_tx_cdc_cdc_fifo_out_payload_data;
-wire          mac_core_tx_cdc_cdc_fifo_out_payload_error;
-wire          mac_core_tx_cdc_cdc_fifo_out_payload_last_be;
-wire          mac_core_tx_cdc_cdc_graycounter0_ce;
-(* dont_touch = "true" *)
-reg     [5:0] mac_core_tx_cdc_cdc_graycounter0_q = 6'd0;
-reg     [5:0] mac_core_tx_cdc_cdc_graycounter0_q_binary = 6'd0;
-wire    [5:0] mac_core_tx_cdc_cdc_graycounter0_q_next;
-reg     [5:0] mac_core_tx_cdc_cdc_graycounter0_q_next_binary = 6'd0;
-wire          mac_core_tx_cdc_cdc_graycounter1_ce;
-(* dont_touch = "true" *)
-reg     [5:0] mac_core_tx_cdc_cdc_graycounter1_q = 6'd0;
-reg     [5:0] mac_core_tx_cdc_cdc_graycounter1_q_binary = 6'd0;
-wire    [5:0] mac_core_tx_cdc_cdc_graycounter1_q_next;
-reg     [5:0] mac_core_tx_cdc_cdc_graycounter1_q_next_binary = 6'd0;
-wire    [5:0] mac_core_tx_cdc_cdc_produce_rdomain;
-wire    [4:0] mac_core_tx_cdc_cdc_rdport_adr;
-wire   [11:0] mac_core_tx_cdc_cdc_rdport_dat_r;
-wire          mac_core_tx_cdc_cdc_sink_first;
-wire          mac_core_tx_cdc_cdc_sink_last;
-wire    [7:0] mac_core_tx_cdc_cdc_sink_payload_data;
-wire          mac_core_tx_cdc_cdc_sink_payload_error;
-wire          mac_core_tx_cdc_cdc_sink_payload_last_be;
-wire          mac_core_tx_cdc_cdc_sink_ready;
-wire          mac_core_tx_cdc_cdc_sink_valid;
-wire          mac_core_tx_cdc_cdc_source_first;
-wire          mac_core_tx_cdc_cdc_source_last;
-wire    [7:0] mac_core_tx_cdc_cdc_source_payload_data;
-wire          mac_core_tx_cdc_cdc_source_payload_error;
-wire          mac_core_tx_cdc_cdc_source_payload_last_be;
-wire          mac_core_tx_cdc_cdc_source_ready;
-wire          mac_core_tx_cdc_cdc_source_valid;
-wire    [4:0] mac_core_tx_cdc_cdc_wrport_adr;
-wire   [11:0] mac_core_tx_cdc_cdc_wrport_dat_r;
-wire   [11:0] mac_core_tx_cdc_cdc_wrport_dat_w;
-wire          mac_core_tx_cdc_cdc_wrport_we;
-wire          mac_core_tx_cdc_sink_sink_first;
-wire          mac_core_tx_cdc_sink_sink_last;
-wire    [7:0] mac_core_tx_cdc_sink_sink_payload_data;
-wire          mac_core_tx_cdc_sink_sink_payload_error;
-wire          mac_core_tx_cdc_sink_sink_payload_last_be;
-wire          mac_core_tx_cdc_sink_sink_ready;
-wire          mac_core_tx_cdc_sink_sink_valid;
-wire          mac_core_tx_cdc_source_source_first;
-wire          mac_core_tx_cdc_source_source_last;
-wire    [7:0] mac_core_tx_cdc_source_source_payload_data;
-wire          mac_core_tx_cdc_source_source_payload_error;
-wire          mac_core_tx_cdc_source_source_payload_last_be;
-wire          mac_core_tx_cdc_source_source_ready;
-wire          mac_core_tx_cdc_source_source_valid;
-wire          mac_core_tx_crc_be;
+reg           mac_core_tx_crc_be0 = 1'd0;
+reg           mac_core_tx_crc_be0_liteethmaccore_clockdomainsrenamer1_next_value1 = 1'd0;
+reg           mac_core_tx_crc_be0_liteethmaccore_clockdomainsrenamer1_next_value_ce1 = 1'd0;
+wire          mac_core_tx_crc_be1;
 reg           mac_core_tx_crc_ce = 1'd0;
 reg     [1:0] mac_core_tx_crc_cnt = 2'd3;
 wire          mac_core_tx_crc_cnt_done;
 reg    [31:0] mac_core_tx_crc_crc_next = 32'd0;
 reg    [31:0] mac_core_tx_crc_crc_packet = 32'd0;
-reg    [31:0] mac_core_tx_crc_crc_packet_liteethmac_clockdomainsrenamer1_next_value0 = 32'd0;
-reg           mac_core_tx_crc_crc_packet_liteethmac_clockdomainsrenamer1_next_value_ce0 = 1'd0;
+reg    [31:0] mac_core_tx_crc_crc_packet_liteethmaccore_clockdomainsrenamer1_next_value0 = 32'd0;
+reg           mac_core_tx_crc_crc_packet_liteethmaccore_clockdomainsrenamer1_next_value_ce0 = 1'd0;
 wire   [31:0] mac_core_tx_crc_crc_prev;
 wire    [7:0] mac_core_tx_crc_data0;
 wire    [7:0] mac_core_tx_crc_data1;
 reg           mac_core_tx_crc_error = 1'd0;
 reg           mac_core_tx_crc_is_ongoing0 = 1'd0;
 reg           mac_core_tx_crc_is_ongoing1 = 1'd0;
-reg           mac_core_tx_crc_last_be = 1'd0;
-reg           mac_core_tx_crc_last_be_liteethmac_clockdomainsrenamer1_next_value1 = 1'd0;
-reg           mac_core_tx_crc_last_be_liteethmac_clockdomainsrenamer1_next_value_ce1 = 1'd0;
 wire          mac_core_tx_crc_pipe_valid_sink_first;
 wire          mac_core_tx_crc_pipe_valid_sink_last;
+wire          mac_core_tx_crc_pipe_valid_sink_payload_be;
 wire    [7:0] mac_core_tx_crc_pipe_valid_sink_payload_data;
 wire          mac_core_tx_crc_pipe_valid_sink_payload_error;
-wire          mac_core_tx_crc_pipe_valid_sink_payload_last_be;
 wire          mac_core_tx_crc_pipe_valid_sink_ready;
 wire          mac_core_tx_crc_pipe_valid_sink_valid;
 reg           mac_core_tx_crc_pipe_valid_source_first = 1'd0;
 reg           mac_core_tx_crc_pipe_valid_source_last = 1'd0;
+reg           mac_core_tx_crc_pipe_valid_source_payload_be = 1'd0;
 reg     [7:0] mac_core_tx_crc_pipe_valid_source_payload_data = 8'd0;
 reg           mac_core_tx_crc_pipe_valid_source_payload_error = 1'd0;
-reg           mac_core_tx_crc_pipe_valid_source_payload_last_be = 1'd0;
 wire          mac_core_tx_crc_pipe_valid_source_ready;
 reg           mac_core_tx_crc_pipe_valid_source_valid = 1'd0;
-reg    [31:0] mac_core_tx_crc_reg = 32'd4294967295;
+reg    [31:0] mac_core_tx_crc_reg = 32'hffffffff;
 reg           mac_core_tx_crc_reset = 1'd0;
 wire          mac_core_tx_crc_sink_first;
 wire          mac_core_tx_crc_sink_last;
+wire          mac_core_tx_crc_sink_payload_be;
 wire    [7:0] mac_core_tx_crc_sink_payload_data;
 wire          mac_core_tx_crc_sink_payload_error;
-wire          mac_core_tx_crc_sink_payload_last_be;
 reg           mac_core_tx_crc_sink_ready = 1'd0;
 wire          mac_core_tx_crc_sink_sink_first;
 wire          mac_core_tx_crc_sink_sink_last;
+wire          mac_core_tx_crc_sink_sink_payload_be;
 wire    [7:0] mac_core_tx_crc_sink_sink_payload_data;
 wire          mac_core_tx_crc_sink_sink_payload_error;
-wire          mac_core_tx_crc_sink_sink_payload_last_be;
 wire          mac_core_tx_crc_sink_sink_ready;
 wire          mac_core_tx_crc_sink_sink_valid;
 wire          mac_core_tx_crc_sink_valid;
 reg           mac_core_tx_crc_source_first = 1'd0;
 reg           mac_core_tx_crc_source_last = 1'd0;
+reg           mac_core_tx_crc_source_payload_be = 1'd0;
 reg     [7:0] mac_core_tx_crc_source_payload_data = 8'd0;
 reg           mac_core_tx_crc_source_payload_error = 1'd0;
-reg           mac_core_tx_crc_source_payload_last_be = 1'd0;
 wire          mac_core_tx_crc_source_ready;
 wire          mac_core_tx_crc_source_source_first;
 wire          mac_core_tx_crc_source_source_last;
+wire          mac_core_tx_crc_source_source_payload_be;
 wire    [7:0] mac_core_tx_crc_source_source_payload_data;
 wire          mac_core_tx_crc_source_source_payload_error;
-wire          mac_core_tx_crc_source_source_payload_last_be;
 wire          mac_core_tx_crc_source_source_ready;
 wire          mac_core_tx_crc_source_source_valid;
 reg           mac_core_tx_crc_source_valid = 1'd0;
 reg    [31:0] mac_core_tx_crc_value = 32'd0;
 reg     [3:0] mac_core_tx_gap_counter = 4'd0;
-reg     [3:0] mac_core_tx_gap_counter_liteethmac_clockdomainsrenamer3_next_value = 4'd0;
-reg           mac_core_tx_gap_counter_liteethmac_clockdomainsrenamer3_next_value_ce = 1'd0;
+reg     [3:0] mac_core_tx_gap_counter_liteethmaccore_clockdomainsrenamer3_next_value = 4'd0;
+reg           mac_core_tx_gap_counter_liteethmaccore_clockdomainsrenamer3_next_value_ce = 1'd0;
 wire          mac_core_tx_gap_sink_first;
 wire          mac_core_tx_gap_sink_last;
+wire          mac_core_tx_gap_sink_payload_be;
 wire    [7:0] mac_core_tx_gap_sink_payload_data;
 wire          mac_core_tx_gap_sink_payload_error;
-wire          mac_core_tx_gap_sink_payload_last_be;
 reg           mac_core_tx_gap_sink_ready = 1'd0;
 wire          mac_core_tx_gap_sink_valid;
 reg           mac_core_tx_gap_source_first = 1'd0;
 reg           mac_core_tx_gap_source_last = 1'd0;
+reg           mac_core_tx_gap_source_payload_be = 1'd0;
 reg     [7:0] mac_core_tx_gap_source_payload_data = 8'd0;
 reg           mac_core_tx_gap_source_payload_error = 1'd0;
-reg           mac_core_tx_gap_source_payload_last_be = 1'd0;
 wire          mac_core_tx_gap_source_ready;
 reg           mac_core_tx_gap_source_valid = 1'd0;
 reg    [15:0] mac_core_tx_padding_counter = 16'd0;
 wire          mac_core_tx_padding_counter_done;
-reg    [15:0] mac_core_tx_padding_counter_liteethmac_clockdomainsrenamer0_next_value = 16'd0;
-reg           mac_core_tx_padding_counter_liteethmac_clockdomainsrenamer0_next_value_ce = 1'd0;
+reg    [15:0] mac_core_tx_padding_counter_liteethmaccore_clockdomainsrenamer0_next_value = 16'd0;
+reg           mac_core_tx_padding_counter_liteethmaccore_clockdomainsrenamer0_next_value_ce = 1'd0;
 wire          mac_core_tx_padding_sink_first;
 wire          mac_core_tx_padding_sink_last;
+wire          mac_core_tx_padding_sink_payload_be;
 wire    [7:0] mac_core_tx_padding_sink_payload_data;
 wire          mac_core_tx_padding_sink_payload_error;
-wire          mac_core_tx_padding_sink_payload_last_be;
 reg           mac_core_tx_padding_sink_ready = 1'd0;
 wire          mac_core_tx_padding_sink_valid;
 reg           mac_core_tx_padding_source_first = 1'd0;
 reg           mac_core_tx_padding_source_last = 1'd0;
+reg           mac_core_tx_padding_source_payload_be = 1'd0;
 reg     [7:0] mac_core_tx_padding_source_payload_data = 8'd0;
 reg           mac_core_tx_padding_source_payload_error = 1'd0;
-reg           mac_core_tx_padding_source_payload_last_be = 1'd0;
 wire          mac_core_tx_padding_source_ready;
 reg           mac_core_tx_padding_source_valid = 1'd0;
 reg     [2:0] mac_core_tx_preamble_count = 3'd0;
-reg     [2:0] mac_core_tx_preamble_count_liteethmac_clockdomainsrenamer2_next_value = 3'd0;
-reg           mac_core_tx_preamble_count_liteethmac_clockdomainsrenamer2_next_value_ce = 1'd0;
-reg    [63:0] mac_core_tx_preamble_preamble = 64'd15372286728091293013;
+reg     [2:0] mac_core_tx_preamble_count_liteethmaccore_clockdomainsrenamer2_next_value = 3'd0;
+reg           mac_core_tx_preamble_count_liteethmaccore_clockdomainsrenamer2_next_value_ce = 1'd0;
+reg    [63:0] mac_core_tx_preamble_preamble = 64'hd555555555555555;
 wire          mac_core_tx_preamble_sink_first;
 wire          mac_core_tx_preamble_sink_last;
+wire          mac_core_tx_preamble_sink_payload_be;
 wire    [7:0] mac_core_tx_preamble_sink_payload_data;
 wire          mac_core_tx_preamble_sink_payload_error;
-wire          mac_core_tx_preamble_sink_payload_last_be;
 reg           mac_core_tx_preamble_sink_ready = 1'd0;
 wire          mac_core_tx_preamble_sink_valid;
 reg           mac_core_tx_preamble_source_first = 1'd0;
 reg           mac_core_tx_preamble_source_last = 1'd0;
+reg           mac_core_tx_preamble_source_payload_be = 1'd0;
 reg     [7:0] mac_core_tx_preamble_source_payload_data = 8'd0;
 reg           mac_core_tx_preamble_source_payload_error = 1'd0;
-wire          mac_core_tx_preamble_source_payload_last_be;
 wire          mac_core_tx_preamble_source_ready;
 reg           mac_core_tx_preamble_source_valid = 1'd0;
+wire   [11:0] mac_core_txdatapath_cdc_asyncfifo_din;
+wire   [11:0] mac_core_txdatapath_cdc_asyncfifo_dout;
+wire          mac_core_txdatapath_cdc_asyncfifo_re;
+wire          mac_core_txdatapath_cdc_asyncfifo_readable;
+wire          mac_core_txdatapath_cdc_asyncfifo_we;
+wire          mac_core_txdatapath_cdc_asyncfifo_writable;
+wire    [5:0] mac_core_txdatapath_cdc_consume_wdomain;
+wire          mac_core_txdatapath_cdc_fifo_in_first;
+wire          mac_core_txdatapath_cdc_fifo_in_last;
+wire          mac_core_txdatapath_cdc_fifo_in_payload_be;
+wire    [7:0] mac_core_txdatapath_cdc_fifo_in_payload_data;
+wire          mac_core_txdatapath_cdc_fifo_in_payload_error;
+wire          mac_core_txdatapath_cdc_fifo_out_first;
+wire          mac_core_txdatapath_cdc_fifo_out_last;
+wire          mac_core_txdatapath_cdc_fifo_out_payload_be;
+wire    [7:0] mac_core_txdatapath_cdc_fifo_out_payload_data;
+wire          mac_core_txdatapath_cdc_fifo_out_payload_error;
+wire          mac_core_txdatapath_cdc_graycounter0_ce;
+(* dont_touch = "true" *)
+reg     [5:0] mac_core_txdatapath_cdc_graycounter0_q = 6'd0;
+reg     [5:0] mac_core_txdatapath_cdc_graycounter0_q_binary = 6'd0;
+wire    [5:0] mac_core_txdatapath_cdc_graycounter0_q_next;
+reg     [5:0] mac_core_txdatapath_cdc_graycounter0_q_next_binary = 6'd0;
+wire          mac_core_txdatapath_cdc_graycounter1_ce;
+(* dont_touch = "true" *)
+reg     [5:0] mac_core_txdatapath_cdc_graycounter1_q = 6'd0;
+reg     [5:0] mac_core_txdatapath_cdc_graycounter1_q_binary = 6'd0;
+wire    [5:0] mac_core_txdatapath_cdc_graycounter1_q_next;
+reg     [5:0] mac_core_txdatapath_cdc_graycounter1_q_next_binary = 6'd0;
+wire    [5:0] mac_core_txdatapath_cdc_produce_rdomain;
+wire    [4:0] mac_core_txdatapath_cdc_rdport_adr;
+wire   [11:0] mac_core_txdatapath_cdc_rdport_dat_r;
+wire          mac_core_txdatapath_cdc_sink_first;
+wire          mac_core_txdatapath_cdc_sink_last;
+wire          mac_core_txdatapath_cdc_sink_payload_be;
+wire    [7:0] mac_core_txdatapath_cdc_sink_payload_data;
+wire          mac_core_txdatapath_cdc_sink_payload_error;
+wire          mac_core_txdatapath_cdc_sink_ready;
+wire          mac_core_txdatapath_cdc_sink_valid;
+wire          mac_core_txdatapath_cdc_source_first;
+wire          mac_core_txdatapath_cdc_source_last;
+wire          mac_core_txdatapath_cdc_source_payload_be;
+wire    [7:0] mac_core_txdatapath_cdc_source_payload_data;
+wire          mac_core_txdatapath_cdc_source_payload_error;
+wire          mac_core_txdatapath_cdc_source_ready;
+wire          mac_core_txdatapath_cdc_source_valid;
+wire    [4:0] mac_core_txdatapath_cdc_wrport_adr;
+wire   [11:0] mac_core_txdatapath_cdc_wrport_dat_r;
+wire   [11:0] mac_core_txdatapath_cdc_wrport_dat_w;
+wire          mac_core_txdatapath_cdc_wrport_we;
+wire          mac_core_txdatapath_sink_sink_first;
+wire          mac_core_txdatapath_sink_sink_last;
+wire          mac_core_txdatapath_sink_sink_payload_be;
+wire    [7:0] mac_core_txdatapath_sink_sink_payload_data;
+wire          mac_core_txdatapath_sink_sink_payload_error;
+wire          mac_core_txdatapath_sink_sink_ready;
+wire          mac_core_txdatapath_sink_sink_valid;
+wire          mac_core_txdatapath_source_source_first;
+wire          mac_core_txdatapath_source_source_last;
+wire          mac_core_txdatapath_source_source_payload_be;
+wire    [7:0] mac_core_txdatapath_source_source_payload_data;
+wire          mac_core_txdatapath_source_source_payload_error;
+wire          mac_core_txdatapath_source_source_ready;
+wire          mac_core_txdatapath_source_source_valid;
 wire          mac_crossbar_sink_first;
 wire          mac_crossbar_sink_last;
+wire          mac_crossbar_sink_payload_be;
 wire    [7:0] mac_crossbar_sink_payload_data;
 wire          mac_crossbar_sink_payload_error;
 wire   [15:0] mac_crossbar_sink_payload_ethernet_type;
-wire          mac_crossbar_sink_payload_last_be;
 wire   [47:0] mac_crossbar_sink_payload_sender_mac;
 wire   [47:0] mac_crossbar_sink_payload_target_mac;
 reg           mac_crossbar_sink_ready = 1'd0;
 wire          mac_crossbar_sink_valid;
 reg           mac_crossbar_source_first = 1'd0;
 reg           mac_crossbar_source_last = 1'd0;
+reg           mac_crossbar_source_payload_be = 1'd0;
 reg     [7:0] mac_crossbar_source_payload_data = 8'd0;
 reg           mac_crossbar_source_payload_error = 1'd0;
 reg    [15:0] mac_crossbar_source_payload_ethernet_type = 16'd0;
-reg           mac_crossbar_source_payload_last_be = 1'd0;
 reg    [47:0] mac_crossbar_source_payload_sender_mac = 48'd0;
 reg    [47:0] mac_crossbar_source_payload_target_mac = 48'd0;
 wire          mac_crossbar_source_ready;
 reg           mac_crossbar_source_valid = 1'd0;
 reg     [3:0] mac_depacketizer_count = 4'd0;
-reg     [3:0] mac_depacketizer_count_liteethmac_fsm0_next_value2 = 4'd0;
-reg           mac_depacketizer_count_liteethmac_fsm0_next_value_ce2 = 1'd0;
-reg           mac_depacketizer_delayed_last_be = 1'd0;
-reg           mac_depacketizer_delayed_last_be_liteethmac_fsm1_next_value1 = 1'd0;
-reg           mac_depacketizer_delayed_last_be_liteethmac_fsm1_next_value_ce1 = 1'd0;
+reg     [3:0] mac_depacketizer_count_liteethmacdepacketizer_next_value0 = 4'd0;
+reg           mac_depacketizer_count_liteethmacdepacketizer_next_value_ce0 = 1'd0;
+reg           mac_depacketizer_data_copy_first = 1'd0;
+reg           mac_depacketizer_data_copy_first_liteethmacdepacketizer_next_value2 = 1'd0;
+reg           mac_depacketizer_data_copy_first_liteethmacdepacketizer_next_value_ce2 = 1'd0;
 reg           mac_depacketizer_fsm_from_idle = 1'd0;
-reg           mac_depacketizer_fsm_from_idle_liteethmac_fsm0_next_value3 = 1'd0;
-reg           mac_depacketizer_fsm_from_idle_liteethmac_fsm0_next_value_ce3 = 1'd0;
+reg           mac_depacketizer_fsm_from_idle_liteethmacdepacketizer_next_value1 = 1'd0;
+reg           mac_depacketizer_fsm_from_idle_liteethmacdepacketizer_next_value_ce1 = 1'd0;
 wire  [111:0] mac_depacketizer_header;
-wire          mac_depacketizer_is_in_copy;
-reg           mac_depacketizer_is_ongoing0 = 1'd0;
-reg           mac_depacketizer_is_ongoing1 = 1'd0;
-reg           mac_depacketizer_is_ongoing2 = 1'd0;
-reg           mac_depacketizer_is_ongoing3 = 1'd0;
-wire          mac_depacketizer_new_last_be;
-reg           mac_depacketizer_sink_d_last = 1'd0;
+wire          mac_depacketizer_sink_be;
 wire          mac_depacketizer_sink_first;
 wire          mac_depacketizer_sink_last;
-wire          mac_depacketizer_sink_last_be;
+wire          mac_depacketizer_sink_payload_be;
 wire    [7:0] mac_depacketizer_sink_payload_data;
 wire          mac_depacketizer_sink_payload_error;
-wire          mac_depacketizer_sink_payload_last_be;
 reg           mac_depacketizer_sink_ready = 1'd0;
 wire          mac_depacketizer_sink_valid;
+reg           mac_depacketizer_source_be = 1'd1;
 reg           mac_depacketizer_source_first = 1'd0;
 reg           mac_depacketizer_source_last = 1'd0;
-reg           mac_depacketizer_source_last_a = 1'd0;
-reg           mac_depacketizer_source_last_b = 1'd0;
-reg           mac_depacketizer_source_last_s = 1'd0;
+wire          mac_depacketizer_source_payload_be;
 reg     [7:0] mac_depacketizer_source_payload_data = 8'd0;
 wire          mac_depacketizer_source_payload_error;
 wire   [15:0] mac_depacketizer_source_payload_ethernet_type;
-reg           mac_depacketizer_source_payload_last_be = 1'd0;
 wire   [47:0] mac_depacketizer_source_payload_sender_mac;
 wire   [47:0] mac_depacketizer_source_payload_target_mac;
 wire          mac_depacketizer_source_ready;
@@ -2465,46 +2452,30 @@ reg           mac_depacketizer_source_valid = 1'd0;
 reg   [111:0] mac_depacketizer_sr = 112'd0;
 reg           mac_depacketizer_sr_shift = 1'd0;
 reg           mac_depacketizer_sr_shift_leftover = 1'd0;
-reg           mac_depacketizer_was_in_copy = 1'd0;
 reg     [3:0] mac_packetizer_count = 4'd0;
-reg     [3:0] mac_packetizer_count_liteethmac_fsm0_next_value0 = 4'd0;
-reg           mac_packetizer_count_liteethmac_fsm0_next_value_ce0 = 1'd0;
-reg           mac_packetizer_delayed_last_be = 1'd0;
-reg           mac_packetizer_delayed_last_be_liteethmac_fsm1_next_value0 = 1'd0;
-reg           mac_packetizer_delayed_last_be_liteethmac_fsm1_next_value_ce0 = 1'd0;
-reg           mac_packetizer_fsm_from_idle = 1'd0;
-reg           mac_packetizer_fsm_from_idle_liteethmac_fsm0_next_value1 = 1'd0;
-reg           mac_packetizer_fsm_from_idle_liteethmac_fsm0_next_value_ce1 = 1'd0;
+reg     [3:0] mac_packetizer_count_liteethmacpacketizer_next_value = 4'd0;
+reg           mac_packetizer_count_liteethmacpacketizer_next_value_ce = 1'd0;
 reg   [111:0] mac_packetizer_header = 112'd0;
-wire          mac_packetizer_in_data_copy;
-reg           mac_packetizer_is_ongoing0 = 1'd0;
-reg           mac_packetizer_is_ongoing1 = 1'd0;
-reg           mac_packetizer_is_ongoing2 = 1'd0;
-wire          mac_packetizer_new_last_be;
+reg           mac_packetizer_is_ongoing = 1'd0;
 wire          mac_packetizer_sink_first;
 wire          mac_packetizer_sink_last;
-wire          mac_packetizer_sink_last_be;
+wire          mac_packetizer_sink_payload_be;
 wire    [7:0] mac_packetizer_sink_payload_data;
 wire          mac_packetizer_sink_payload_error;
 wire   [15:0] mac_packetizer_sink_payload_ethernet_type;
-wire          mac_packetizer_sink_payload_last_be;
 wire   [47:0] mac_packetizer_sink_payload_sender_mac;
 wire   [47:0] mac_packetizer_sink_payload_target_mac;
 reg           mac_packetizer_sink_ready = 1'd0;
 wire          mac_packetizer_sink_valid;
+reg           mac_packetizer_source_be = 1'd1;
 reg           mac_packetizer_source_first = 1'd0;
 reg           mac_packetizer_source_last = 1'd0;
-reg           mac_packetizer_source_last_a = 1'd0;
-reg           mac_packetizer_source_last_b = 1'd0;
-reg           mac_packetizer_source_last_s = 1'd0;
+wire          mac_packetizer_source_payload_be;
 reg     [7:0] mac_packetizer_source_payload_data = 8'd0;
-wire          mac_packetizer_source_payload_error;
-reg           mac_packetizer_source_payload_last_be = 1'd0;
+reg           mac_packetizer_source_payload_error = 1'd0;
 wire          mac_packetizer_source_ready;
 reg           mac_packetizer_source_valid = 1'd0;
-reg   [111:0] mac_packetizer_sr = 112'd0;
-reg           mac_packetizer_sr_load = 1'd0;
-reg           mac_packetizer_sr_shift = 1'd0;
+reg           next_state = 1'd0;
 wire          pll_fb;
 wire          por_clk;
 wire          re;
@@ -2516,302 +2487,215 @@ wire          reset4;
 wire          reset5;
 wire          reset6;
 wire          reset7;
-wire   [15:0] rhs_slice_proxy0;
-wire   [15:0] rhs_slice_proxy1;
-wire   [47:0] rhs_slice_proxy10;
-wire   [47:0] rhs_slice_proxy11;
-wire   [47:0] rhs_slice_proxy12;
-wire   [47:0] rhs_slice_proxy13;
-wire    [7:0] rhs_slice_proxy14;
-wire   [15:0] rhs_slice_proxy15;
-wire   [15:0] rhs_slice_proxy16;
-wire   [15:0] rhs_slice_proxy17;
-wire   [15:0] rhs_slice_proxy18;
-wire   [15:0] rhs_slice_proxy19;
-wire   [47:0] rhs_slice_proxy2;
-wire   [15:0] rhs_slice_proxy20;
-wire    [7:0] rhs_slice_proxy21;
-wire   [31:0] rhs_slice_proxy22;
-wire   [31:0] rhs_slice_proxy23;
-wire   [31:0] rhs_slice_proxy24;
-wire   [31:0] rhs_slice_proxy25;
-wire   [47:0] rhs_slice_proxy26;
-wire   [47:0] rhs_slice_proxy27;
-wire   [47:0] rhs_slice_proxy28;
-wire   [47:0] rhs_slice_proxy29;
-wire   [47:0] rhs_slice_proxy3;
-wire   [47:0] rhs_slice_proxy30;
-wire   [47:0] rhs_slice_proxy31;
-wire   [31:0] rhs_slice_proxy32;
-wire   [31:0] rhs_slice_proxy33;
-wire   [31:0] rhs_slice_proxy34;
-wire   [31:0] rhs_slice_proxy35;
-wire   [47:0] rhs_slice_proxy36;
-wire   [47:0] rhs_slice_proxy37;
-wire   [47:0] rhs_slice_proxy38;
-wire   [47:0] rhs_slice_proxy39;
-wire   [47:0] rhs_slice_proxy4;
-wire   [47:0] rhs_slice_proxy40;
-wire   [47:0] rhs_slice_proxy41;
-wire   [15:0] rhs_slice_proxy42;
-wire   [15:0] rhs_slice_proxy43;
-wire   [15:0] rhs_slice_proxy44;
-wire   [15:0] rhs_slice_proxy45;
-wire    [3:0] rhs_slice_proxy46;
-wire    [7:0] rhs_slice_proxy47;
-wire   [31:0] rhs_slice_proxy48;
-wire   [31:0] rhs_slice_proxy49;
-wire   [47:0] rhs_slice_proxy5;
-wire   [31:0] rhs_slice_proxy50;
-wire   [31:0] rhs_slice_proxy51;
-wire   [31:0] rhs_slice_proxy52;
-wire   [31:0] rhs_slice_proxy53;
-wire   [31:0] rhs_slice_proxy54;
-wire   [31:0] rhs_slice_proxy55;
-wire   [15:0] rhs_slice_proxy56;
-wire   [15:0] rhs_slice_proxy57;
-wire    [7:0] rhs_slice_proxy58;
-wire    [3:0] rhs_slice_proxy59;
-wire   [47:0] rhs_slice_proxy6;
-wire   [15:0] rhs_slice_proxy60;
-wire   [15:0] rhs_slice_proxy61;
-wire    [7:0] rhs_slice_proxy62;
-wire    [7:0] rhs_slice_proxy63;
-wire   [31:0] rhs_slice_proxy64;
-wire   [31:0] rhs_slice_proxy65;
-wire   [31:0] rhs_slice_proxy66;
-wire   [31:0] rhs_slice_proxy67;
-wire   [15:0] rhs_slice_proxy68;
-wire   [15:0] rhs_slice_proxy69;
-wire   [47:0] rhs_slice_proxy7;
-wire   [15:0] rhs_slice_proxy70;
-wire   [15:0] rhs_slice_proxy71;
-wire   [15:0] rhs_slice_proxy72;
-wire   [15:0] rhs_slice_proxy73;
-wire   [15:0] rhs_slice_proxy74;
-wire   [15:0] rhs_slice_proxy75;
-wire   [47:0] rhs_slice_proxy8;
-wire   [47:0] rhs_slice_proxy9;
-reg    [15:0] rx_count = 16'd0;
-reg    [15:0] rx_count_liteethudp_next_value = 16'd0;
-reg           rx_count_liteethudp_next_value_ce = 1'd0;
+wire          rx_accepted;
+reg           rx_active = 1'd0;
+reg    [16:0] rx_count = 17'd0;
+reg    [16:0] rx_count_liteethudp_fsm_next_value = 17'd0;
+reg           rx_count_liteethudp_fsm_next_value_ce = 1'd0;
 reg     [2:0] rx_depacketizer_count = 3'd0;
-reg     [2:0] rx_depacketizer_count_liteethudp_fsm0_next_value2 = 3'd0;
-reg           rx_depacketizer_count_liteethudp_fsm0_next_value_ce2 = 1'd0;
-reg           rx_depacketizer_delayed_last_be = 1'd0;
-reg           rx_depacketizer_delayed_last_be_liteethudp_fsm1_next_value1 = 1'd0;
-reg           rx_depacketizer_delayed_last_be_liteethudp_fsm1_next_value_ce1 = 1'd0;
+reg     [2:0] rx_depacketizer_count_liteethudp_liteethudpdepacketizer_next_value0 = 3'd0;
+reg           rx_depacketizer_count_liteethudp_liteethudpdepacketizer_next_value_ce0 = 1'd0;
+reg           rx_depacketizer_data_copy_first = 1'd0;
+reg           rx_depacketizer_data_copy_first_liteethudp_liteethudpdepacketizer_next_value2 = 1'd0;
+reg           rx_depacketizer_data_copy_first_liteethudp_liteethudpdepacketizer_next_value_ce2 = 1'd0;
 reg           rx_depacketizer_fsm_from_idle = 1'd0;
-reg           rx_depacketizer_fsm_from_idle_liteethudp_fsm0_next_value3 = 1'd0;
-reg           rx_depacketizer_fsm_from_idle_liteethudp_fsm0_next_value_ce3 = 1'd0;
+reg           rx_depacketizer_fsm_from_idle_liteethudp_liteethudpdepacketizer_next_value1 = 1'd0;
+reg           rx_depacketizer_fsm_from_idle_liteethudp_liteethudpdepacketizer_next_value_ce1 = 1'd0;
 wire   [63:0] rx_depacketizer_header;
-wire          rx_depacketizer_is_in_copy;
-reg           rx_depacketizer_is_ongoing0 = 1'd0;
-reg           rx_depacketizer_is_ongoing1 = 1'd0;
-reg           rx_depacketizer_is_ongoing2 = 1'd0;
-reg           rx_depacketizer_is_ongoing3 = 1'd0;
-wire          rx_depacketizer_new_last_be;
-reg           rx_depacketizer_sink_d_last = 1'd0;
+wire          rx_depacketizer_sink_be;
 wire          rx_depacketizer_sink_first;
 wire          rx_depacketizer_sink_last;
-wire          rx_depacketizer_sink_last_be;
 wire   [31:0] rx_depacketizer_sink_param_ip_address;
 wire   [15:0] rx_depacketizer_sink_param_length;
 wire    [7:0] rx_depacketizer_sink_param_protocol;
+wire          rx_depacketizer_sink_payload_be;
 wire    [7:0] rx_depacketizer_sink_payload_data;
 wire          rx_depacketizer_sink_payload_error;
-wire          rx_depacketizer_sink_payload_last_be;
 reg           rx_depacketizer_sink_ready = 1'd0;
 wire          rx_depacketizer_sink_valid;
+reg           rx_depacketizer_source_be = 1'd1;
+reg           rx_depacketizer_source_first = 1'd0;
 reg           rx_depacketizer_source_last = 1'd0;
-reg           rx_depacketizer_source_last_a = 1'd0;
-reg           rx_depacketizer_source_last_b = 1'd0;
-reg           rx_depacketizer_source_last_s = 1'd0;
 wire   [15:0] rx_depacketizer_source_param_checksum;
 wire   [15:0] rx_depacketizer_source_param_dst_port;
 wire   [15:0] rx_depacketizer_source_param_length;
 wire   [15:0] rx_depacketizer_source_param_src_port;
+wire          rx_depacketizer_source_payload_be;
 reg     [7:0] rx_depacketizer_source_payload_data = 8'd0;
 wire          rx_depacketizer_source_payload_error;
-reg           rx_depacketizer_source_payload_last_be = 1'd0;
-reg           rx_depacketizer_source_ready = 1'd0;
+wire          rx_depacketizer_source_ready;
 reg           rx_depacketizer_source_valid = 1'd0;
 reg    [63:0] rx_depacketizer_sr = 64'd0;
 reg           rx_depacketizer_sr_shift = 1'd0;
 reg           rx_depacketizer_sr_shift_leftover = 1'd0;
-reg           rx_depacketizer_was_in_copy = 1'd0;
+wire   [16:0] rx_end_count;
+reg    [31:0] rx_ip_address = 32'd0;
+reg           rx_is_ongoing0 = 1'd0;
+reg           rx_is_ongoing1 = 1'd0;
+reg    [15:0] rx_length = 16'd0;
+reg     [7:0] rx_protocol = 8'd0;
+wire          rx_receiving;
 wire          rx_sink_sink_first;
 wire          rx_sink_sink_last;
 wire   [31:0] rx_sink_sink_param_ip_address;
 wire   [15:0] rx_sink_sink_param_length;
 wire    [7:0] rx_sink_sink_param_protocol;
+wire          rx_sink_sink_payload_be;
 wire    [7:0] rx_sink_sink_payload_data;
 wire          rx_sink_sink_payload_error;
-wire          rx_sink_sink_payload_last_be;
 wire          rx_sink_sink_ready;
 wire          rx_sink_sink_valid;
 reg           rx_source_source_first = 1'd0;
-reg           rx_source_source_last = 1'd0;
+wire          rx_source_source_last;
 wire   [15:0] rx_source_source_param_dst_port;
 wire   [31:0] rx_source_source_param_ip_address;
 wire   [15:0] rx_source_source_param_length;
 wire   [15:0] rx_source_source_param_src_port;
+reg           rx_source_source_payload_be = 1'd0;
 wire    [7:0] rx_source_source_payload_data;
-wire          rx_source_source_payload_error;
-reg           rx_source_source_payload_last_be = 1'd0;
+reg           rx_source_source_payload_error = 1'd0;
 wire          rx_source_source_ready;
-reg           rx_source_source_valid = 1'd0;
+wire          rx_source_source_valid;
+reg    [31:0] self = 32'd0;
+reg           state = 1'd0;
 (* dont_touch = "true" *)
 wire          sys_clk;
 wire          sys_rst;
+reg           tx_active = 1'd0;
+reg    [31:0] tx_ip_address = 32'd0;
+reg    [15:0] tx_length = 16'd0;
 reg     [2:0] tx_packetizer_count = 3'd0;
-reg     [2:0] tx_packetizer_count_liteethudp_fsm0_next_value0 = 3'd0;
-reg           tx_packetizer_count_liteethudp_fsm0_next_value_ce0 = 1'd0;
-reg           tx_packetizer_delayed_last_be = 1'd0;
-reg           tx_packetizer_delayed_last_be_liteethudp_fsm1_next_value0 = 1'd0;
-reg           tx_packetizer_delayed_last_be_liteethudp_fsm1_next_value_ce0 = 1'd0;
-reg           tx_packetizer_fsm_from_idle = 1'd0;
-reg           tx_packetizer_fsm_from_idle_liteethudp_fsm0_next_value1 = 1'd0;
-reg           tx_packetizer_fsm_from_idle_liteethudp_fsm0_next_value_ce1 = 1'd0;
+reg     [2:0] tx_packetizer_count_liteethudp_next_value = 3'd0;
+reg           tx_packetizer_count_liteethudp_next_value_ce = 1'd0;
 reg    [63:0] tx_packetizer_header = 64'd0;
-wire          tx_packetizer_in_data_copy;
-reg           tx_packetizer_is_ongoing0 = 1'd0;
-reg           tx_packetizer_is_ongoing1 = 1'd0;
-reg           tx_packetizer_is_ongoing2 = 1'd0;
-wire          tx_packetizer_new_last_be;
+reg           tx_packetizer_is_ongoing = 1'd0;
 wire          tx_packetizer_sink_last;
-wire          tx_packetizer_sink_last_be;
 wire   [15:0] tx_packetizer_sink_param_checksum;
 wire   [15:0] tx_packetizer_sink_param_dst_port;
 wire   [15:0] tx_packetizer_sink_param_length;
 wire   [15:0] tx_packetizer_sink_param_src_port;
+wire          tx_packetizer_sink_payload_be;
 wire    [7:0] tx_packetizer_sink_payload_data;
 reg           tx_packetizer_sink_payload_error = 1'd0;
-wire          tx_packetizer_sink_payload_last_be;
 reg           tx_packetizer_sink_ready = 1'd0;
 wire          tx_packetizer_sink_valid;
+reg           tx_packetizer_source_be = 1'd1;
 reg           tx_packetizer_source_first = 1'd0;
 reg           tx_packetizer_source_last = 1'd0;
-reg           tx_packetizer_source_last_a = 1'd0;
-reg           tx_packetizer_source_last_b = 1'd0;
-reg           tx_packetizer_source_last_s = 1'd0;
-reg    [31:0] tx_packetizer_source_param_ip_address = 32'd0;
-reg    [15:0] tx_packetizer_source_param_length = 16'd0;
-reg     [7:0] tx_packetizer_source_param_protocol = 8'd0;
+wire          tx_packetizer_source_payload_be;
 reg     [7:0] tx_packetizer_source_payload_data = 8'd0;
-wire          tx_packetizer_source_payload_error;
-reg           tx_packetizer_source_payload_last_be = 1'd0;
-reg           tx_packetizer_source_ready = 1'd0;
+reg           tx_packetizer_source_payload_error = 1'd0;
+wire          tx_packetizer_source_ready;
 reg           tx_packetizer_source_valid = 1'd0;
-reg    [63:0] tx_packetizer_sr = 64'd0;
-reg           tx_packetizer_sr_load = 1'd0;
-reg           tx_packetizer_sr_shift = 1'd0;
 wire          tx_sink_sink_first;
 wire          tx_sink_sink_last;
 wire   [15:0] tx_sink_sink_param_dst_port;
 wire   [31:0] tx_sink_sink_param_ip_address;
 wire   [15:0] tx_sink_sink_param_length;
 wire   [15:0] tx_sink_sink_param_src_port;
+wire          tx_sink_sink_payload_be;
 wire    [7:0] tx_sink_sink_payload_data;
 wire          tx_sink_sink_payload_error;
-wire          tx_sink_sink_payload_last_be;
 wire          tx_sink_sink_ready;
 wire          tx_sink_sink_valid;
-reg           tx_source_source_first = 1'd0;
-reg           tx_source_source_last = 1'd0;
-reg    [31:0] tx_source_source_param_ip_address = 32'd0;
-reg    [15:0] tx_source_source_param_length = 16'd0;
-reg     [7:0] tx_source_source_param_protocol = 8'd0;
-reg     [7:0] tx_source_source_payload_data = 8'd0;
-reg           tx_source_source_payload_error = 1'd0;
-reg           tx_source_source_payload_last_be = 1'd0;
+wire          tx_source_source_first;
+wire          tx_source_source_last;
+wire   [31:0] tx_source_source_param_ip_address;
+wire   [15:0] tx_source_source_param_length;
+wire    [7:0] tx_source_source_param_protocol;
+wire          tx_source_source_payload_be;
+wire    [7:0] tx_source_source_payload_data;
+wire          tx_source_source_payload_error;
 wire          tx_source_source_ready;
-reg           tx_source_source_valid = 1'd0;
+wire          tx_source_source_valid;
 reg           udpcore_bus_error = 1'd0;
 reg    [31:0] udpcore_bus_errors = 32'd0;
-reg           udpcore_bus_errors_re = 1'd0;
+wire          udpcore_bus_errors_rd_stb;
 wire   [31:0] udpcore_bus_errors_status;
-wire          udpcore_bus_errors_we;
+reg           udpcore_bus_errors_wr_stb = 1'd0;
 wire          udpcore_cpu_rst;
-reg           udpcore_reset_re = 1'd0;
 reg     [1:0] udpcore_reset_storage = 2'd0;
-reg           udpcore_scratch_re = 1'd0;
+reg           udpcore_reset_wr_stb = 1'd0;
 reg    [31:0] udpcore_scratch_storage = 32'd305419896;
+reg           udpcore_scratch_wr_stb = 1'd0;
 reg           udpcore_soc_rst = 1'd0;
 wire          we;
-reg           wishbone2csr_next_state = 1'd0;
-reg           wishbone2csr_state = 1'd0;
 wire          xilinxasyncresetsynchronizerimpl0;
 wire          xilinxasyncresetsynchronizerimpl0_expr;
 wire          xilinxasyncresetsynchronizerimpl0_rst_meta;
 wire          xilinxasyncresetsynchronizerimpl1_rst_meta;
 wire          xilinxasyncresetsynchronizerimpl2_rst_meta;
 (* async_reg = "true", mr_ff = "true", dont_touch = "true" *)
-reg           xilinxmultiregimpl0_regs0 = 1'd0;
+reg           xilinxmultiregimpl00 = 1'd0;
 (* async_reg = "true", dont_touch = "true" *)
-reg           xilinxmultiregimpl0_regs1 = 1'd0;
+reg           xilinxmultiregimpl01 = 1'd0;
 (* async_reg = "true", mr_ff = "true", dont_touch = "true" *)
-reg     [5:0] xilinxmultiregimpl1_regs0 = 6'd0;
+reg     [5:0] xilinxmultiregimpl10 = 6'd0;
 (* async_reg = "true", dont_touch = "true" *)
-reg     [5:0] xilinxmultiregimpl1_regs1 = 6'd0;
+reg     [5:0] xilinxmultiregimpl11 = 6'd0;
 (* async_reg = "true", mr_ff = "true", dont_touch = "true" *)
-reg     [5:0] xilinxmultiregimpl2_regs0 = 6'd0;
+reg     [5:0] xilinxmultiregimpl20 = 6'd0;
 (* async_reg = "true", dont_touch = "true" *)
-reg     [5:0] xilinxmultiregimpl2_regs1 = 6'd0;
+reg     [5:0] xilinxmultiregimpl21 = 6'd0;
 (* async_reg = "true", mr_ff = "true", dont_touch = "true" *)
-reg           xilinxmultiregimpl3_regs0 = 1'd0;
+reg           xilinxmultiregimpl30 = 1'd0;
 (* async_reg = "true", dont_touch = "true" *)
-reg           xilinxmultiregimpl3_regs1 = 1'd0;
+reg           xilinxmultiregimpl31 = 1'd0;
 (* async_reg = "true", mr_ff = "true", dont_touch = "true" *)
-reg           xilinxmultiregimpl4_regs0 = 1'd0;
+reg           xilinxmultiregimpl40 = 1'd0;
 (* async_reg = "true", dont_touch = "true" *)
-reg           xilinxmultiregimpl4_regs1 = 1'd0;
+reg           xilinxmultiregimpl41 = 1'd0;
 (* async_reg = "true", mr_ff = "true", dont_touch = "true" *)
-reg     [5:0] xilinxmultiregimpl5_regs0 = 6'd0;
+reg     [5:0] xilinxmultiregimpl50 = 6'd0;
 (* async_reg = "true", dont_touch = "true" *)
-reg     [5:0] xilinxmultiregimpl5_regs1 = 6'd0;
+reg     [5:0] xilinxmultiregimpl51 = 6'd0;
 (* async_reg = "true", mr_ff = "true", dont_touch = "true" *)
-reg     [5:0] xilinxmultiregimpl6_regs0 = 6'd0;
+reg     [5:0] xilinxmultiregimpl60 = 6'd0;
 (* async_reg = "true", dont_touch = "true" *)
-reg     [5:0] xilinxmultiregimpl6_regs1 = 6'd0;
+reg     [5:0] xilinxmultiregimpl61 = 6'd0;
 
 //------------------------------------------------------------------------------
 // Combinatorial Logic
 //------------------------------------------------------------------------------
 
-assign liteethudpstreamer0_tx_sink_sink_valid = udp0_sink_valid;
-assign liteethudpstreamer0_tx_sink_sink_last = udp0_sink_last;
-assign udp0_sink_ready = liteethudpstreamer0_tx_sink_sink_ready;
-assign liteethudpstreamer0_tx_sink_sink_payload_data = udp0_sink_data;
+assign liteethudpstreamer0_tx_sink_valid = udp0_sink_valid;
+assign liteethudpstreamer0_tx_sink_last = udp0_sink_last;
+assign udp0_sink_ready = liteethudpstreamer0_tx_sink_ready;
+assign liteethudpstreamer0_tx_sink_payload_data = udp0_sink_data;
+assign liteethudpstreamer0_tx_sink_payload_be = udp0_sink_keep;
 assign udp0_source_valid = liteethudpstreamer0_rx_source_source_valid;
 assign udp0_source_last = liteethudpstreamer0_rx_source_source_last;
 assign liteethudpstreamer0_rx_source_source_ready = udp0_source_ready;
 assign udp0_source_data = liteethudpstreamer0_rx_source_source_payload_data;
 assign udp0_source_error = liteethudpstreamer0_rx_source_source_payload_error;
-assign liteethudpstreamer1_tx_sink_sink_valid = udp1_sink_valid;
-assign liteethudpstreamer1_tx_sink_sink_last = udp1_sink_last;
-assign udp1_sink_ready = liteethudpstreamer1_tx_sink_sink_ready;
-assign liteethudpstreamer1_tx_sink_sink_payload_data = udp1_sink_data;
+assign udp0_source_keep = liteethudpstreamer0_rx_source_source_payload_be;
+assign liteethudpstreamer1_tx_sink_valid = udp1_sink_valid;
+assign liteethudpstreamer1_tx_sink_last = udp1_sink_last;
+assign udp1_sink_ready = liteethudpstreamer1_tx_sink_ready;
+assign liteethudpstreamer1_tx_sink_payload_data = udp1_sink_data;
+assign liteethudpstreamer1_tx_sink_payload_be = udp1_sink_keep;
 assign udp1_source_valid = liteethudpstreamer1_rx_source_source_valid;
 assign udp1_source_last = liteethudpstreamer1_rx_source_source_last;
 assign liteethudpstreamer1_rx_source_source_ready = udp1_source_ready;
 assign udp1_source_data = liteethudpstreamer1_rx_source_source_payload_data;
 assign udp1_source_error = liteethudpstreamer1_rx_source_source_payload_error;
+assign udp1_source_keep = liteethudpstreamer1_rx_source_source_payload_be;
 assign udpcore_bus_errors_status = udpcore_bus_errors;
 assign sys_clk = sys_clock;
 assign por_clk = sys_clock;
 assign sys_rst = int_rst;
 assign ethphy_reset1 = ethphy_reset_storage;
 assign rgmii_rst_n = (~ethphy_reset1);
-assign ethphy_clkin = eth_rx_clk;
+assign ethphy_clkin_signal = eth_rx_clk;
 assign eth_tx_clk = ethphy_clkout_buf0;
 assign eth_tx_delayed_clk = ethphy_clkout_buf1;
 assign ethphy_sink_ready = 1'd1;
-assign ethphy_liteethphyrgmiirx_last = ((~ethphy_liteethphyrgmiirx_rx_ctl) & ethphy_liteethphyrgmiirx_rx_ctl_d);
-assign ethphy_liteethphyrgmiirx_source_last = ethphy_liteethphyrgmiirx_last;
-assign rgmii_mdc = ethphy__w_storage[0];
-assign ethphy_data_oe = ethphy__w_storage[1];
-assign ethphy_data_w = ethphy__w_storage[2];
+assign ethphy_source_payload_be = 1'd1;
+assign ethphy_last = ((~ethphy_rx_ctl[0]) & ethphy_rx_ctl_d);
+assign ethphy_source_last = ethphy_last;
+assign rgmii_mdc = ethphy_mdc;
+assign ethphy_data_oe = ethphy_oe;
+assign ethphy_data_w = ethphy_w;
 assign mac_packetizer_sink_valid = mac_crossbar_source_valid;
 assign mac_crossbar_source_ready = mac_packetizer_sink_ready;
 assign mac_packetizer_sink_first = mac_crossbar_source_first;
@@ -2820,21 +2704,21 @@ assign mac_packetizer_sink_payload_ethernet_type = mac_crossbar_source_payload_e
 assign mac_packetizer_sink_payload_sender_mac = mac_crossbar_source_payload_sender_mac;
 assign mac_packetizer_sink_payload_target_mac = mac_crossbar_source_payload_target_mac;
 assign mac_packetizer_sink_payload_data = mac_crossbar_source_payload_data;
-assign mac_packetizer_sink_payload_last_be = mac_crossbar_source_payload_last_be;
+assign mac_packetizer_sink_payload_be = mac_crossbar_source_payload_be;
 assign mac_packetizer_sink_payload_error = mac_crossbar_source_payload_error;
 assign mac_core_sink_valid = mac_packetizer_source_valid;
 assign mac_packetizer_source_ready = mac_core_sink_ready;
 assign mac_core_sink_first = mac_packetizer_source_first;
 assign mac_core_sink_last = mac_packetizer_source_last;
 assign mac_core_sink_payload_data = mac_packetizer_source_payload_data;
-assign mac_core_sink_payload_last_be = mac_packetizer_source_payload_last_be;
+assign mac_core_sink_payload_be = mac_packetizer_source_payload_be;
 assign mac_core_sink_payload_error = mac_packetizer_source_payload_error;
 assign mac_depacketizer_sink_valid = mac_core_source_valid;
 assign mac_core_source_ready = mac_depacketizer_sink_ready;
 assign mac_depacketizer_sink_first = mac_core_source_first;
 assign mac_depacketizer_sink_last = mac_core_source_last;
 assign mac_depacketizer_sink_payload_data = mac_core_source_payload_data;
-assign mac_depacketizer_sink_payload_last_be = mac_core_source_payload_last_be;
+assign mac_depacketizer_sink_payload_be = mac_core_source_payload_be;
 assign mac_depacketizer_sink_payload_error = mac_core_source_payload_error;
 assign mac_crossbar_sink_valid = mac_depacketizer_source_valid;
 assign mac_depacketizer_source_ready = mac_crossbar_sink_ready;
@@ -2844,119 +2728,212 @@ assign mac_crossbar_sink_payload_ethernet_type = mac_depacketizer_source_payload
 assign mac_crossbar_sink_payload_sender_mac = mac_depacketizer_source_payload_sender_mac;
 assign mac_crossbar_sink_payload_target_mac = mac_depacketizer_source_payload_target_mac;
 assign mac_crossbar_sink_payload_data = mac_depacketizer_source_payload_data;
-assign mac_crossbar_sink_payload_last_be = mac_depacketizer_source_payload_last_be;
+assign mac_crossbar_sink_payload_be = mac_depacketizer_source_payload_be;
 assign mac_crossbar_sink_payload_error = mac_depacketizer_source_payload_error;
-assign mac_core_tx_cdc_cdc_sink_valid = mac_core_tx_cdc_sink_sink_valid;
-assign mac_core_tx_cdc_sink_sink_ready = mac_core_tx_cdc_cdc_sink_ready;
-assign mac_core_tx_cdc_cdc_sink_first = mac_core_tx_cdc_sink_sink_first;
-assign mac_core_tx_cdc_cdc_sink_last = mac_core_tx_cdc_sink_sink_last;
-assign mac_core_tx_cdc_cdc_sink_payload_data = mac_core_tx_cdc_sink_sink_payload_data;
-assign mac_core_tx_cdc_cdc_sink_payload_last_be = mac_core_tx_cdc_sink_sink_payload_last_be;
-assign mac_core_tx_cdc_cdc_sink_payload_error = mac_core_tx_cdc_sink_sink_payload_error;
-assign mac_core_tx_cdc_source_source_valid = mac_core_tx_cdc_cdc_source_valid;
-assign mac_core_tx_cdc_cdc_source_ready = mac_core_tx_cdc_source_source_ready;
-assign mac_core_tx_cdc_source_source_first = mac_core_tx_cdc_cdc_source_first;
-assign mac_core_tx_cdc_source_source_last = mac_core_tx_cdc_cdc_source_last;
-assign mac_core_tx_cdc_source_source_payload_data = mac_core_tx_cdc_cdc_source_payload_data;
-assign mac_core_tx_cdc_source_source_payload_last_be = mac_core_tx_cdc_cdc_source_payload_last_be;
-assign mac_core_tx_cdc_source_source_payload_error = mac_core_tx_cdc_cdc_source_payload_error;
-assign mac_core_tx_cdc_cdc_asyncfifo_din = {mac_core_tx_cdc_cdc_fifo_in_last, mac_core_tx_cdc_cdc_fifo_in_first, mac_core_tx_cdc_cdc_fifo_in_payload_error, mac_core_tx_cdc_cdc_fifo_in_payload_last_be, mac_core_tx_cdc_cdc_fifo_in_payload_data};
-assign {mac_core_tx_cdc_cdc_fifo_out_last, mac_core_tx_cdc_cdc_fifo_out_first, mac_core_tx_cdc_cdc_fifo_out_payload_error, mac_core_tx_cdc_cdc_fifo_out_payload_last_be, mac_core_tx_cdc_cdc_fifo_out_payload_data} = mac_core_tx_cdc_cdc_asyncfifo_dout;
-assign mac_core_tx_cdc_cdc_sink_ready = mac_core_tx_cdc_cdc_asyncfifo_writable;
-assign mac_core_tx_cdc_cdc_asyncfifo_we = mac_core_tx_cdc_cdc_sink_valid;
-assign mac_core_tx_cdc_cdc_fifo_in_first = mac_core_tx_cdc_cdc_sink_first;
-assign mac_core_tx_cdc_cdc_fifo_in_last = mac_core_tx_cdc_cdc_sink_last;
-assign mac_core_tx_cdc_cdc_fifo_in_payload_data = mac_core_tx_cdc_cdc_sink_payload_data;
-assign mac_core_tx_cdc_cdc_fifo_in_payload_last_be = mac_core_tx_cdc_cdc_sink_payload_last_be;
-assign mac_core_tx_cdc_cdc_fifo_in_payload_error = mac_core_tx_cdc_cdc_sink_payload_error;
-assign mac_core_tx_cdc_cdc_source_valid = mac_core_tx_cdc_cdc_asyncfifo_readable;
-assign mac_core_tx_cdc_cdc_source_first = mac_core_tx_cdc_cdc_fifo_out_first;
-assign mac_core_tx_cdc_cdc_source_last = mac_core_tx_cdc_cdc_fifo_out_last;
-assign mac_core_tx_cdc_cdc_source_payload_data = mac_core_tx_cdc_cdc_fifo_out_payload_data;
-assign mac_core_tx_cdc_cdc_source_payload_last_be = mac_core_tx_cdc_cdc_fifo_out_payload_last_be;
-assign mac_core_tx_cdc_cdc_source_payload_error = mac_core_tx_cdc_cdc_fifo_out_payload_error;
-assign mac_core_tx_cdc_cdc_asyncfifo_re = mac_core_tx_cdc_cdc_source_ready;
-assign mac_core_tx_cdc_cdc_graycounter0_ce = (mac_core_tx_cdc_cdc_asyncfifo_writable & mac_core_tx_cdc_cdc_asyncfifo_we);
-assign mac_core_tx_cdc_cdc_graycounter1_ce = (mac_core_tx_cdc_cdc_asyncfifo_readable & mac_core_tx_cdc_cdc_asyncfifo_re);
-assign mac_core_tx_cdc_cdc_asyncfifo_writable = (((mac_core_tx_cdc_cdc_graycounter0_q[5] == mac_core_tx_cdc_cdc_consume_wdomain[5]) | (mac_core_tx_cdc_cdc_graycounter0_q[4] == mac_core_tx_cdc_cdc_consume_wdomain[4])) | (mac_core_tx_cdc_cdc_graycounter0_q[3:0] != mac_core_tx_cdc_cdc_consume_wdomain[3:0]));
-assign mac_core_tx_cdc_cdc_asyncfifo_readable = (mac_core_tx_cdc_cdc_graycounter1_q != mac_core_tx_cdc_cdc_produce_rdomain);
-assign mac_core_tx_cdc_cdc_wrport_adr = mac_core_tx_cdc_cdc_graycounter0_q_binary[4:0];
-assign mac_core_tx_cdc_cdc_wrport_dat_w = mac_core_tx_cdc_cdc_asyncfifo_din;
-assign mac_core_tx_cdc_cdc_wrport_we = mac_core_tx_cdc_cdc_graycounter0_ce;
-assign mac_core_tx_cdc_cdc_rdport_adr = mac_core_tx_cdc_cdc_graycounter1_q_next_binary[4:0];
-assign mac_core_tx_cdc_cdc_asyncfifo_dout = mac_core_tx_cdc_cdc_rdport_dat_r;
+assign mac_core_txdatapath_cdc_sink_valid = mac_core_txdatapath_sink_sink_valid;
+assign mac_core_txdatapath_sink_sink_ready = mac_core_txdatapath_cdc_sink_ready;
+assign mac_core_txdatapath_cdc_sink_first = mac_core_txdatapath_sink_sink_first;
+assign mac_core_txdatapath_cdc_sink_last = mac_core_txdatapath_sink_sink_last;
+assign mac_core_txdatapath_cdc_sink_payload_data = mac_core_txdatapath_sink_sink_payload_data;
+assign mac_core_txdatapath_cdc_sink_payload_be = mac_core_txdatapath_sink_sink_payload_be;
+assign mac_core_txdatapath_cdc_sink_payload_error = mac_core_txdatapath_sink_sink_payload_error;
+assign mac_core_txdatapath_source_source_valid = mac_core_txdatapath_cdc_source_valid;
+assign mac_core_txdatapath_cdc_source_ready = mac_core_txdatapath_source_source_ready;
+assign mac_core_txdatapath_source_source_first = mac_core_txdatapath_cdc_source_first;
+assign mac_core_txdatapath_source_source_last = mac_core_txdatapath_cdc_source_last;
+assign mac_core_txdatapath_source_source_payload_data = mac_core_txdatapath_cdc_source_payload_data;
+assign mac_core_txdatapath_source_source_payload_be = mac_core_txdatapath_cdc_source_payload_be;
+assign mac_core_txdatapath_source_source_payload_error = mac_core_txdatapath_cdc_source_payload_error;
+assign mac_core_txdatapath_cdc_asyncfifo_din = {mac_core_txdatapath_cdc_fifo_in_last, mac_core_txdatapath_cdc_fifo_in_first, mac_core_txdatapath_cdc_fifo_in_payload_error, mac_core_txdatapath_cdc_fifo_in_payload_be, mac_core_txdatapath_cdc_fifo_in_payload_data};
+assign {mac_core_txdatapath_cdc_fifo_out_last, mac_core_txdatapath_cdc_fifo_out_first, mac_core_txdatapath_cdc_fifo_out_payload_error, mac_core_txdatapath_cdc_fifo_out_payload_be, mac_core_txdatapath_cdc_fifo_out_payload_data} = mac_core_txdatapath_cdc_asyncfifo_dout;
+assign mac_core_txdatapath_cdc_sink_ready = mac_core_txdatapath_cdc_asyncfifo_writable;
+assign mac_core_txdatapath_cdc_asyncfifo_we = mac_core_txdatapath_cdc_sink_valid;
+assign mac_core_txdatapath_cdc_fifo_in_first = mac_core_txdatapath_cdc_sink_first;
+assign mac_core_txdatapath_cdc_fifo_in_last = mac_core_txdatapath_cdc_sink_last;
+assign mac_core_txdatapath_cdc_fifo_in_payload_data = mac_core_txdatapath_cdc_sink_payload_data;
+assign mac_core_txdatapath_cdc_fifo_in_payload_be = mac_core_txdatapath_cdc_sink_payload_be;
+assign mac_core_txdatapath_cdc_fifo_in_payload_error = mac_core_txdatapath_cdc_sink_payload_error;
+assign mac_core_txdatapath_cdc_source_valid = mac_core_txdatapath_cdc_asyncfifo_readable;
+assign mac_core_txdatapath_cdc_source_first = mac_core_txdatapath_cdc_fifo_out_first;
+assign mac_core_txdatapath_cdc_source_last = mac_core_txdatapath_cdc_fifo_out_last;
+assign mac_core_txdatapath_cdc_source_payload_data = mac_core_txdatapath_cdc_fifo_out_payload_data;
+assign mac_core_txdatapath_cdc_source_payload_be = mac_core_txdatapath_cdc_fifo_out_payload_be;
+assign mac_core_txdatapath_cdc_source_payload_error = mac_core_txdatapath_cdc_fifo_out_payload_error;
+assign mac_core_txdatapath_cdc_asyncfifo_re = mac_core_txdatapath_cdc_source_ready;
+assign mac_core_txdatapath_cdc_graycounter0_ce = (mac_core_txdatapath_cdc_asyncfifo_writable & mac_core_txdatapath_cdc_asyncfifo_we);
+assign mac_core_txdatapath_cdc_graycounter1_ce = (mac_core_txdatapath_cdc_asyncfifo_readable & mac_core_txdatapath_cdc_asyncfifo_re);
+assign mac_core_txdatapath_cdc_asyncfifo_writable = (((mac_core_txdatapath_cdc_graycounter0_q[5] == mac_core_txdatapath_cdc_consume_wdomain[5]) | (mac_core_txdatapath_cdc_graycounter0_q[4] == mac_core_txdatapath_cdc_consume_wdomain[4])) | (mac_core_txdatapath_cdc_graycounter0_q[3:0] != mac_core_txdatapath_cdc_consume_wdomain[3:0]));
+assign mac_core_txdatapath_cdc_asyncfifo_readable = (mac_core_txdatapath_cdc_graycounter1_q != mac_core_txdatapath_cdc_produce_rdomain);
+assign mac_core_txdatapath_cdc_wrport_adr = mac_core_txdatapath_cdc_graycounter0_q_binary[4:0];
+assign mac_core_txdatapath_cdc_wrport_dat_w = mac_core_txdatapath_cdc_asyncfifo_din;
+assign mac_core_txdatapath_cdc_wrport_we = mac_core_txdatapath_cdc_graycounter0_ce;
+assign mac_core_txdatapath_cdc_rdport_adr = mac_core_txdatapath_cdc_graycounter1_q_next_binary[4:0];
+assign mac_core_txdatapath_cdc_asyncfifo_dout = mac_core_txdatapath_cdc_rdport_dat_r;
 always @(*) begin
-    mac_core_tx_cdc_cdc_graycounter0_q_next_binary <= 6'd0;
-    if (mac_core_tx_cdc_cdc_graycounter0_ce) begin
-        mac_core_tx_cdc_cdc_graycounter0_q_next_binary <= (mac_core_tx_cdc_cdc_graycounter0_q_binary + 1'd1);
+    mac_core_txdatapath_cdc_graycounter0_q_next_binary = 6'd0;
+    if (mac_core_txdatapath_cdc_graycounter0_ce) begin
+        mac_core_txdatapath_cdc_graycounter0_q_next_binary = (mac_core_txdatapath_cdc_graycounter0_q_binary + 1'd1);
     end else begin
-        mac_core_tx_cdc_cdc_graycounter0_q_next_binary <= mac_core_tx_cdc_cdc_graycounter0_q_binary;
+        mac_core_txdatapath_cdc_graycounter0_q_next_binary = mac_core_txdatapath_cdc_graycounter0_q_binary;
     end
 end
-assign mac_core_tx_cdc_cdc_graycounter0_q_next = (mac_core_tx_cdc_cdc_graycounter0_q_next_binary ^ mac_core_tx_cdc_cdc_graycounter0_q_next_binary[5:1]);
+assign mac_core_txdatapath_cdc_graycounter0_q_next = (mac_core_txdatapath_cdc_graycounter0_q_next_binary ^ mac_core_txdatapath_cdc_graycounter0_q_next_binary[5:1]);
 always @(*) begin
-    mac_core_tx_cdc_cdc_graycounter1_q_next_binary <= 6'd0;
-    if (mac_core_tx_cdc_cdc_graycounter1_ce) begin
-        mac_core_tx_cdc_cdc_graycounter1_q_next_binary <= (mac_core_tx_cdc_cdc_graycounter1_q_binary + 1'd1);
+    mac_core_txdatapath_cdc_graycounter1_q_next_binary = 6'd0;
+    if (mac_core_txdatapath_cdc_graycounter1_ce) begin
+        mac_core_txdatapath_cdc_graycounter1_q_next_binary = (mac_core_txdatapath_cdc_graycounter1_q_binary + 1'd1);
     end else begin
-        mac_core_tx_cdc_cdc_graycounter1_q_next_binary <= mac_core_tx_cdc_cdc_graycounter1_q_binary;
+        mac_core_txdatapath_cdc_graycounter1_q_next_binary = mac_core_txdatapath_cdc_graycounter1_q_binary;
     end
 end
-assign mac_core_tx_cdc_cdc_graycounter1_q_next = (mac_core_tx_cdc_cdc_graycounter1_q_next_binary ^ mac_core_tx_cdc_cdc_graycounter1_q_next_binary[5:1]);
+assign mac_core_txdatapath_cdc_graycounter1_q_next = (mac_core_txdatapath_cdc_graycounter1_q_next_binary ^ mac_core_txdatapath_cdc_graycounter1_q_next_binary[5:1]);
 assign mac_core_tx_padding_counter_done = (mac_core_tx_padding_counter >= 6'd59);
 always @(*) begin
-    liteethmac_txdatapath_liteethmacpaddinginserter_next_state <= 1'd0;
-    mac_core_tx_padding_counter_liteethmac_clockdomainsrenamer0_next_value <= 16'd0;
-    mac_core_tx_padding_counter_liteethmac_clockdomainsrenamer0_next_value_ce <= 1'd0;
-    mac_core_tx_padding_sink_ready <= 1'd0;
-    mac_core_tx_padding_source_first <= 1'd0;
-    mac_core_tx_padding_source_last <= 1'd0;
-    mac_core_tx_padding_source_payload_data <= 8'd0;
-    mac_core_tx_padding_source_payload_error <= 1'd0;
-    mac_core_tx_padding_source_payload_last_be <= 1'd0;
-    mac_core_tx_padding_source_valid <= 1'd0;
-    liteethmac_txdatapath_liteethmacpaddinginserter_next_state <= liteethmac_txdatapath_liteethmacpaddinginserter_state;
+    liteethmac_txdatapath_liteethmacpaddinginserter_next_state = 1'd0;
+    mac_core_tx_padding_counter_liteethmaccore_clockdomainsrenamer0_next_value = 16'd0;
+    mac_core_tx_padding_counter_liteethmaccore_clockdomainsrenamer0_next_value_ce = 1'd0;
+    mac_core_tx_padding_sink_ready = 1'd0;
+    mac_core_tx_padding_source_first = 1'd0;
+    mac_core_tx_padding_source_last = 1'd0;
+    mac_core_tx_padding_source_payload_be = 1'd0;
+    mac_core_tx_padding_source_payload_data = 8'd0;
+    mac_core_tx_padding_source_payload_error = 1'd0;
+    mac_core_tx_padding_source_valid = 1'd0;
     case (liteethmac_txdatapath_liteethmacpaddinginserter_state)
         1'd1: begin
-            mac_core_tx_padding_source_valid <= 1'd1;
+        end
+        default: begin
+            mac_core_tx_padding_sink_ready = mac_core_tx_padding_source_ready;
+        end
+    endcase
+    case (liteethmac_txdatapath_liteethmacpaddinginserter_state)
+        1'd1: begin
+        end
+        default: begin
+            mac_core_tx_padding_source_first = mac_core_tx_padding_sink_first;
+        end
+    endcase
+    case (liteethmac_txdatapath_liteethmacpaddinginserter_state)
+        1'd1: begin
             if (mac_core_tx_padding_counter_done) begin
-                mac_core_tx_padding_source_payload_last_be <= 1'd1;
-                mac_core_tx_padding_source_last <= 1'd1;
+                mac_core_tx_padding_source_last = 1'd1;
             end
-            mac_core_tx_padding_source_payload_data <= 1'd0;
+        end
+        default: begin
+            mac_core_tx_padding_source_last = mac_core_tx_padding_sink_last;
+            if (mac_core_tx_padding_sink_last) begin
+                if ((~mac_core_tx_padding_counter_done)) begin
+                    mac_core_tx_padding_source_last = 1'd0;
+                end else begin
+                end
+            end
+        end
+    endcase
+    case (liteethmac_txdatapath_liteethmacpaddinginserter_state)
+        1'd1: begin
+            mac_core_tx_padding_source_payload_be = 1'd1;
+            if (mac_core_tx_padding_counter_done) begin
+                mac_core_tx_padding_source_payload_be = 1'd1;
+            end
+        end
+        default: begin
+            mac_core_tx_padding_source_payload_be = mac_core_tx_padding_sink_payload_be;
+            if (mac_core_tx_padding_sink_last) begin
+                if ((~mac_core_tx_padding_counter_done)) begin
+                    mac_core_tx_padding_source_payload_be = 1'd1;
+                end else begin
+                    if (((mac_core_tx_padding_counter == 6'd59) & (mac_core_tx_padding_sink_payload_be < 1'd1))) begin
+                        mac_core_tx_padding_source_payload_be = 1'd1;
+                    end
+                end
+            end
+        end
+    endcase
+    case (liteethmac_txdatapath_liteethmacpaddinginserter_state)
+        1'd1: begin
+            mac_core_tx_padding_source_payload_data = 1'd0;
+        end
+        default: begin
+            mac_core_tx_padding_source_payload_data = mac_core_tx_padding_sink_payload_data;
+            if (mac_core_tx_padding_sink_last) begin
+                if ((~mac_core_tx_padding_sink_payload_be)) begin
+                    mac_core_tx_padding_source_payload_data = 1'd0;
+                end
+            end
+        end
+    endcase
+    case (liteethmac_txdatapath_liteethmacpaddinginserter_state)
+        1'd1: begin
+        end
+        default: begin
+            mac_core_tx_padding_source_payload_error = mac_core_tx_padding_sink_payload_error;
+        end
+    endcase
+    case (liteethmac_txdatapath_liteethmacpaddinginserter_state)
+        1'd1: begin
+            mac_core_tx_padding_source_valid = 1'd1;
+        end
+        default: begin
+            mac_core_tx_padding_source_valid = mac_core_tx_padding_sink_valid;
+        end
+    endcase
+    liteethmac_txdatapath_liteethmacpaddinginserter_next_state = liteethmac_txdatapath_liteethmacpaddinginserter_state;
+    case (liteethmac_txdatapath_liteethmacpaddinginserter_state)
+        1'd1: begin
             if ((mac_core_tx_padding_source_valid & mac_core_tx_padding_source_ready)) begin
-                mac_core_tx_padding_counter_liteethmac_clockdomainsrenamer0_next_value <= (mac_core_tx_padding_counter + 1'd1);
-                mac_core_tx_padding_counter_liteethmac_clockdomainsrenamer0_next_value_ce <= 1'd1;
                 if (mac_core_tx_padding_counter_done) begin
-                    mac_core_tx_padding_counter_liteethmac_clockdomainsrenamer0_next_value <= 1'd0;
-                    mac_core_tx_padding_counter_liteethmac_clockdomainsrenamer0_next_value_ce <= 1'd1;
-                    liteethmac_txdatapath_liteethmacpaddinginserter_next_state <= 1'd0;
+                    liteethmac_txdatapath_liteethmacpaddinginserter_next_state = 1'd0;
                 end
             end
         end
         default: begin
-            mac_core_tx_padding_source_valid <= mac_core_tx_padding_sink_valid;
-            mac_core_tx_padding_sink_ready <= mac_core_tx_padding_source_ready;
-            mac_core_tx_padding_source_first <= mac_core_tx_padding_sink_first;
-            mac_core_tx_padding_source_last <= mac_core_tx_padding_sink_last;
-            mac_core_tx_padding_source_payload_data <= mac_core_tx_padding_sink_payload_data;
-            mac_core_tx_padding_source_payload_last_be <= mac_core_tx_padding_sink_payload_last_be;
-            mac_core_tx_padding_source_payload_error <= mac_core_tx_padding_sink_payload_error;
             if ((mac_core_tx_padding_source_valid & mac_core_tx_padding_source_ready)) begin
-                mac_core_tx_padding_counter_liteethmac_clockdomainsrenamer0_next_value <= (mac_core_tx_padding_counter + 1'd1);
-                mac_core_tx_padding_counter_liteethmac_clockdomainsrenamer0_next_value_ce <= 1'd1;
                 if (mac_core_tx_padding_sink_last) begin
                     if ((~mac_core_tx_padding_counter_done)) begin
-                        mac_core_tx_padding_source_last <= 1'd0;
-                        mac_core_tx_padding_source_payload_last_be <= 1'd0;
-                        liteethmac_txdatapath_liteethmacpaddinginserter_next_state <= 1'd1;
+                        liteethmac_txdatapath_liteethmacpaddinginserter_next_state = 1'd1;
                     end else begin
-                        if (((mac_core_tx_padding_counter == 6'd59) & (mac_core_tx_padding_sink_payload_last_be < 1'd1))) begin
-                            mac_core_tx_padding_source_payload_last_be <= 1'd1;
-                        end else begin
-                            mac_core_tx_padding_counter_liteethmac_clockdomainsrenamer0_next_value <= 1'd0;
-                            mac_core_tx_padding_counter_liteethmac_clockdomainsrenamer0_next_value_ce <= 1'd1;
-                        end
+                    end
+                end
+            end
+        end
+    endcase
+    case (liteethmac_txdatapath_liteethmacpaddinginserter_state)
+        1'd1: begin
+            if ((mac_core_tx_padding_source_valid & mac_core_tx_padding_source_ready)) begin
+                mac_core_tx_padding_counter_liteethmaccore_clockdomainsrenamer0_next_value = (mac_core_tx_padding_counter + 1'd1);
+                if (mac_core_tx_padding_counter_done) begin
+                    mac_core_tx_padding_counter_liteethmaccore_clockdomainsrenamer0_next_value = 1'd0;
+                end
+            end
+        end
+        default: begin
+            if ((mac_core_tx_padding_source_valid & mac_core_tx_padding_source_ready)) begin
+                mac_core_tx_padding_counter_liteethmaccore_clockdomainsrenamer0_next_value = (mac_core_tx_padding_counter + 1'd1);
+                if (mac_core_tx_padding_sink_last) begin
+                    if ((~mac_core_tx_padding_counter_done)) begin
+                    end else begin
+                        mac_core_tx_padding_counter_liteethmaccore_clockdomainsrenamer0_next_value = 1'd0;
+                    end
+                end
+            end
+        end
+    endcase
+    case (liteethmac_txdatapath_liteethmacpaddinginserter_state)
+        1'd1: begin
+            if ((mac_core_tx_padding_source_valid & mac_core_tx_padding_source_ready)) begin
+                mac_core_tx_padding_counter_liteethmaccore_clockdomainsrenamer0_next_value_ce = 1'd1;
+                if (mac_core_tx_padding_counter_done) begin
+                    mac_core_tx_padding_counter_liteethmaccore_clockdomainsrenamer0_next_value_ce = 1'd1;
+                end
+            end
+        end
+        default: begin
+            if ((mac_core_tx_padding_source_valid & mac_core_tx_padding_source_ready)) begin
+                mac_core_tx_padding_counter_liteethmaccore_clockdomainsrenamer0_next_value_ce = 1'd1;
+                if (mac_core_tx_padding_sink_last) begin
+                    if ((~mac_core_tx_padding_counter_done)) begin
+                    end else begin
+                        mac_core_tx_padding_counter_liteethmaccore_clockdomainsrenamer0_next_value_ce = 1'd1;
                     end
                 end
             end
@@ -2964,148 +2941,149 @@ always @(*) begin
     endcase
 end
 assign mac_core_tx_crc_data0 = mac_core_tx_crc_sink_payload_data;
-assign mac_core_tx_crc_be = mac_core_tx_crc_sink_payload_last_be;
+assign mac_core_tx_crc_be1 = mac_core_tx_crc_sink_payload_be;
 assign mac_core_tx_crc_cnt_done = (mac_core_tx_crc_cnt == 1'd0);
 assign mac_core_tx_crc_sink_valid = mac_core_tx_crc_source_source_valid;
 assign mac_core_tx_crc_source_source_ready = mac_core_tx_crc_sink_ready;
 assign mac_core_tx_crc_sink_first = mac_core_tx_crc_source_source_first;
 assign mac_core_tx_crc_sink_last = mac_core_tx_crc_source_source_last;
 assign mac_core_tx_crc_sink_payload_data = mac_core_tx_crc_source_source_payload_data;
-assign mac_core_tx_crc_sink_payload_last_be = mac_core_tx_crc_source_source_payload_last_be;
+assign mac_core_tx_crc_sink_payload_be = mac_core_tx_crc_source_source_payload_be;
 assign mac_core_tx_crc_sink_payload_error = mac_core_tx_crc_source_source_payload_error;
 assign mac_core_tx_crc_data1 = mac_core_tx_crc_data0;
 assign mac_core_tx_crc_crc_prev = mac_core_tx_crc_reg;
 always @(*) begin
-    mac_core_tx_crc_error <= 1'd0;
-    mac_core_tx_crc_value <= 32'd0;
-    if (mac_core_tx_crc_be) begin
-        mac_core_tx_crc_value <= ({mac_core_tx_crc_crc_next[0], mac_core_tx_crc_crc_next[1], mac_core_tx_crc_crc_next[2], mac_core_tx_crc_crc_next[3], mac_core_tx_crc_crc_next[4], mac_core_tx_crc_crc_next[5], mac_core_tx_crc_crc_next[6], mac_core_tx_crc_crc_next[7], mac_core_tx_crc_crc_next[8], mac_core_tx_crc_crc_next[9], mac_core_tx_crc_crc_next[10], mac_core_tx_crc_crc_next[11], mac_core_tx_crc_crc_next[12], mac_core_tx_crc_crc_next[13], mac_core_tx_crc_crc_next[14], mac_core_tx_crc_crc_next[15], mac_core_tx_crc_crc_next[16], mac_core_tx_crc_crc_next[17], mac_core_tx_crc_crc_next[18], mac_core_tx_crc_crc_next[19], mac_core_tx_crc_crc_next[20], mac_core_tx_crc_crc_next[21], mac_core_tx_crc_crc_next[22], mac_core_tx_crc_crc_next[23], mac_core_tx_crc_crc_next[24], mac_core_tx_crc_crc_next[25], mac_core_tx_crc_crc_next[26], mac_core_tx_crc_crc_next[27], mac_core_tx_crc_crc_next[28], mac_core_tx_crc_crc_next[29], mac_core_tx_crc_crc_next[30], mac_core_tx_crc_crc_next[31]} ^ 32'd4294967295);
-        mac_core_tx_crc_error <= (mac_core_tx_crc_crc_next != 32'd3338984827);
+    mac_core_tx_crc_error = 1'd0;
+    mac_core_tx_crc_value = 32'd0;
+    if (mac_core_tx_crc_be1) begin
+        mac_core_tx_crc_value = ({mac_core_tx_crc_crc_next[0], mac_core_tx_crc_crc_next[1], mac_core_tx_crc_crc_next[2], mac_core_tx_crc_crc_next[3], mac_core_tx_crc_crc_next[4], mac_core_tx_crc_crc_next[5], mac_core_tx_crc_crc_next[6], mac_core_tx_crc_crc_next[7], mac_core_tx_crc_crc_next[8], mac_core_tx_crc_crc_next[9], mac_core_tx_crc_crc_next[10], mac_core_tx_crc_crc_next[11], mac_core_tx_crc_crc_next[12], mac_core_tx_crc_crc_next[13], mac_core_tx_crc_crc_next[14], mac_core_tx_crc_crc_next[15], mac_core_tx_crc_crc_next[16], mac_core_tx_crc_crc_next[17], mac_core_tx_crc_crc_next[18], mac_core_tx_crc_crc_next[19], mac_core_tx_crc_crc_next[20], mac_core_tx_crc_crc_next[21], mac_core_tx_crc_crc_next[22], mac_core_tx_crc_crc_next[23], mac_core_tx_crc_crc_next[24], mac_core_tx_crc_crc_next[25], mac_core_tx_crc_crc_next[26], mac_core_tx_crc_crc_next[27], mac_core_tx_crc_crc_next[28], mac_core_tx_crc_crc_next[29], mac_core_tx_crc_crc_next[30], mac_core_tx_crc_crc_next[31]} ^ 32'hffffffff);
+        mac_core_tx_crc_error = (mac_core_tx_crc_crc_next != 32'd3338984827);
     end
 end
 always @(*) begin
-    mac_core_tx_crc_crc_next <= 32'd0;
-    mac_core_tx_crc_crc_next[0] <= (((mac_core_tx_crc_crc_prev[24] ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_data1[7]);
-    mac_core_tx_crc_crc_next[1] <= (((((((mac_core_tx_crc_crc_prev[25] ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_data1[6]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_data1[7]);
-    mac_core_tx_crc_crc_next[2] <= (((((((((mac_core_tx_crc_crc_prev[26] ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_data1[6]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_data1[7]);
-    mac_core_tx_crc_crc_next[3] <= (((((((mac_core_tx_crc_crc_prev[27] ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_data1[6]);
-    mac_core_tx_crc_crc_next[4] <= (((((((((mac_core_tx_crc_crc_prev[28] ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_data1[7]);
-    mac_core_tx_crc_crc_next[5] <= (((((((((((((mac_core_tx_crc_crc_prev[29] ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_data1[6]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_data1[7]);
-    mac_core_tx_crc_crc_next[6] <= (((((((((((mac_core_tx_crc_crc_prev[30] ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_data1[6]);
-    mac_core_tx_crc_crc_next[7] <= (((((((((mac_core_tx_crc_crc_prev[31] ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_data1[7]);
-    mac_core_tx_crc_crc_next[8] <= ((((((((mac_core_tx_crc_crc_prev[0] ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_data1[6]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_data1[7]);
-    mac_core_tx_crc_crc_next[9] <= ((((((((mac_core_tx_crc_crc_prev[1] ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_data1[6]);
-    mac_core_tx_crc_crc_next[10] <= ((((((((mac_core_tx_crc_crc_prev[2] ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_data1[7]);
-    mac_core_tx_crc_crc_next[11] <= ((((((((mac_core_tx_crc_crc_prev[3] ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_data1[6]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_data1[7]);
-    mac_core_tx_crc_crc_next[12] <= ((((((((((((mac_core_tx_crc_crc_prev[4] ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_data1[6]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_data1[7]);
-    mac_core_tx_crc_crc_next[13] <= ((((((((((((mac_core_tx_crc_crc_prev[5] ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_data1[6]);
-    mac_core_tx_crc_crc_next[14] <= ((((((((((mac_core_tx_crc_crc_prev[6] ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]);
-    mac_core_tx_crc_crc_next[15] <= ((((((((mac_core_tx_crc_crc_prev[7] ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]);
-    mac_core_tx_crc_crc_next[16] <= ((((((mac_core_tx_crc_crc_prev[8] ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_data1[7]);
-    mac_core_tx_crc_crc_next[17] <= ((((((mac_core_tx_crc_crc_prev[9] ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_data1[6]);
-    mac_core_tx_crc_crc_next[18] <= ((((((mac_core_tx_crc_crc_prev[10] ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]);
-    mac_core_tx_crc_crc_next[19] <= ((((mac_core_tx_crc_crc_prev[11] ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]);
-    mac_core_tx_crc_crc_next[20] <= ((mac_core_tx_crc_crc_prev[12] ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]);
-    mac_core_tx_crc_crc_next[21] <= ((mac_core_tx_crc_crc_prev[13] ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]);
-    mac_core_tx_crc_crc_next[22] <= ((mac_core_tx_crc_crc_prev[14] ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_data1[7]);
-    mac_core_tx_crc_crc_next[23] <= ((((((mac_core_tx_crc_crc_prev[15] ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_data1[6]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_data1[7]);
-    mac_core_tx_crc_crc_next[24] <= ((((((mac_core_tx_crc_crc_prev[16] ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_data1[6]);
-    mac_core_tx_crc_crc_next[25] <= ((((mac_core_tx_crc_crc_prev[17] ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]);
-    mac_core_tx_crc_crc_next[26] <= ((((((((mac_core_tx_crc_crc_prev[18] ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_data1[7]);
-    mac_core_tx_crc_crc_next[27] <= ((((((((mac_core_tx_crc_crc_prev[19] ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_data1[6]);
-    mac_core_tx_crc_crc_next[28] <= ((((((mac_core_tx_crc_crc_prev[20] ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]);
-    mac_core_tx_crc_crc_next[29] <= ((((((mac_core_tx_crc_crc_prev[21] ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]);
-    mac_core_tx_crc_crc_next[30] <= ((((mac_core_tx_crc_crc_prev[22] ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]);
-    mac_core_tx_crc_crc_next[31] <= ((mac_core_tx_crc_crc_prev[23] ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]);
+    mac_core_tx_crc_crc_next = 32'd0;
+    mac_core_tx_crc_crc_next[0] = (((mac_core_tx_crc_crc_prev[24] ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_data1[7]);
+    mac_core_tx_crc_crc_next[1] = (((((((mac_core_tx_crc_crc_prev[25] ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_data1[6]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_data1[7]);
+    mac_core_tx_crc_crc_next[2] = (((((((((mac_core_tx_crc_crc_prev[26] ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_data1[6]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_data1[7]);
+    mac_core_tx_crc_crc_next[3] = (((((((mac_core_tx_crc_crc_prev[27] ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_data1[6]);
+    mac_core_tx_crc_crc_next[4] = (((((((((mac_core_tx_crc_crc_prev[28] ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_data1[7]);
+    mac_core_tx_crc_crc_next[5] = (((((((((((((mac_core_tx_crc_crc_prev[29] ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_data1[6]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_data1[7]);
+    mac_core_tx_crc_crc_next[6] = (((((((((((mac_core_tx_crc_crc_prev[30] ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_data1[6]);
+    mac_core_tx_crc_crc_next[7] = (((((((((mac_core_tx_crc_crc_prev[31] ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_data1[7]);
+    mac_core_tx_crc_crc_next[8] = ((((((((mac_core_tx_crc_crc_prev[0] ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_data1[6]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_data1[7]);
+    mac_core_tx_crc_crc_next[9] = ((((((((mac_core_tx_crc_crc_prev[1] ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_data1[6]);
+    mac_core_tx_crc_crc_next[10] = ((((((((mac_core_tx_crc_crc_prev[2] ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_data1[7]);
+    mac_core_tx_crc_crc_next[11] = ((((((((mac_core_tx_crc_crc_prev[3] ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_data1[6]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_data1[7]);
+    mac_core_tx_crc_crc_next[12] = ((((((((((((mac_core_tx_crc_crc_prev[4] ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_data1[6]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_data1[7]);
+    mac_core_tx_crc_crc_next[13] = ((((((((((((mac_core_tx_crc_crc_prev[5] ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_data1[6]);
+    mac_core_tx_crc_crc_next[14] = ((((((((((mac_core_tx_crc_crc_prev[6] ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]);
+    mac_core_tx_crc_crc_next[15] = ((((((((mac_core_tx_crc_crc_prev[7] ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]);
+    mac_core_tx_crc_crc_next[16] = ((((((mac_core_tx_crc_crc_prev[8] ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_data1[7]);
+    mac_core_tx_crc_crc_next[17] = ((((((mac_core_tx_crc_crc_prev[9] ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_data1[6]);
+    mac_core_tx_crc_crc_next[18] = ((((((mac_core_tx_crc_crc_prev[10] ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]);
+    mac_core_tx_crc_crc_next[19] = ((((mac_core_tx_crc_crc_prev[11] ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]);
+    mac_core_tx_crc_crc_next[20] = ((mac_core_tx_crc_crc_prev[12] ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]);
+    mac_core_tx_crc_crc_next[21] = ((mac_core_tx_crc_crc_prev[13] ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]);
+    mac_core_tx_crc_crc_next[22] = ((mac_core_tx_crc_crc_prev[14] ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_data1[7]);
+    mac_core_tx_crc_crc_next[23] = ((((((mac_core_tx_crc_crc_prev[15] ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_data1[6]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_data1[7]);
+    mac_core_tx_crc_crc_next[24] = ((((((mac_core_tx_crc_crc_prev[16] ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_data1[6]);
+    mac_core_tx_crc_crc_next[25] = ((((mac_core_tx_crc_crc_prev[17] ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]);
+    mac_core_tx_crc_crc_next[26] = ((((((((mac_core_tx_crc_crc_prev[18] ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]) ^ mac_core_tx_crc_crc_prev[24]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_data1[7]);
+    mac_core_tx_crc_crc_next[27] = ((((((((mac_core_tx_crc_crc_prev[19] ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]) ^ mac_core_tx_crc_crc_prev[25]) ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_data1[6]);
+    mac_core_tx_crc_crc_next[28] = ((((((mac_core_tx_crc_crc_prev[20] ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]) ^ mac_core_tx_crc_crc_prev[26]) ^ mac_core_tx_crc_data1[5]);
+    mac_core_tx_crc_crc_next[29] = ((((((mac_core_tx_crc_crc_prev[21] ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_crc_prev[30]) ^ mac_core_tx_crc_data1[1]) ^ mac_core_tx_crc_crc_prev[27]) ^ mac_core_tx_crc_data1[4]);
+    mac_core_tx_crc_crc_next[30] = ((((mac_core_tx_crc_crc_prev[22] ^ mac_core_tx_crc_crc_prev[31]) ^ mac_core_tx_crc_data1[0]) ^ mac_core_tx_crc_crc_prev[28]) ^ mac_core_tx_crc_data1[3]);
+    mac_core_tx_crc_crc_next[31] = ((mac_core_tx_crc_crc_prev[23] ^ mac_core_tx_crc_crc_prev[29]) ^ mac_core_tx_crc_data1[2]);
 end
 always @(*) begin
-    liteethmac_txdatapath_bufferizeendpoints_next_state <= 2'd0;
-    mac_core_tx_crc_ce <= 1'd0;
-    mac_core_tx_crc_crc_packet_liteethmac_clockdomainsrenamer1_next_value0 <= 32'd0;
-    mac_core_tx_crc_crc_packet_liteethmac_clockdomainsrenamer1_next_value_ce0 <= 1'd0;
-    mac_core_tx_crc_is_ongoing0 <= 1'd0;
-    mac_core_tx_crc_is_ongoing1 <= 1'd0;
-    mac_core_tx_crc_last_be_liteethmac_clockdomainsrenamer1_next_value1 <= 1'd0;
-    mac_core_tx_crc_last_be_liteethmac_clockdomainsrenamer1_next_value_ce1 <= 1'd0;
-    mac_core_tx_crc_reset <= 1'd0;
-    mac_core_tx_crc_sink_ready <= 1'd0;
-    mac_core_tx_crc_source_first <= 1'd0;
-    mac_core_tx_crc_source_last <= 1'd0;
-    mac_core_tx_crc_source_payload_data <= 8'd0;
-    mac_core_tx_crc_source_payload_error <= 1'd0;
-    mac_core_tx_crc_source_payload_last_be <= 1'd0;
-    mac_core_tx_crc_source_valid <= 1'd0;
-    liteethmac_txdatapath_bufferizeendpoints_next_state <= liteethmac_txdatapath_bufferizeendpoints_state;
+    liteethmac_txdatapath_bufferizeendpoints_next_state = 2'd0;
+    mac_core_tx_crc_be0_liteethmaccore_clockdomainsrenamer1_next_value1 = 1'd0;
+    mac_core_tx_crc_be0_liteethmaccore_clockdomainsrenamer1_next_value_ce1 = 1'd0;
+    mac_core_tx_crc_ce = 1'd0;
+    mac_core_tx_crc_crc_packet_liteethmaccore_clockdomainsrenamer1_next_value0 = 32'd0;
+    mac_core_tx_crc_crc_packet_liteethmaccore_clockdomainsrenamer1_next_value_ce0 = 1'd0;
+    mac_core_tx_crc_is_ongoing0 = 1'd0;
+    mac_core_tx_crc_is_ongoing1 = 1'd0;
+    mac_core_tx_crc_reset = 1'd0;
+    mac_core_tx_crc_sink_ready = 1'd0;
+    mac_core_tx_crc_source_first = 1'd0;
+    mac_core_tx_crc_source_last = 1'd0;
+    mac_core_tx_crc_source_payload_be = 1'd0;
+    mac_core_tx_crc_source_payload_data = 8'd0;
+    mac_core_tx_crc_source_payload_error = 1'd0;
+    mac_core_tx_crc_source_valid = 1'd0;
+    liteethmac_txdatapath_bufferizeendpoints_next_state = liteethmac_txdatapath_bufferizeendpoints_state;
     case (liteethmac_txdatapath_bufferizeendpoints_state)
         1'd1: begin
-            mac_core_tx_crc_ce <= (mac_core_tx_crc_sink_valid & mac_core_tx_crc_source_ready);
-            mac_core_tx_crc_source_valid <= mac_core_tx_crc_sink_valid;
-            mac_core_tx_crc_sink_ready <= mac_core_tx_crc_source_ready;
-            mac_core_tx_crc_source_first <= mac_core_tx_crc_sink_first;
-            mac_core_tx_crc_source_last <= mac_core_tx_crc_sink_last;
-            mac_core_tx_crc_source_payload_data <= mac_core_tx_crc_sink_payload_data;
-            mac_core_tx_crc_source_payload_last_be <= mac_core_tx_crc_sink_payload_last_be;
-            mac_core_tx_crc_source_payload_error <= mac_core_tx_crc_sink_payload_error;
-            mac_core_tx_crc_source_last <= 1'd0;
-            mac_core_tx_crc_source_payload_last_be <= 1'd0;
+            mac_core_tx_crc_ce = (mac_core_tx_crc_sink_valid & mac_core_tx_crc_source_ready);
+            mac_core_tx_crc_source_valid = mac_core_tx_crc_sink_valid;
+            mac_core_tx_crc_sink_ready = mac_core_tx_crc_source_ready;
+            mac_core_tx_crc_source_first = mac_core_tx_crc_sink_first;
+            mac_core_tx_crc_source_last = mac_core_tx_crc_sink_last;
+            mac_core_tx_crc_source_payload_data = mac_core_tx_crc_sink_payload_data;
+            mac_core_tx_crc_source_payload_be = mac_core_tx_crc_sink_payload_be;
+            mac_core_tx_crc_source_payload_error = mac_core_tx_crc_sink_payload_error;
+            mac_core_tx_crc_source_last = 1'd0;
+            mac_core_tx_crc_source_payload_be = 1'd1;
             if (mac_core_tx_crc_sink_last) begin
-                if (mac_core_tx_crc_sink_payload_last_be) begin
-                    mac_core_tx_crc_source_payload_data <= cases_slice_proxy[7:0];
+                if (mac_core_tx_crc_sink_payload_be) begin
+                    mac_core_tx_crc_source_payload_data = mac_core_tx_crc_sink_payload_data;
                 end
-                if ((1'd0 & (mac_core_tx_crc_sink_payload_last_be <= 4'd15))) begin
-                    mac_core_tx_crc_source_last <= 1'd1;
-                    mac_core_tx_crc_source_payload_last_be <= (mac_core_tx_crc_sink_payload_last_be <<< -3'd3);
+                if ((1'd0 & (mac_core_tx_crc_sink_payload_be <= 4'd15))) begin
+                    mac_core_tx_crc_source_last = 1'd1;
+                    mac_core_tx_crc_source_payload_be = ((mac_core_tx_crc_sink_payload_be <<< 3'd4) | 4'd15);
                 end
             end
             if (((mac_core_tx_crc_sink_valid & mac_core_tx_crc_sink_last) & mac_core_tx_crc_source_ready)) begin
-                if ((1'd0 & (mac_core_tx_crc_sink_payload_last_be <= 4'd15))) begin
-                    liteethmac_txdatapath_bufferizeendpoints_next_state <= 1'd0;
+                if ((1'd0 & (mac_core_tx_crc_sink_payload_be <= 4'd15))) begin
+                    liteethmac_txdatapath_bufferizeendpoints_next_state = 1'd0;
                 end else begin
-                    mac_core_tx_crc_crc_packet_liteethmac_clockdomainsrenamer1_next_value0 <= mac_core_tx_crc_value;
-                    mac_core_tx_crc_crc_packet_liteethmac_clockdomainsrenamer1_next_value_ce0 <= 1'd1;
+                    mac_core_tx_crc_crc_packet_liteethmaccore_clockdomainsrenamer1_next_value0 = mac_core_tx_crc_value;
+                    mac_core_tx_crc_crc_packet_liteethmaccore_clockdomainsrenamer1_next_value_ce0 = 1'd1;
                     if (1'd0) begin
-                        mac_core_tx_crc_last_be_liteethmac_clockdomainsrenamer1_next_value1 <= (mac_core_tx_crc_sink_payload_last_be >>> 3'd4);
-                        mac_core_tx_crc_last_be_liteethmac_clockdomainsrenamer1_next_value_ce1 <= 1'd1;
+                        mac_core_tx_crc_be0_liteethmaccore_clockdomainsrenamer1_next_value1 = (mac_core_tx_crc_sink_payload_be >>> 3'd4);
+                        mac_core_tx_crc_be0_liteethmaccore_clockdomainsrenamer1_next_value_ce1 = 1'd1;
                     end else begin
-                        mac_core_tx_crc_last_be_liteethmac_clockdomainsrenamer1_next_value1 <= mac_core_tx_crc_sink_payload_last_be;
-                        mac_core_tx_crc_last_be_liteethmac_clockdomainsrenamer1_next_value_ce1 <= 1'd1;
+                        mac_core_tx_crc_be0_liteethmaccore_clockdomainsrenamer1_next_value1 = mac_core_tx_crc_sink_payload_be;
+                        mac_core_tx_crc_be0_liteethmaccore_clockdomainsrenamer1_next_value_ce1 = 1'd1;
                     end
-                    liteethmac_txdatapath_bufferizeendpoints_next_state <= 2'd2;
+                    liteethmac_txdatapath_bufferizeendpoints_next_state = 2'd2;
                 end
             end
         end
         2'd2: begin
-            mac_core_tx_crc_source_valid <= 1'd1;
+            mac_core_tx_crc_source_valid = 1'd1;
+            mac_core_tx_crc_source_payload_be = 1'd1;
             case (mac_core_tx_crc_cnt)
                 1'd0: begin
-                    mac_core_tx_crc_source_payload_data <= mac_core_tx_crc_crc_packet[31:24];
+                    mac_core_tx_crc_source_payload_data = mac_core_tx_crc_crc_packet[31:24];
                 end
                 1'd1: begin
-                    mac_core_tx_crc_source_payload_data <= mac_core_tx_crc_crc_packet[23:16];
+                    mac_core_tx_crc_source_payload_data = mac_core_tx_crc_crc_packet[23:16];
                 end
                 2'd2: begin
-                    mac_core_tx_crc_source_payload_data <= mac_core_tx_crc_crc_packet[15:8];
+                    mac_core_tx_crc_source_payload_data = mac_core_tx_crc_crc_packet[15:8];
                 end
                 default: begin
-                    mac_core_tx_crc_source_payload_data <= mac_core_tx_crc_crc_packet[7:0];
+                    mac_core_tx_crc_source_payload_data = mac_core_tx_crc_crc_packet[7:0];
                 end
             endcase
             if (mac_core_tx_crc_cnt_done) begin
-                mac_core_tx_crc_source_last <= 1'd1;
+                mac_core_tx_crc_source_last = 1'd1;
                 if (mac_core_tx_crc_source_ready) begin
-                    liteethmac_txdatapath_bufferizeendpoints_next_state <= 1'd0;
+                    liteethmac_txdatapath_bufferizeendpoints_next_state = 1'd0;
                 end
             end
-            mac_core_tx_crc_is_ongoing1 <= 1'd1;
+            mac_core_tx_crc_is_ongoing1 = 1'd1;
         end
         default: begin
-            mac_core_tx_crc_reset <= 1'd1;
-            mac_core_tx_crc_sink_ready <= 1'd1;
+            mac_core_tx_crc_reset = 1'd1;
+            mac_core_tx_crc_sink_ready = 1'd1;
             if (mac_core_tx_crc_sink_valid) begin
-                mac_core_tx_crc_sink_ready <= 1'd0;
-                liteethmac_txdatapath_bufferizeendpoints_next_state <= 1'd1;
+                mac_core_tx_crc_sink_ready = 1'd0;
+                liteethmac_txdatapath_bufferizeendpoints_next_state = 1'd1;
             end
-            mac_core_tx_crc_is_ongoing0 <= 1'd1;
+            mac_core_tx_crc_is_ongoing0 = 1'd1;
         end
     endcase
 end
@@ -3115,221 +3093,318 @@ assign mac_core_tx_crc_sink_sink_ready = mac_core_tx_crc_pipe_valid_sink_ready;
 assign mac_core_tx_crc_pipe_valid_sink_first = mac_core_tx_crc_sink_sink_first;
 assign mac_core_tx_crc_pipe_valid_sink_last = mac_core_tx_crc_sink_sink_last;
 assign mac_core_tx_crc_pipe_valid_sink_payload_data = mac_core_tx_crc_sink_sink_payload_data;
-assign mac_core_tx_crc_pipe_valid_sink_payload_last_be = mac_core_tx_crc_sink_sink_payload_last_be;
+assign mac_core_tx_crc_pipe_valid_sink_payload_be = mac_core_tx_crc_sink_sink_payload_be;
 assign mac_core_tx_crc_pipe_valid_sink_payload_error = mac_core_tx_crc_sink_sink_payload_error;
 assign mac_core_tx_crc_source_source_valid = mac_core_tx_crc_pipe_valid_source_valid;
 assign mac_core_tx_crc_pipe_valid_source_ready = mac_core_tx_crc_source_source_ready;
 assign mac_core_tx_crc_source_source_first = mac_core_tx_crc_pipe_valid_source_first;
 assign mac_core_tx_crc_source_source_last = mac_core_tx_crc_pipe_valid_source_last;
 assign mac_core_tx_crc_source_source_payload_data = mac_core_tx_crc_pipe_valid_source_payload_data;
-assign mac_core_tx_crc_source_source_payload_last_be = mac_core_tx_crc_pipe_valid_source_payload_last_be;
+assign mac_core_tx_crc_source_source_payload_be = mac_core_tx_crc_pipe_valid_source_payload_be;
 assign mac_core_tx_crc_source_source_payload_error = mac_core_tx_crc_pipe_valid_source_payload_error;
-assign mac_core_tx_preamble_source_payload_last_be = mac_core_tx_preamble_sink_payload_last_be;
 always @(*) begin
-    liteethmac_txdatapath_liteethmacpreambleinserter_next_state <= 2'd0;
-    mac_core_tx_preamble_count_liteethmac_clockdomainsrenamer2_next_value <= 3'd0;
-    mac_core_tx_preamble_count_liteethmac_clockdomainsrenamer2_next_value_ce <= 1'd0;
-    mac_core_tx_preamble_sink_ready <= 1'd0;
-    mac_core_tx_preamble_source_first <= 1'd0;
-    mac_core_tx_preamble_source_last <= 1'd0;
-    mac_core_tx_preamble_source_payload_data <= 8'd0;
-    mac_core_tx_preamble_source_payload_error <= 1'd0;
-    mac_core_tx_preamble_source_valid <= 1'd0;
-    mac_core_tx_preamble_source_payload_data <= mac_core_tx_preamble_sink_payload_data;
-    liteethmac_txdatapath_liteethmacpreambleinserter_next_state <= liteethmac_txdatapath_liteethmacpreambleinserter_state;
+    liteethmac_txdatapath_liteethmacpreambleinserter_next_state = 2'd0;
+    mac_core_tx_preamble_count_liteethmaccore_clockdomainsrenamer2_next_value = 3'd0;
+    mac_core_tx_preamble_count_liteethmaccore_clockdomainsrenamer2_next_value_ce = 1'd0;
+    mac_core_tx_preamble_sink_ready = 1'd0;
+    mac_core_tx_preamble_source_first = 1'd0;
+    mac_core_tx_preamble_source_last = 1'd0;
+    mac_core_tx_preamble_source_payload_be = 1'd0;
+    mac_core_tx_preamble_source_payload_data = 8'd0;
+    mac_core_tx_preamble_source_payload_error = 1'd0;
+    mac_core_tx_preamble_source_valid = 1'd0;
+    mac_core_tx_preamble_source_payload_data = mac_core_tx_preamble_sink_payload_data;
+    mac_core_tx_preamble_source_payload_be = mac_core_tx_preamble_sink_payload_be;
+    liteethmac_txdatapath_liteethmacpreambleinserter_next_state = liteethmac_txdatapath_liteethmacpreambleinserter_state;
     case (liteethmac_txdatapath_liteethmacpreambleinserter_state)
         1'd1: begin
-            mac_core_tx_preamble_source_valid <= 1'd1;
+            mac_core_tx_preamble_source_valid = 1'd1;
+            mac_core_tx_preamble_source_payload_be = 1'd1;
             case (mac_core_tx_preamble_count)
                 1'd0: begin
-                    mac_core_tx_preamble_source_payload_data <= mac_core_tx_preamble_preamble[7:0];
+                    mac_core_tx_preamble_source_payload_data = mac_core_tx_preamble_preamble[7:0];
                 end
                 1'd1: begin
-                    mac_core_tx_preamble_source_payload_data <= mac_core_tx_preamble_preamble[15:8];
+                    mac_core_tx_preamble_source_payload_data = mac_core_tx_preamble_preamble[15:8];
                 end
                 2'd2: begin
-                    mac_core_tx_preamble_source_payload_data <= mac_core_tx_preamble_preamble[23:16];
+                    mac_core_tx_preamble_source_payload_data = mac_core_tx_preamble_preamble[23:16];
                 end
                 2'd3: begin
-                    mac_core_tx_preamble_source_payload_data <= mac_core_tx_preamble_preamble[31:24];
+                    mac_core_tx_preamble_source_payload_data = mac_core_tx_preamble_preamble[31:24];
                 end
                 3'd4: begin
-                    mac_core_tx_preamble_source_payload_data <= mac_core_tx_preamble_preamble[39:32];
+                    mac_core_tx_preamble_source_payload_data = mac_core_tx_preamble_preamble[39:32];
                 end
                 3'd5: begin
-                    mac_core_tx_preamble_source_payload_data <= mac_core_tx_preamble_preamble[47:40];
+                    mac_core_tx_preamble_source_payload_data = mac_core_tx_preamble_preamble[47:40];
                 end
                 3'd6: begin
-                    mac_core_tx_preamble_source_payload_data <= mac_core_tx_preamble_preamble[55:48];
+                    mac_core_tx_preamble_source_payload_data = mac_core_tx_preamble_preamble[55:48];
                 end
                 default: begin
-                    mac_core_tx_preamble_source_payload_data <= mac_core_tx_preamble_preamble[63:56];
+                    mac_core_tx_preamble_source_payload_data = mac_core_tx_preamble_preamble[63:56];
                 end
             endcase
             if (mac_core_tx_preamble_source_ready) begin
                 if ((mac_core_tx_preamble_count == 3'd7)) begin
-                    liteethmac_txdatapath_liteethmacpreambleinserter_next_state <= 2'd2;
+                    liteethmac_txdatapath_liteethmacpreambleinserter_next_state = 2'd2;
                 end else begin
-                    mac_core_tx_preamble_count_liteethmac_clockdomainsrenamer2_next_value <= (mac_core_tx_preamble_count + 1'd1);
-                    mac_core_tx_preamble_count_liteethmac_clockdomainsrenamer2_next_value_ce <= 1'd1;
+                    mac_core_tx_preamble_count_liteethmaccore_clockdomainsrenamer2_next_value = (mac_core_tx_preamble_count + 1'd1);
+                    mac_core_tx_preamble_count_liteethmaccore_clockdomainsrenamer2_next_value_ce = 1'd1;
                 end
             end
         end
         2'd2: begin
-            mac_core_tx_preamble_source_valid <= mac_core_tx_preamble_sink_valid;
-            mac_core_tx_preamble_sink_ready <= mac_core_tx_preamble_source_ready;
-            mac_core_tx_preamble_source_first <= mac_core_tx_preamble_sink_first;
-            mac_core_tx_preamble_source_last <= mac_core_tx_preamble_sink_last;
-            mac_core_tx_preamble_source_payload_error <= mac_core_tx_preamble_sink_payload_error;
+            mac_core_tx_preamble_source_valid = mac_core_tx_preamble_sink_valid;
+            mac_core_tx_preamble_sink_ready = mac_core_tx_preamble_source_ready;
+            mac_core_tx_preamble_source_first = mac_core_tx_preamble_sink_first;
+            mac_core_tx_preamble_source_last = mac_core_tx_preamble_sink_last;
+            mac_core_tx_preamble_source_payload_error = mac_core_tx_preamble_sink_payload_error;
             if (((mac_core_tx_preamble_sink_valid & mac_core_tx_preamble_sink_last) & mac_core_tx_preamble_source_ready)) begin
-                liteethmac_txdatapath_liteethmacpreambleinserter_next_state <= 1'd0;
+                liteethmac_txdatapath_liteethmacpreambleinserter_next_state = 1'd0;
             end
         end
         default: begin
-            mac_core_tx_preamble_sink_ready <= 1'd1;
-            mac_core_tx_preamble_count_liteethmac_clockdomainsrenamer2_next_value <= 1'd0;
-            mac_core_tx_preamble_count_liteethmac_clockdomainsrenamer2_next_value_ce <= 1'd1;
+            mac_core_tx_preamble_sink_ready = 1'd1;
+            mac_core_tx_preamble_count_liteethmaccore_clockdomainsrenamer2_next_value = 1'd0;
+            mac_core_tx_preamble_count_liteethmaccore_clockdomainsrenamer2_next_value_ce = 1'd1;
             if (mac_core_tx_preamble_sink_valid) begin
-                mac_core_tx_preamble_sink_ready <= 1'd0;
-                liteethmac_txdatapath_liteethmacpreambleinserter_next_state <= 1'd1;
+                mac_core_tx_preamble_sink_ready = 1'd0;
+                liteethmac_txdatapath_liteethmacpreambleinserter_next_state = 1'd1;
             end
         end
     endcase
 end
 always @(*) begin
-    liteethmac_txdatapath_liteethmacgap_next_state <= 1'd0;
-    mac_core_tx_gap_counter_liteethmac_clockdomainsrenamer3_next_value <= 4'd0;
-    mac_core_tx_gap_counter_liteethmac_clockdomainsrenamer3_next_value_ce <= 1'd0;
-    mac_core_tx_gap_sink_ready <= 1'd0;
-    mac_core_tx_gap_source_first <= 1'd0;
-    mac_core_tx_gap_source_last <= 1'd0;
-    mac_core_tx_gap_source_payload_data <= 8'd0;
-    mac_core_tx_gap_source_payload_error <= 1'd0;
-    mac_core_tx_gap_source_payload_last_be <= 1'd0;
-    mac_core_tx_gap_source_valid <= 1'd0;
-    liteethmac_txdatapath_liteethmacgap_next_state <= liteethmac_txdatapath_liteethmacgap_state;
+    liteethmac_txdatapath_liteethmacgap_next_state = 1'd0;
+    mac_core_tx_gap_counter_liteethmaccore_clockdomainsrenamer3_next_value = 4'd0;
+    mac_core_tx_gap_counter_liteethmaccore_clockdomainsrenamer3_next_value_ce = 1'd0;
+    mac_core_tx_gap_sink_ready = 1'd0;
+    mac_core_tx_gap_source_first = 1'd0;
+    mac_core_tx_gap_source_last = 1'd0;
+    mac_core_tx_gap_source_payload_be = 1'd0;
+    mac_core_tx_gap_source_payload_data = 8'd0;
+    mac_core_tx_gap_source_payload_error = 1'd0;
+    mac_core_tx_gap_source_valid = 1'd0;
     case (liteethmac_txdatapath_liteethmacgap_state)
         1'd1: begin
-            mac_core_tx_gap_counter_liteethmac_clockdomainsrenamer3_next_value <= (mac_core_tx_gap_counter + 1'd1);
-            mac_core_tx_gap_counter_liteethmac_clockdomainsrenamer3_next_value_ce <= 1'd1;
-            if ((mac_core_tx_gap_counter == 4'd11)) begin
-                liteethmac_txdatapath_liteethmacgap_next_state <= 1'd0;
+        end
+        default: begin
+            mac_core_tx_gap_sink_ready = mac_core_tx_gap_source_ready;
+        end
+    endcase
+    liteethmac_txdatapath_liteethmacgap_next_state = liteethmac_txdatapath_liteethmacgap_state;
+    case (liteethmac_txdatapath_liteethmacgap_state)
+        1'd1: begin
+            if ((mac_core_tx_gap_counter == 1'd1)) begin
+                liteethmac_txdatapath_liteethmacgap_next_state = 1'd0;
             end
         end
         default: begin
-            mac_core_tx_gap_counter_liteethmac_clockdomainsrenamer3_next_value <= 1'd0;
-            mac_core_tx_gap_counter_liteethmac_clockdomainsrenamer3_next_value_ce <= 1'd1;
-            mac_core_tx_gap_source_valid <= mac_core_tx_gap_sink_valid;
-            mac_core_tx_gap_sink_ready <= mac_core_tx_gap_source_ready;
-            mac_core_tx_gap_source_first <= mac_core_tx_gap_sink_first;
-            mac_core_tx_gap_source_last <= mac_core_tx_gap_sink_last;
-            mac_core_tx_gap_source_payload_data <= mac_core_tx_gap_sink_payload_data;
-            mac_core_tx_gap_source_payload_last_be <= mac_core_tx_gap_sink_payload_last_be;
-            mac_core_tx_gap_source_payload_error <= mac_core_tx_gap_sink_payload_error;
             if (((mac_core_tx_gap_sink_valid & mac_core_tx_gap_sink_last) & mac_core_tx_gap_sink_ready)) begin
-                liteethmac_txdatapath_liteethmacgap_next_state <= 1'd1;
+                liteethmac_txdatapath_liteethmacgap_next_state = 1'd1;
             end
         end
     endcase
+    case (liteethmac_txdatapath_liteethmacgap_state)
+        1'd1: begin
+            mac_core_tx_gap_counter_liteethmaccore_clockdomainsrenamer3_next_value = (mac_core_tx_gap_counter - 1'd1);
+        end
+        default: begin
+            if (((mac_core_tx_gap_sink_valid & mac_core_tx_gap_sink_last) & mac_core_tx_gap_sink_ready)) begin
+                mac_core_tx_gap_counter_liteethmaccore_clockdomainsrenamer3_next_value = 4'd12;
+            end
+        end
+    endcase
+    case (liteethmac_txdatapath_liteethmacgap_state)
+        1'd1: begin
+            mac_core_tx_gap_counter_liteethmaccore_clockdomainsrenamer3_next_value_ce = 1'd1;
+        end
+        default: begin
+            if (((mac_core_tx_gap_sink_valid & mac_core_tx_gap_sink_last) & mac_core_tx_gap_sink_ready)) begin
+                mac_core_tx_gap_counter_liteethmaccore_clockdomainsrenamer3_next_value_ce = 1'd1;
+            end
+        end
+    endcase
+    case (liteethmac_txdatapath_liteethmacgap_state)
+        1'd1: begin
+        end
+        default: begin
+            mac_core_tx_gap_source_first = mac_core_tx_gap_sink_first;
+        end
+    endcase
+    case (liteethmac_txdatapath_liteethmacgap_state)
+        1'd1: begin
+        end
+        default: begin
+            mac_core_tx_gap_source_last = mac_core_tx_gap_sink_last;
+        end
+    endcase
+    case (liteethmac_txdatapath_liteethmacgap_state)
+        1'd1: begin
+        end
+        default: begin
+            mac_core_tx_gap_source_payload_be = mac_core_tx_gap_sink_payload_be;
+        end
+    endcase
+    case (liteethmac_txdatapath_liteethmacgap_state)
+        1'd1: begin
+        end
+        default: begin
+            mac_core_tx_gap_source_payload_data = mac_core_tx_gap_sink_payload_data;
+        end
+    endcase
+    case (liteethmac_txdatapath_liteethmacgap_state)
+        1'd1: begin
+        end
+        default: begin
+            mac_core_tx_gap_source_payload_error = mac_core_tx_gap_sink_payload_error;
+        end
+    endcase
+    case (liteethmac_txdatapath_liteethmacgap_state)
+        1'd1: begin
+        end
+        default: begin
+            mac_core_tx_gap_source_valid = mac_core_tx_gap_sink_valid;
+        end
+    endcase
 end
-assign mac_core_tx_cdc_sink_sink_valid = mac_core_sink_valid;
-assign mac_core_sink_ready = mac_core_tx_cdc_sink_sink_ready;
-assign mac_core_tx_cdc_sink_sink_first = mac_core_sink_first;
-assign mac_core_tx_cdc_sink_sink_last = mac_core_sink_last;
-assign mac_core_tx_cdc_sink_sink_payload_data = mac_core_sink_payload_data;
-assign mac_core_tx_cdc_sink_sink_payload_last_be = mac_core_sink_payload_last_be;
-assign mac_core_tx_cdc_sink_sink_payload_error = mac_core_sink_payload_error;
-assign mac_core_tx_padding_sink_valid = mac_core_tx_cdc_source_source_valid;
-assign mac_core_tx_cdc_source_source_ready = mac_core_tx_padding_sink_ready;
-assign mac_core_tx_padding_sink_first = mac_core_tx_cdc_source_source_first;
-assign mac_core_tx_padding_sink_last = mac_core_tx_cdc_source_source_last;
-assign mac_core_tx_padding_sink_payload_data = mac_core_tx_cdc_source_source_payload_data;
-assign mac_core_tx_padding_sink_payload_last_be = mac_core_tx_cdc_source_source_payload_last_be;
-assign mac_core_tx_padding_sink_payload_error = mac_core_tx_cdc_source_source_payload_error;
+assign mac_core_txdatapath_sink_sink_valid = mac_core_sink_valid;
+assign mac_core_sink_ready = mac_core_txdatapath_sink_sink_ready;
+assign mac_core_txdatapath_sink_sink_first = mac_core_sink_first;
+assign mac_core_txdatapath_sink_sink_last = mac_core_sink_last;
+assign mac_core_txdatapath_sink_sink_payload_data = mac_core_sink_payload_data;
+assign mac_core_txdatapath_sink_sink_payload_be = mac_core_sink_payload_be;
+assign mac_core_txdatapath_sink_sink_payload_error = mac_core_sink_payload_error;
+assign mac_core_tx_padding_sink_valid = mac_core_txdatapath_source_source_valid;
+assign mac_core_txdatapath_source_source_ready = mac_core_tx_padding_sink_ready;
+assign mac_core_tx_padding_sink_first = mac_core_txdatapath_source_source_first;
+assign mac_core_tx_padding_sink_last = mac_core_txdatapath_source_source_last;
+assign mac_core_tx_padding_sink_payload_data = mac_core_txdatapath_source_source_payload_data;
+assign mac_core_tx_padding_sink_payload_be = mac_core_txdatapath_source_source_payload_be;
+assign mac_core_tx_padding_sink_payload_error = mac_core_txdatapath_source_source_payload_error;
 assign mac_core_tx_crc_sink_sink_valid = mac_core_tx_padding_source_valid;
 assign mac_core_tx_padding_source_ready = mac_core_tx_crc_sink_sink_ready;
 assign mac_core_tx_crc_sink_sink_first = mac_core_tx_padding_source_first;
 assign mac_core_tx_crc_sink_sink_last = mac_core_tx_padding_source_last;
 assign mac_core_tx_crc_sink_sink_payload_data = mac_core_tx_padding_source_payload_data;
-assign mac_core_tx_crc_sink_sink_payload_last_be = mac_core_tx_padding_source_payload_last_be;
+assign mac_core_tx_crc_sink_sink_payload_be = mac_core_tx_padding_source_payload_be;
 assign mac_core_tx_crc_sink_sink_payload_error = mac_core_tx_padding_source_payload_error;
 assign mac_core_tx_preamble_sink_valid = mac_core_tx_crc_source_valid;
 assign mac_core_tx_crc_source_ready = mac_core_tx_preamble_sink_ready;
 assign mac_core_tx_preamble_sink_first = mac_core_tx_crc_source_first;
 assign mac_core_tx_preamble_sink_last = mac_core_tx_crc_source_last;
 assign mac_core_tx_preamble_sink_payload_data = mac_core_tx_crc_source_payload_data;
-assign mac_core_tx_preamble_sink_payload_last_be = mac_core_tx_crc_source_payload_last_be;
+assign mac_core_tx_preamble_sink_payload_be = mac_core_tx_crc_source_payload_be;
 assign mac_core_tx_preamble_sink_payload_error = mac_core_tx_crc_source_payload_error;
 assign mac_core_tx_gap_sink_valid = mac_core_tx_preamble_source_valid;
 assign mac_core_tx_preamble_source_ready = mac_core_tx_gap_sink_ready;
 assign mac_core_tx_gap_sink_first = mac_core_tx_preamble_source_first;
 assign mac_core_tx_gap_sink_last = mac_core_tx_preamble_source_last;
 assign mac_core_tx_gap_sink_payload_data = mac_core_tx_preamble_source_payload_data;
-assign mac_core_tx_gap_sink_payload_last_be = mac_core_tx_preamble_source_payload_last_be;
+assign mac_core_tx_gap_sink_payload_be = mac_core_tx_preamble_source_payload_be;
 assign mac_core_tx_gap_sink_payload_error = mac_core_tx_preamble_source_payload_error;
 assign ethphy_sink_valid = mac_core_tx_gap_source_valid;
 assign mac_core_tx_gap_source_ready = ethphy_sink_ready;
 assign ethphy_sink_first = mac_core_tx_gap_source_first;
 assign ethphy_sink_last = mac_core_tx_gap_source_last;
 assign ethphy_sink_payload_data = mac_core_tx_gap_source_payload_data;
-assign ethphy_sink_payload_last_be = mac_core_tx_gap_source_payload_last_be;
+assign ethphy_sink_payload_be = mac_core_tx_gap_source_payload_be;
 assign ethphy_sink_payload_error = mac_core_tx_gap_source_payload_error;
 assign mac_core_pulsesynchronizer0_i = mac_core_rx_preamble_error;
 assign mac_core_pulsesynchronizer1_i = mac_core_liteethmaccrc32checker_error;
 assign mac_core_rx_preamble_source_payload_data = mac_core_rx_preamble_sink_payload_data;
-assign mac_core_rx_preamble_source_payload_last_be = mac_core_rx_preamble_sink_payload_last_be;
+assign mac_core_rx_preamble_source_payload_be = mac_core_rx_preamble_sink_payload_be;
 always @(*) begin
-    liteethmac_rxdatapath_liteethmacpreamblechecker_next_state <= 1'd0;
-    mac_core_rx_preamble_error <= 1'd0;
-    mac_core_rx_preamble_sink_ready <= 1'd0;
-    mac_core_rx_preamble_source_first <= 1'd0;
-    mac_core_rx_preamble_source_last <= 1'd0;
-    mac_core_rx_preamble_source_payload_error <= 1'd0;
-    mac_core_rx_preamble_source_valid <= 1'd0;
-    liteethmac_rxdatapath_liteethmacpreamblechecker_next_state <= liteethmac_rxdatapath_liteethmacpreamblechecker_state;
+    liteethmac_rxdatapath_liteethmacpreamblechecker_next_state = 1'd0;
+    mac_core_rx_preamble_error = 1'd0;
+    mac_core_rx_preamble_sink_ready = 1'd0;
+    mac_core_rx_preamble_source_first = 1'd0;
+    mac_core_rx_preamble_source_last = 1'd0;
+    mac_core_rx_preamble_source_payload_error = 1'd0;
+    mac_core_rx_preamble_source_valid = 1'd0;
     case (liteethmac_rxdatapath_liteethmacpreamblechecker_state)
         1'd1: begin
-            mac_core_rx_preamble_source_valid <= mac_core_rx_preamble_sink_valid;
-            mac_core_rx_preamble_sink_ready <= mac_core_rx_preamble_source_ready;
-            mac_core_rx_preamble_source_first <= mac_core_rx_preamble_sink_first;
-            mac_core_rx_preamble_source_last <= mac_core_rx_preamble_sink_last;
-            mac_core_rx_preamble_source_payload_error <= mac_core_rx_preamble_sink_payload_error;
+        end
+        default: begin
+            if ((mac_core_rx_preamble_sink_valid & mac_core_rx_preamble_sink_last)) begin
+                mac_core_rx_preamble_error = 1'd1;
+            end
+        end
+    endcase
+    case (liteethmac_rxdatapath_liteethmacpreamblechecker_state)
+        1'd1: begin
+            mac_core_rx_preamble_sink_ready = mac_core_rx_preamble_source_ready;
+        end
+        default: begin
+            mac_core_rx_preamble_sink_ready = 1'd1;
+        end
+    endcase
+    case (liteethmac_rxdatapath_liteethmacpreamblechecker_state)
+        1'd1: begin
+            mac_core_rx_preamble_source_first = mac_core_rx_preamble_sink_first;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethmac_rxdatapath_liteethmacpreamblechecker_state)
+        1'd1: begin
+            mac_core_rx_preamble_source_last = mac_core_rx_preamble_sink_last;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethmac_rxdatapath_liteethmacpreamblechecker_state)
+        1'd1: begin
+            mac_core_rx_preamble_source_payload_error = mac_core_rx_preamble_sink_payload_error;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethmac_rxdatapath_liteethmacpreamblechecker_state)
+        1'd1: begin
+            mac_core_rx_preamble_source_valid = mac_core_rx_preamble_sink_valid;
+        end
+        default: begin
+        end
+    endcase
+    liteethmac_rxdatapath_liteethmacpreamblechecker_next_state = liteethmac_rxdatapath_liteethmacpreamblechecker_state;
+    case (liteethmac_rxdatapath_liteethmacpreamblechecker_state)
+        1'd1: begin
             if (((mac_core_rx_preamble_source_valid & mac_core_rx_preamble_source_last) & mac_core_rx_preamble_source_ready)) begin
-                liteethmac_rxdatapath_liteethmacpreamblechecker_next_state <= 1'd0;
+                liteethmac_rxdatapath_liteethmacpreamblechecker_next_state = 1'd0;
             end
         end
         default: begin
-            mac_core_rx_preamble_sink_ready <= 1'd1;
             if (((mac_core_rx_preamble_sink_valid & (~mac_core_rx_preamble_sink_last)) & (mac_core_rx_preamble_sink_payload_data == mac_core_rx_preamble_preamble[63:56]))) begin
-                liteethmac_rxdatapath_liteethmacpreamblechecker_next_state <= 1'd1;
-            end
-            if ((mac_core_rx_preamble_sink_valid & mac_core_rx_preamble_sink_last)) begin
-                mac_core_rx_preamble_error <= 1'd1;
+                liteethmac_rxdatapath_liteethmacpreamblechecker_next_state = 1'd1;
             end
         end
     endcase
 end
 assign mac_core_pulsesynchronizer0_o = (mac_core_pulsesynchronizer0_toggle_o ^ mac_core_pulsesynchronizer0_toggle_o_r);
 assign mac_core_liteethmaccrc32checker_fifo_full = (mac_core_liteethmaccrc32checker_syncfifo_level == 3'd4);
-assign mac_core_liteethmaccrc32checker_fifo_in = (mac_core_liteethmaccrc32checker_sink_sink_valid & ((~mac_core_liteethmaccrc32checker_fifo_full) | mac_core_liteethmaccrc32checker_fifo_out));
 assign mac_core_liteethmaccrc32checker_fifo_out = (mac_core_liteethmaccrc32checker_source_source_valid & mac_core_liteethmaccrc32checker_source_source_ready);
 assign mac_core_liteethmaccrc32checker_syncfifo_sink_first = mac_core_liteethmaccrc32checker_sink_sink_first;
 assign mac_core_liteethmaccrc32checker_syncfifo_sink_last = mac_core_liteethmaccrc32checker_sink_sink_last;
 assign mac_core_liteethmaccrc32checker_syncfifo_sink_payload_data = mac_core_liteethmaccrc32checker_sink_sink_payload_data;
-assign mac_core_liteethmaccrc32checker_syncfifo_sink_payload_last_be = mac_core_liteethmaccrc32checker_sink_sink_payload_last_be;
+assign mac_core_liteethmaccrc32checker_syncfifo_sink_payload_be = mac_core_liteethmaccrc32checker_sink_sink_payload_be;
 assign mac_core_liteethmaccrc32checker_syncfifo_sink_payload_error = mac_core_liteethmaccrc32checker_sink_sink_payload_error;
 always @(*) begin
-    mac_core_liteethmaccrc32checker_syncfifo_sink_valid <= 1'd0;
-    mac_core_liteethmaccrc32checker_syncfifo_sink_valid <= mac_core_liteethmaccrc32checker_sink_sink_valid;
-    mac_core_liteethmaccrc32checker_syncfifo_sink_valid <= mac_core_liteethmaccrc32checker_fifo_in;
+    mac_core_liteethmaccrc32checker_syncfifo_sink_valid = 1'd0;
+    mac_core_liteethmaccrc32checker_syncfifo_sink_valid = mac_core_liteethmaccrc32checker_sink_sink_valid;
+    mac_core_liteethmaccrc32checker_syncfifo_sink_valid = mac_core_liteethmaccrc32checker_fifo_in;
 end
 always @(*) begin
-    mac_core_liteethmaccrc32checker_sink_sink_ready <= 1'd0;
-    mac_core_liteethmaccrc32checker_sink_sink_ready <= mac_core_liteethmaccrc32checker_syncfifo_sink_ready;
-    mac_core_liteethmaccrc32checker_sink_sink_ready <= mac_core_liteethmaccrc32checker_fifo_in;
+    mac_core_liteethmaccrc32checker_sink_sink_ready = 1'd0;
+    mac_core_liteethmaccrc32checker_sink_sink_ready = mac_core_liteethmaccrc32checker_syncfifo_sink_ready;
+    mac_core_liteethmaccrc32checker_sink_sink_ready = mac_core_liteethmaccrc32checker_fifo_in;
 end
+assign mac_core_liteethmaccrc32checker_fifo_in = (((mac_core_liteethmaccrc32checker_sink_sink_valid & ((~mac_core_liteethmaccrc32checker_fifo_full) | mac_core_liteethmaccrc32checker_fifo_out)) & (~mac_core_liteethmaccrc32checker_is_ongoing0)) & (~mac_core_liteethmaccrc32checker_is_ongoing1));
 assign mac_core_liteethmaccrc32checker_crc_data0 = mac_core_liteethmaccrc32checker_sink_sink_payload_data;
-assign mac_core_liteethmaccrc32checker_crc_be = mac_core_liteethmaccrc32checker_sink_sink_payload_last_be;
+assign mac_core_liteethmaccrc32checker_crc_be = mac_core_liteethmaccrc32checker_sink_sink_payload_be;
+assign mac_core_liteethmaccrc32checker_last_word_error = ((mac_core_liteethmaccrc32checker_crc_error | mac_core_liteethmaccrc32checker_packet_error) | ((mac_core_liteethmaccrc32checker_sink_sink_payload_error & mac_core_liteethmaccrc32checker_sink_sink_payload_be) != 1'd0));
 assign mac_core_liteethmaccrc32checker_source_source_first = mac_core_liteethmaccrc32checker_syncfifo_source_first;
 assign mac_core_liteethmaccrc32checker_source_source_payload_data = mac_core_liteethmaccrc32checker_syncfifo_source_payload_data;
 assign mac_core_liteethmaccrc32checker_sink_sink_valid = mac_core_bufferizeendpoints_source_source_valid;
@@ -3337,75 +3412,75 @@ assign mac_core_bufferizeendpoints_source_source_ready = mac_core_liteethmaccrc3
 assign mac_core_liteethmaccrc32checker_sink_sink_first = mac_core_bufferizeendpoints_source_source_first;
 assign mac_core_liteethmaccrc32checker_sink_sink_last = mac_core_bufferizeendpoints_source_source_last;
 assign mac_core_liteethmaccrc32checker_sink_sink_payload_data = mac_core_bufferizeendpoints_source_source_payload_data;
-assign mac_core_liteethmaccrc32checker_sink_sink_payload_last_be = mac_core_bufferizeendpoints_source_source_payload_last_be;
+assign mac_core_liteethmaccrc32checker_sink_sink_payload_be = mac_core_bufferizeendpoints_source_source_payload_be;
 assign mac_core_liteethmaccrc32checker_sink_sink_payload_error = mac_core_bufferizeendpoints_source_source_payload_error;
-assign mac_core_liteethmaccrc32checker_crc_data1 = mac_core_liteethmaccrc32checker_crc_data0;
 assign mac_core_liteethmaccrc32checker_crc_crc_prev = mac_core_liteethmaccrc32checker_crc_reg;
 always @(*) begin
-    mac_core_liteethmaccrc32checker_crc_error0 <= 1'd0;
-    mac_core_liteethmaccrc32checker_crc_value <= 32'd0;
+    mac_core_liteethmaccrc32checker_crc_data1 = 8'd0;
+    mac_core_liteethmaccrc32checker_crc_error = 1'd0;
+    mac_core_liteethmaccrc32checker_crc_data1 = mac_core_liteethmaccrc32checker_crc_data0;
     if (mac_core_liteethmaccrc32checker_crc_be) begin
-        mac_core_liteethmaccrc32checker_crc_value <= ({mac_core_liteethmaccrc32checker_crc_crc_next[0], mac_core_liteethmaccrc32checker_crc_crc_next[1], mac_core_liteethmaccrc32checker_crc_crc_next[2], mac_core_liteethmaccrc32checker_crc_crc_next[3], mac_core_liteethmaccrc32checker_crc_crc_next[4], mac_core_liteethmaccrc32checker_crc_crc_next[5], mac_core_liteethmaccrc32checker_crc_crc_next[6], mac_core_liteethmaccrc32checker_crc_crc_next[7], mac_core_liteethmaccrc32checker_crc_crc_next[8], mac_core_liteethmaccrc32checker_crc_crc_next[9], mac_core_liteethmaccrc32checker_crc_crc_next[10], mac_core_liteethmaccrc32checker_crc_crc_next[11], mac_core_liteethmaccrc32checker_crc_crc_next[12], mac_core_liteethmaccrc32checker_crc_crc_next[13], mac_core_liteethmaccrc32checker_crc_crc_next[14], mac_core_liteethmaccrc32checker_crc_crc_next[15], mac_core_liteethmaccrc32checker_crc_crc_next[16], mac_core_liteethmaccrc32checker_crc_crc_next[17], mac_core_liteethmaccrc32checker_crc_crc_next[18], mac_core_liteethmaccrc32checker_crc_crc_next[19], mac_core_liteethmaccrc32checker_crc_crc_next[20], mac_core_liteethmaccrc32checker_crc_crc_next[21], mac_core_liteethmaccrc32checker_crc_crc_next[22], mac_core_liteethmaccrc32checker_crc_crc_next[23], mac_core_liteethmaccrc32checker_crc_crc_next[24], mac_core_liteethmaccrc32checker_crc_crc_next[25], mac_core_liteethmaccrc32checker_crc_crc_next[26], mac_core_liteethmaccrc32checker_crc_crc_next[27], mac_core_liteethmaccrc32checker_crc_crc_next[28], mac_core_liteethmaccrc32checker_crc_crc_next[29], mac_core_liteethmaccrc32checker_crc_crc_next[30], mac_core_liteethmaccrc32checker_crc_crc_next[31]} ^ 32'd4294967295);
-        mac_core_liteethmaccrc32checker_crc_error0 <= (mac_core_liteethmaccrc32checker_crc_crc_next != 32'd3338984827);
+        mac_core_liteethmaccrc32checker_crc_data1 = (mac_core_liteethmaccrc32checker_crc_data0 & 8'hff);
+        mac_core_liteethmaccrc32checker_crc_error = (mac_core_liteethmaccrc32checker_crc_crc_next != 32'd3338984827);
     end
 end
 always @(*) begin
-    mac_core_liteethmaccrc32checker_crc_crc_next <= 32'd0;
-    mac_core_liteethmaccrc32checker_crc_crc_next[0] <= (((mac_core_liteethmaccrc32checker_crc_crc_prev[24] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[1] <= (((((((mac_core_liteethmaccrc32checker_crc_crc_prev[25] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[2] <= (((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[26] ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[3] <= (((((((mac_core_liteethmaccrc32checker_crc_crc_prev[27] ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[4] <= (((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[28] ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[5] <= (((((((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[29] ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[6] <= (((((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[30] ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[7] <= (((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[31] ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[8] <= ((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[0] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[9] <= ((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[1] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[10] <= ((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[2] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[11] <= ((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[3] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[12] <= ((((((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[4] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[13] <= ((((((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[5] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[14] <= ((((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[6] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[15] <= ((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[7] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[16] <= ((((((mac_core_liteethmaccrc32checker_crc_crc_prev[8] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[17] <= ((((((mac_core_liteethmaccrc32checker_crc_crc_prev[9] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[18] <= ((((((mac_core_liteethmaccrc32checker_crc_crc_prev[10] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[19] <= ((((mac_core_liteethmaccrc32checker_crc_crc_prev[11] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[20] <= ((mac_core_liteethmaccrc32checker_crc_crc_prev[12] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[21] <= ((mac_core_liteethmaccrc32checker_crc_crc_prev[13] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[22] <= ((mac_core_liteethmaccrc32checker_crc_crc_prev[14] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[23] <= ((((((mac_core_liteethmaccrc32checker_crc_crc_prev[15] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[24] <= ((((((mac_core_liteethmaccrc32checker_crc_crc_prev[16] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[25] <= ((((mac_core_liteethmaccrc32checker_crc_crc_prev[17] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[26] <= ((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[18] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[27] <= ((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[19] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[28] <= ((((((mac_core_liteethmaccrc32checker_crc_crc_prev[20] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[29] <= ((((((mac_core_liteethmaccrc32checker_crc_crc_prev[21] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[30] <= ((((mac_core_liteethmaccrc32checker_crc_crc_prev[22] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]);
-    mac_core_liteethmaccrc32checker_crc_crc_next[31] <= ((mac_core_liteethmaccrc32checker_crc_crc_prev[23] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]);
+    mac_core_liteethmaccrc32checker_crc_crc_next = 32'd0;
+    mac_core_liteethmaccrc32checker_crc_crc_next[0] = (((mac_core_liteethmaccrc32checker_crc_crc_prev[24] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[1] = (((((((mac_core_liteethmaccrc32checker_crc_crc_prev[25] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[2] = (((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[26] ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[3] = (((((((mac_core_liteethmaccrc32checker_crc_crc_prev[27] ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[4] = (((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[28] ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[5] = (((((((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[29] ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[6] = (((((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[30] ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[7] = (((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[31] ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[8] = ((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[0] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[9] = ((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[1] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[10] = ((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[2] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[11] = ((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[3] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[12] = ((((((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[4] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[13] = ((((((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[5] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[14] = ((((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[6] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[15] = ((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[7] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[16] = ((((((mac_core_liteethmaccrc32checker_crc_crc_prev[8] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[17] = ((((((mac_core_liteethmaccrc32checker_crc_crc_prev[9] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[18] = ((((((mac_core_liteethmaccrc32checker_crc_crc_prev[10] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[19] = ((((mac_core_liteethmaccrc32checker_crc_crc_prev[11] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[20] = ((mac_core_liteethmaccrc32checker_crc_crc_prev[12] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[21] = ((mac_core_liteethmaccrc32checker_crc_crc_prev[13] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[22] = ((mac_core_liteethmaccrc32checker_crc_crc_prev[14] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[23] = ((((((mac_core_liteethmaccrc32checker_crc_crc_prev[15] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[24] = ((((((mac_core_liteethmaccrc32checker_crc_crc_prev[16] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[25] = ((((mac_core_liteethmaccrc32checker_crc_crc_prev[17] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[26] = ((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[18] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[24]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_data1[7]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[27] = ((((((((mac_core_liteethmaccrc32checker_crc_crc_prev[19] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[25]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_data1[6]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[28] = ((((((mac_core_liteethmaccrc32checker_crc_crc_prev[20] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[26]) ^ mac_core_liteethmaccrc32checker_crc_data1[5]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[29] = ((((((mac_core_liteethmaccrc32checker_crc_crc_prev[21] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[30]) ^ mac_core_liteethmaccrc32checker_crc_data1[1]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[27]) ^ mac_core_liteethmaccrc32checker_crc_data1[4]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[30] = ((((mac_core_liteethmaccrc32checker_crc_crc_prev[22] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[31]) ^ mac_core_liteethmaccrc32checker_crc_data1[0]) ^ mac_core_liteethmaccrc32checker_crc_crc_prev[28]) ^ mac_core_liteethmaccrc32checker_crc_data1[3]);
+    mac_core_liteethmaccrc32checker_crc_crc_next[31] = ((mac_core_liteethmaccrc32checker_crc_crc_prev[23] ^ mac_core_liteethmaccrc32checker_crc_crc_prev[29]) ^ mac_core_liteethmaccrc32checker_crc_data1[2]);
 end
-assign mac_core_liteethmaccrc32checker_syncfifo_syncfifo_din = {mac_core_liteethmaccrc32checker_syncfifo_fifo_in_last, mac_core_liteethmaccrc32checker_syncfifo_fifo_in_first, mac_core_liteethmaccrc32checker_syncfifo_fifo_in_payload_error, mac_core_liteethmaccrc32checker_syncfifo_fifo_in_payload_last_be, mac_core_liteethmaccrc32checker_syncfifo_fifo_in_payload_data};
-assign {mac_core_liteethmaccrc32checker_syncfifo_fifo_out_last, mac_core_liteethmaccrc32checker_syncfifo_fifo_out_first, mac_core_liteethmaccrc32checker_syncfifo_fifo_out_payload_error, mac_core_liteethmaccrc32checker_syncfifo_fifo_out_payload_last_be, mac_core_liteethmaccrc32checker_syncfifo_fifo_out_payload_data} = mac_core_liteethmaccrc32checker_syncfifo_syncfifo_dout;
+assign mac_core_liteethmaccrc32checker_syncfifo_syncfifo_din = {mac_core_liteethmaccrc32checker_syncfifo_fifo_in_last, mac_core_liteethmaccrc32checker_syncfifo_fifo_in_first, mac_core_liteethmaccrc32checker_syncfifo_fifo_in_payload_error, mac_core_liteethmaccrc32checker_syncfifo_fifo_in_payload_be, mac_core_liteethmaccrc32checker_syncfifo_fifo_in_payload_data};
+assign {mac_core_liteethmaccrc32checker_syncfifo_fifo_out_last, mac_core_liteethmaccrc32checker_syncfifo_fifo_out_first, mac_core_liteethmaccrc32checker_syncfifo_fifo_out_payload_error, mac_core_liteethmaccrc32checker_syncfifo_fifo_out_payload_be, mac_core_liteethmaccrc32checker_syncfifo_fifo_out_payload_data} = mac_core_liteethmaccrc32checker_syncfifo_syncfifo_dout;
 assign mac_core_liteethmaccrc32checker_syncfifo_sink_ready = mac_core_liteethmaccrc32checker_syncfifo_syncfifo_writable;
 assign mac_core_liteethmaccrc32checker_syncfifo_syncfifo_we = mac_core_liteethmaccrc32checker_syncfifo_sink_valid;
 assign mac_core_liteethmaccrc32checker_syncfifo_fifo_in_first = mac_core_liteethmaccrc32checker_syncfifo_sink_first;
 assign mac_core_liteethmaccrc32checker_syncfifo_fifo_in_last = mac_core_liteethmaccrc32checker_syncfifo_sink_last;
 assign mac_core_liteethmaccrc32checker_syncfifo_fifo_in_payload_data = mac_core_liteethmaccrc32checker_syncfifo_sink_payload_data;
-assign mac_core_liteethmaccrc32checker_syncfifo_fifo_in_payload_last_be = mac_core_liteethmaccrc32checker_syncfifo_sink_payload_last_be;
+assign mac_core_liteethmaccrc32checker_syncfifo_fifo_in_payload_be = mac_core_liteethmaccrc32checker_syncfifo_sink_payload_be;
 assign mac_core_liteethmaccrc32checker_syncfifo_fifo_in_payload_error = mac_core_liteethmaccrc32checker_syncfifo_sink_payload_error;
 assign mac_core_liteethmaccrc32checker_syncfifo_source_valid = mac_core_liteethmaccrc32checker_syncfifo_syncfifo_readable;
 assign mac_core_liteethmaccrc32checker_syncfifo_source_first = mac_core_liteethmaccrc32checker_syncfifo_fifo_out_first;
 assign mac_core_liteethmaccrc32checker_syncfifo_source_last = mac_core_liteethmaccrc32checker_syncfifo_fifo_out_last;
 assign mac_core_liteethmaccrc32checker_syncfifo_source_payload_data = mac_core_liteethmaccrc32checker_syncfifo_fifo_out_payload_data;
-assign mac_core_liteethmaccrc32checker_syncfifo_source_payload_last_be = mac_core_liteethmaccrc32checker_syncfifo_fifo_out_payload_last_be;
+assign mac_core_liteethmaccrc32checker_syncfifo_source_payload_be = mac_core_liteethmaccrc32checker_syncfifo_fifo_out_payload_be;
 assign mac_core_liteethmaccrc32checker_syncfifo_source_payload_error = mac_core_liteethmaccrc32checker_syncfifo_fifo_out_payload_error;
 assign mac_core_liteethmaccrc32checker_syncfifo_syncfifo_re = mac_core_liteethmaccrc32checker_syncfifo_source_ready;
 always @(*) begin
-    mac_core_liteethmaccrc32checker_syncfifo_wrport_adr <= 3'd0;
+    mac_core_liteethmaccrc32checker_syncfifo_wrport_adr = 3'd0;
     if (mac_core_liteethmaccrc32checker_syncfifo_replace) begin
-        mac_core_liteethmaccrc32checker_syncfifo_wrport_adr <= (mac_core_liteethmaccrc32checker_syncfifo_produce - 1'd1);
+        mac_core_liteethmaccrc32checker_syncfifo_wrport_adr = (mac_core_liteethmaccrc32checker_syncfifo_produce - 1'd1);
     end else begin
-        mac_core_liteethmaccrc32checker_syncfifo_wrport_adr <= mac_core_liteethmaccrc32checker_syncfifo_produce;
+        mac_core_liteethmaccrc32checker_syncfifo_wrport_adr = mac_core_liteethmaccrc32checker_syncfifo_produce;
     end
 end
 assign mac_core_liteethmaccrc32checker_syncfifo_wrport_dat_w = mac_core_liteethmaccrc32checker_syncfifo_syncfifo_din;
@@ -3416,73 +3491,276 @@ assign mac_core_liteethmaccrc32checker_syncfifo_syncfifo_dout = mac_core_liteeth
 assign mac_core_liteethmaccrc32checker_syncfifo_syncfifo_writable = (mac_core_liteethmaccrc32checker_syncfifo_level != 3'd5);
 assign mac_core_liteethmaccrc32checker_syncfifo_syncfifo_readable = (mac_core_liteethmaccrc32checker_syncfifo_level != 1'd0);
 always @(*) begin
-    liteethmac_rxdatapath_bufferizeendpoints_next_state <= 2'd0;
-    mac_core_liteethmaccrc32checker_crc_ce <= 1'd0;
-    mac_core_liteethmaccrc32checker_crc_error1_liteethmac_next_value1 <= 1'd0;
-    mac_core_liteethmaccrc32checker_crc_error1_liteethmac_next_value_ce1 <= 1'd0;
-    mac_core_liteethmaccrc32checker_crc_reset <= 1'd0;
-    mac_core_liteethmaccrc32checker_error <= 1'd0;
-    mac_core_liteethmaccrc32checker_fifo_reset <= 1'd0;
-    mac_core_liteethmaccrc32checker_last_be_liteethmac_next_value0 <= 1'd0;
-    mac_core_liteethmaccrc32checker_last_be_liteethmac_next_value_ce0 <= 1'd0;
-    mac_core_liteethmaccrc32checker_source_source_last <= 1'd0;
-    mac_core_liteethmaccrc32checker_source_source_payload_error <= 1'd0;
-    mac_core_liteethmaccrc32checker_source_source_payload_last_be <= 1'd0;
-    mac_core_liteethmaccrc32checker_source_source_valid <= 1'd0;
-    mac_core_liteethmaccrc32checker_syncfifo_source_ready <= 1'd0;
-    mac_core_liteethmaccrc32checker_source_source_payload_error <= mac_core_liteethmaccrc32checker_syncfifo_source_payload_error;
-    liteethmac_rxdatapath_bufferizeendpoints_next_state <= liteethmac_rxdatapath_bufferizeendpoints_state;
+    liteethmac_rxdatapath_bufferizeendpoints_next_state = 2'd0;
+    mac_core_liteethmaccrc32checker_be_liteethmaccore_next_value0 = 1'd0;
+    mac_core_liteethmaccrc32checker_be_liteethmaccore_next_value_ce0 = 1'd0;
+    mac_core_liteethmaccrc32checker_crc_ce = 1'd0;
+    mac_core_liteethmaccrc32checker_crc_reset = 1'd0;
+    mac_core_liteethmaccrc32checker_error = 1'd0;
+    mac_core_liteethmaccrc32checker_fifo_reset = 1'd0;
+    mac_core_liteethmaccrc32checker_is_ongoing0 = 1'd0;
+    mac_core_liteethmaccrc32checker_is_ongoing1 = 1'd0;
+    mac_core_liteethmaccrc32checker_is_ongoing2 = 1'd0;
+    mac_core_liteethmaccrc32checker_last_error_liteethmaccore_next_value1 = 1'd0;
+    mac_core_liteethmaccrc32checker_last_error_liteethmaccore_next_value_ce1 = 1'd0;
+    mac_core_liteethmaccrc32checker_source_source_last = 1'd0;
+    mac_core_liteethmaccrc32checker_source_source_payload_be = 1'd0;
+    mac_core_liteethmaccrc32checker_source_source_payload_error = 1'd0;
+    mac_core_liteethmaccrc32checker_source_source_valid = 1'd0;
+    mac_core_liteethmaccrc32checker_syncfifo_source_ready = 1'd0;
     case (liteethmac_rxdatapath_bufferizeendpoints_state)
         1'd1: begin
+        end
+        2'd2: begin
+        end
+        2'd3: begin
+            if (1'd1) begin
+            end else begin
+                if ((mac_core_liteethmaccrc32checker_sink_sink_payload_be <= 4'd15)) begin
+                end else begin
+                    mac_core_liteethmaccrc32checker_be_liteethmaccore_next_value0 = (mac_core_liteethmaccrc32checker_sink_sink_payload_be >>> 3'd4);
+                end
+            end
+        end
+        default: begin
+        end
+    endcase
+    case (liteethmac_rxdatapath_bufferizeendpoints_state)
+        1'd1: begin
+        end
+        2'd2: begin
+        end
+        2'd3: begin
+            if (1'd1) begin
+            end else begin
+                if ((mac_core_liteethmaccrc32checker_sink_sink_payload_be <= 4'd15)) begin
+                end else begin
+                    mac_core_liteethmaccrc32checker_be_liteethmaccore_next_value_ce0 = 1'd1;
+                end
+            end
+        end
+        default: begin
+        end
+    endcase
+    case (liteethmac_rxdatapath_bufferizeendpoints_state)
+        1'd1: begin
+        end
+        2'd2: begin
             if ((mac_core_liteethmaccrc32checker_sink_sink_valid & mac_core_liteethmaccrc32checker_sink_sink_ready)) begin
-                mac_core_liteethmaccrc32checker_crc_ce <= 1'd1;
-                liteethmac_rxdatapath_bufferizeendpoints_next_state <= 2'd2;
+                mac_core_liteethmaccrc32checker_crc_ce = 1'd1;
+            end
+        end
+        2'd3: begin
+            if ((mac_core_liteethmaccrc32checker_sink_sink_valid & mac_core_liteethmaccrc32checker_sink_sink_ready)) begin
+                mac_core_liteethmaccrc32checker_crc_ce = 1'd1;
+            end
+        end
+        default: begin
+        end
+    endcase
+    case (liteethmac_rxdatapath_bufferizeendpoints_state)
+        1'd1: begin
+        end
+        2'd2: begin
+        end
+        2'd3: begin
+        end
+        default: begin
+            mac_core_liteethmaccrc32checker_crc_reset = 1'd1;
+        end
+    endcase
+    case (liteethmac_rxdatapath_bufferizeendpoints_state)
+        1'd1: begin
+        end
+        2'd2: begin
+        end
+        2'd3: begin
+            mac_core_liteethmaccrc32checker_error = ((mac_core_liteethmaccrc32checker_sink_sink_valid & mac_core_liteethmaccrc32checker_sink_sink_last) & mac_core_liteethmaccrc32checker_crc_error);
+        end
+        default: begin
+        end
+    endcase
+    case (liteethmac_rxdatapath_bufferizeendpoints_state)
+        1'd1: begin
+        end
+        2'd2: begin
+        end
+        2'd3: begin
+        end
+        default: begin
+            mac_core_liteethmaccrc32checker_fifo_reset = 1'd1;
+        end
+    endcase
+    case (liteethmac_rxdatapath_bufferizeendpoints_state)
+        1'd1: begin
+        end
+        2'd2: begin
+        end
+        2'd3: begin
+        end
+        default: begin
+            mac_core_liteethmaccrc32checker_is_ongoing0 = 1'd1;
+        end
+    endcase
+    case (liteethmac_rxdatapath_bufferizeendpoints_state)
+        1'd1: begin
+            mac_core_liteethmaccrc32checker_is_ongoing1 = 1'd1;
+        end
+        2'd2: begin
+        end
+        2'd3: begin
+        end
+        default: begin
+        end
+    endcase
+    case (liteethmac_rxdatapath_bufferizeendpoints_state)
+        1'd1: begin
+        end
+        2'd2: begin
+        end
+        2'd3: begin
+        end
+        default: begin
+            mac_core_liteethmaccrc32checker_is_ongoing2 = 1'd1;
+        end
+    endcase
+    case (liteethmac_rxdatapath_bufferizeendpoints_state)
+        1'd1: begin
+        end
+        2'd2: begin
+        end
+        2'd3: begin
+            if (1'd1) begin
+            end else begin
+                if ((mac_core_liteethmaccrc32checker_sink_sink_payload_be <= 4'd15)) begin
+                end else begin
+                    mac_core_liteethmaccrc32checker_last_error_liteethmaccore_next_value1 = mac_core_liteethmaccrc32checker_last_word_error;
+                end
+            end
+        end
+        default: begin
+        end
+    endcase
+    case (liteethmac_rxdatapath_bufferizeendpoints_state)
+        1'd1: begin
+        end
+        2'd2: begin
+        end
+        2'd3: begin
+            if (1'd1) begin
+            end else begin
+                if ((mac_core_liteethmaccrc32checker_sink_sink_payload_be <= 4'd15)) begin
+                end else begin
+                    mac_core_liteethmaccrc32checker_last_error_liteethmaccore_next_value_ce1 = 1'd1;
+                end
+            end
+        end
+        default: begin
+        end
+    endcase
+    case (liteethmac_rxdatapath_bufferizeendpoints_state)
+        1'd1: begin
+            mac_core_liteethmaccrc32checker_source_source_last = mac_core_liteethmaccrc32checker_syncfifo_source_last;
+        end
+        2'd2: begin
+        end
+        2'd3: begin
+            if (1'd1) begin
+                mac_core_liteethmaccrc32checker_source_source_last = mac_core_liteethmaccrc32checker_sink_sink_last;
+            end else begin
+                if ((mac_core_liteethmaccrc32checker_sink_sink_payload_be <= 4'd15)) begin
+                    mac_core_liteethmaccrc32checker_source_source_last = mac_core_liteethmaccrc32checker_sink_sink_last;
+                end else begin
+                end
+            end
+        end
+        default: begin
+        end
+    endcase
+    case (liteethmac_rxdatapath_bufferizeendpoints_state)
+        1'd1: begin
+            mac_core_liteethmaccrc32checker_source_source_payload_be = mac_core_liteethmaccrc32checker_be;
+        end
+        2'd2: begin
+        end
+        2'd3: begin
+            mac_core_liteethmaccrc32checker_source_source_payload_be = 1'd1;
+            if (1'd1) begin
+                if (mac_core_liteethmaccrc32checker_sink_sink_last) begin
+                    mac_core_liteethmaccrc32checker_source_source_payload_be = mac_core_liteethmaccrc32checker_sink_sink_payload_be;
+                end
+            end else begin
+                if ((mac_core_liteethmaccrc32checker_sink_sink_payload_be <= 4'd15)) begin
+                    mac_core_liteethmaccrc32checker_source_source_payload_be = ((mac_core_liteethmaccrc32checker_sink_sink_payload_be <<< 3'd4) | 4'd15);
+                end else begin
+                end
+            end
+        end
+        default: begin
+        end
+    endcase
+    mac_core_liteethmaccrc32checker_source_source_payload_error = mac_core_liteethmaccrc32checker_syncfifo_source_payload_error;
+    case (liteethmac_rxdatapath_bufferizeendpoints_state)
+        1'd1: begin
+            mac_core_liteethmaccrc32checker_source_source_payload_error = (mac_core_liteethmaccrc32checker_syncfifo_source_payload_error | {1{mac_core_liteethmaccrc32checker_last_error}});
+        end
+        2'd2: begin
+        end
+        2'd3: begin
+            mac_core_liteethmaccrc32checker_source_source_payload_error = (mac_core_liteethmaccrc32checker_sink_sink_last ? {1{mac_core_liteethmaccrc32checker_last_word_error}} : mac_core_liteethmaccrc32checker_syncfifo_source_payload_error);
+        end
+        default: begin
+        end
+    endcase
+    case (liteethmac_rxdatapath_bufferizeendpoints_state)
+        1'd1: begin
+            mac_core_liteethmaccrc32checker_source_source_valid = mac_core_liteethmaccrc32checker_syncfifo_source_valid;
+        end
+        2'd2: begin
+        end
+        2'd3: begin
+            mac_core_liteethmaccrc32checker_source_source_valid = (mac_core_liteethmaccrc32checker_sink_sink_valid & mac_core_liteethmaccrc32checker_fifo_full);
+        end
+        default: begin
+        end
+    endcase
+    liteethmac_rxdatapath_bufferizeendpoints_next_state = liteethmac_rxdatapath_bufferizeendpoints_state;
+    case (liteethmac_rxdatapath_bufferizeendpoints_state)
+        1'd1: begin
+            if ((mac_core_liteethmaccrc32checker_source_source_valid & mac_core_liteethmaccrc32checker_source_source_ready)) begin
+                liteethmac_rxdatapath_bufferizeendpoints_next_state = 1'd0;
             end
         end
         2'd2: begin
-            mac_core_liteethmaccrc32checker_syncfifo_source_ready <= mac_core_liteethmaccrc32checker_fifo_out;
-            mac_core_liteethmaccrc32checker_source_source_valid <= (mac_core_liteethmaccrc32checker_sink_sink_valid & mac_core_liteethmaccrc32checker_fifo_full);
-            if (1'd1) begin
-                mac_core_liteethmaccrc32checker_source_source_last <= mac_core_liteethmaccrc32checker_sink_sink_last;
-                mac_core_liteethmaccrc32checker_source_source_payload_last_be <= mac_core_liteethmaccrc32checker_sink_sink_payload_last_be;
-            end else begin
-                if ((mac_core_liteethmaccrc32checker_sink_sink_payload_last_be & 4'd15)) begin
-                    mac_core_liteethmaccrc32checker_source_source_last <= mac_core_liteethmaccrc32checker_sink_sink_last;
-                    mac_core_liteethmaccrc32checker_source_source_payload_last_be <= (mac_core_liteethmaccrc32checker_sink_sink_payload_last_be <<< -3'd3);
-                end else begin
-                    mac_core_liteethmaccrc32checker_last_be_liteethmac_next_value0 <= (mac_core_liteethmaccrc32checker_sink_sink_payload_last_be >>> 3'd4);
-                    mac_core_liteethmaccrc32checker_last_be_liteethmac_next_value_ce0 <= 1'd1;
-                    mac_core_liteethmaccrc32checker_crc_error1_liteethmac_next_value1 <= mac_core_liteethmaccrc32checker_crc_error0;
-                    mac_core_liteethmaccrc32checker_crc_error1_liteethmac_next_value_ce1 <= 1'd1;
-                end
-            end
-            mac_core_liteethmaccrc32checker_source_source_payload_error <= (mac_core_liteethmaccrc32checker_sink_sink_payload_error | {1{(mac_core_liteethmaccrc32checker_crc_error0 & mac_core_liteethmaccrc32checker_sink_sink_last)}});
-            mac_core_liteethmaccrc32checker_error <= ((mac_core_liteethmaccrc32checker_sink_sink_valid & mac_core_liteethmaccrc32checker_sink_sink_last) & mac_core_liteethmaccrc32checker_crc_error0);
             if ((mac_core_liteethmaccrc32checker_sink_sink_valid & mac_core_liteethmaccrc32checker_sink_sink_ready)) begin
-                mac_core_liteethmaccrc32checker_crc_ce <= 1'd1;
-                if ((mac_core_liteethmaccrc32checker_sink_sink_last & (mac_core_liteethmaccrc32checker_sink_sink_payload_last_be > 4'd15))) begin
-                    liteethmac_rxdatapath_bufferizeendpoints_next_state <= 2'd3;
+                liteethmac_rxdatapath_bufferizeendpoints_next_state = 2'd3;
+            end
+        end
+        2'd3: begin
+            if ((mac_core_liteethmaccrc32checker_sink_sink_valid & mac_core_liteethmaccrc32checker_sink_sink_ready)) begin
+                if ((mac_core_liteethmaccrc32checker_sink_sink_last & (mac_core_liteethmaccrc32checker_sink_sink_payload_be > 4'd15))) begin
+                    liteethmac_rxdatapath_bufferizeendpoints_next_state = 1'd1;
                 end else begin
                     if (mac_core_liteethmaccrc32checker_sink_sink_last) begin
-                        liteethmac_rxdatapath_bufferizeendpoints_next_state <= 1'd0;
+                        liteethmac_rxdatapath_bufferizeendpoints_next_state = 1'd0;
                     end
                 end
             end
         end
+        default: begin
+            liteethmac_rxdatapath_bufferizeendpoints_next_state = 2'd2;
+        end
+    endcase
+    case (liteethmac_rxdatapath_bufferizeendpoints_state)
+        1'd1: begin
+            mac_core_liteethmaccrc32checker_syncfifo_source_ready = mac_core_liteethmaccrc32checker_source_source_ready;
+        end
+        2'd2: begin
+        end
         2'd3: begin
-            mac_core_liteethmaccrc32checker_source_source_valid <= mac_core_liteethmaccrc32checker_syncfifo_source_valid;
-            mac_core_liteethmaccrc32checker_syncfifo_source_ready <= mac_core_liteethmaccrc32checker_source_source_ready;
-            mac_core_liteethmaccrc32checker_source_source_last <= mac_core_liteethmaccrc32checker_syncfifo_source_last;
-            mac_core_liteethmaccrc32checker_source_source_payload_error <= (mac_core_liteethmaccrc32checker_syncfifo_source_payload_error | {1{mac_core_liteethmaccrc32checker_crc_error1}});
-            mac_core_liteethmaccrc32checker_source_source_payload_last_be <= mac_core_liteethmaccrc32checker_last_be;
-            if ((mac_core_liteethmaccrc32checker_source_source_valid & mac_core_liteethmaccrc32checker_source_source_ready)) begin
-                liteethmac_rxdatapath_bufferizeendpoints_next_state <= 1'd0;
-            end
+            mac_core_liteethmaccrc32checker_syncfifo_source_ready = mac_core_liteethmaccrc32checker_fifo_out;
         end
         default: begin
-            mac_core_liteethmaccrc32checker_crc_reset <= 1'd1;
-            mac_core_liteethmaccrc32checker_fifo_reset <= 1'd1;
-            liteethmac_rxdatapath_bufferizeendpoints_next_state <= 1'd1;
         end
     endcase
 end
@@ -3492,51 +3770,59 @@ assign mac_core_bufferizeendpoints_sink_sink_ready = mac_core_bufferizeendpoints
 assign mac_core_bufferizeendpoints_pipe_valid_sink_first = mac_core_bufferizeendpoints_sink_sink_first;
 assign mac_core_bufferizeendpoints_pipe_valid_sink_last = mac_core_bufferizeendpoints_sink_sink_last;
 assign mac_core_bufferizeendpoints_pipe_valid_sink_payload_data = mac_core_bufferizeendpoints_sink_sink_payload_data;
-assign mac_core_bufferizeendpoints_pipe_valid_sink_payload_last_be = mac_core_bufferizeendpoints_sink_sink_payload_last_be;
+assign mac_core_bufferizeendpoints_pipe_valid_sink_payload_be = mac_core_bufferizeendpoints_sink_sink_payload_be;
 assign mac_core_bufferizeendpoints_pipe_valid_sink_payload_error = mac_core_bufferizeendpoints_sink_sink_payload_error;
 assign mac_core_bufferizeendpoints_source_source_valid = mac_core_bufferizeendpoints_pipe_valid_source_valid;
 assign mac_core_bufferizeendpoints_pipe_valid_source_ready = mac_core_bufferizeendpoints_source_source_ready;
 assign mac_core_bufferizeendpoints_source_source_first = mac_core_bufferizeendpoints_pipe_valid_source_first;
 assign mac_core_bufferizeendpoints_source_source_last = mac_core_bufferizeendpoints_pipe_valid_source_last;
 assign mac_core_bufferizeendpoints_source_source_payload_data = mac_core_bufferizeendpoints_pipe_valid_source_payload_data;
-assign mac_core_bufferizeendpoints_source_source_payload_last_be = mac_core_bufferizeendpoints_pipe_valid_source_payload_last_be;
+assign mac_core_bufferizeendpoints_source_source_payload_be = mac_core_bufferizeendpoints_pipe_valid_source_payload_be;
 assign mac_core_bufferizeendpoints_source_source_payload_error = mac_core_bufferizeendpoints_pipe_valid_source_payload_error;
 assign mac_core_pulsesynchronizer1_o = (mac_core_pulsesynchronizer1_toggle_o ^ mac_core_pulsesynchronizer1_toggle_o_r);
+assign mac_core_rx_padding_length_inc = (1'd0 + mac_core_rx_padding_sink_payload_be);
 assign mac_core_rx_padding_source_valid = mac_core_rx_padding_sink_valid;
 assign mac_core_rx_padding_sink_ready = mac_core_rx_padding_source_ready;
 assign mac_core_rx_padding_source_first = mac_core_rx_padding_sink_first;
 assign mac_core_rx_padding_source_last = mac_core_rx_padding_sink_last;
 assign mac_core_rx_padding_source_payload_data = mac_core_rx_padding_sink_payload_data;
-assign mac_core_rx_padding_source_payload_last_be = mac_core_rx_padding_sink_payload_last_be;
-assign mac_core_rx_padding_source_payload_error = mac_core_rx_padding_sink_payload_error;
+assign mac_core_rx_padding_source_payload_be = mac_core_rx_padding_sink_payload_be;
+always @(*) begin
+    mac_core_rx_padding_source_payload_error = 1'd0;
+    if (((mac_core_rx_padding_sink_valid & mac_core_rx_padding_sink_last) & ((mac_core_rx_padding_length + mac_core_rx_padding_length_inc) < 6'd60))) begin
+        mac_core_rx_padding_source_payload_error = {1{1'd1}};
+    end else begin
+        mac_core_rx_padding_source_payload_error = mac_core_rx_padding_sink_payload_error;
+    end
+end
 assign mac_core_cdc_sink_valid = mac_core_sink_sink_valid;
 assign mac_core_sink_sink_ready = mac_core_cdc_sink_ready;
 assign mac_core_cdc_sink_first = mac_core_sink_sink_first;
 assign mac_core_cdc_sink_last = mac_core_sink_sink_last;
 assign mac_core_cdc_sink_payload_data = mac_core_sink_sink_payload_data;
-assign mac_core_cdc_sink_payload_last_be = mac_core_sink_sink_payload_last_be;
+assign mac_core_cdc_sink_payload_be = mac_core_sink_sink_payload_be;
 assign mac_core_cdc_sink_payload_error = mac_core_sink_sink_payload_error;
 assign mac_core_source_source_valid = mac_core_cdc_source_valid;
 assign mac_core_cdc_source_ready = mac_core_source_source_ready;
 assign mac_core_source_source_first = mac_core_cdc_source_first;
 assign mac_core_source_source_last = mac_core_cdc_source_last;
 assign mac_core_source_source_payload_data = mac_core_cdc_source_payload_data;
-assign mac_core_source_source_payload_last_be = mac_core_cdc_source_payload_last_be;
+assign mac_core_source_source_payload_be = mac_core_cdc_source_payload_be;
 assign mac_core_source_source_payload_error = mac_core_cdc_source_payload_error;
-assign mac_core_cdc_asyncfifo_din = {mac_core_cdc_fifo_in_last, mac_core_cdc_fifo_in_first, mac_core_cdc_fifo_in_payload_error, mac_core_cdc_fifo_in_payload_last_be, mac_core_cdc_fifo_in_payload_data};
-assign {mac_core_cdc_fifo_out_last, mac_core_cdc_fifo_out_first, mac_core_cdc_fifo_out_payload_error, mac_core_cdc_fifo_out_payload_last_be, mac_core_cdc_fifo_out_payload_data} = mac_core_cdc_asyncfifo_dout;
+assign mac_core_cdc_asyncfifo_din = {mac_core_cdc_fifo_in_last, mac_core_cdc_fifo_in_first, mac_core_cdc_fifo_in_payload_error, mac_core_cdc_fifo_in_payload_be, mac_core_cdc_fifo_in_payload_data};
+assign {mac_core_cdc_fifo_out_last, mac_core_cdc_fifo_out_first, mac_core_cdc_fifo_out_payload_error, mac_core_cdc_fifo_out_payload_be, mac_core_cdc_fifo_out_payload_data} = mac_core_cdc_asyncfifo_dout;
 assign mac_core_cdc_sink_ready = mac_core_cdc_asyncfifo_writable;
 assign mac_core_cdc_asyncfifo_we = mac_core_cdc_sink_valid;
 assign mac_core_cdc_fifo_in_first = mac_core_cdc_sink_first;
 assign mac_core_cdc_fifo_in_last = mac_core_cdc_sink_last;
 assign mac_core_cdc_fifo_in_payload_data = mac_core_cdc_sink_payload_data;
-assign mac_core_cdc_fifo_in_payload_last_be = mac_core_cdc_sink_payload_last_be;
+assign mac_core_cdc_fifo_in_payload_be = mac_core_cdc_sink_payload_be;
 assign mac_core_cdc_fifo_in_payload_error = mac_core_cdc_sink_payload_error;
 assign mac_core_cdc_source_valid = mac_core_cdc_asyncfifo_readable;
 assign mac_core_cdc_source_first = mac_core_cdc_fifo_out_first;
 assign mac_core_cdc_source_last = mac_core_cdc_fifo_out_last;
 assign mac_core_cdc_source_payload_data = mac_core_cdc_fifo_out_payload_data;
-assign mac_core_cdc_source_payload_last_be = mac_core_cdc_fifo_out_payload_last_be;
+assign mac_core_cdc_source_payload_be = mac_core_cdc_fifo_out_payload_be;
 assign mac_core_cdc_source_payload_error = mac_core_cdc_fifo_out_payload_error;
 assign mac_core_cdc_asyncfifo_re = mac_core_cdc_source_ready;
 assign mac_core_cdc_graycounter0_ce = (mac_core_cdc_asyncfifo_writable & mac_core_cdc_asyncfifo_we);
@@ -3549,108 +3835,108 @@ assign mac_core_cdc_wrport_we = mac_core_cdc_graycounter0_ce;
 assign mac_core_cdc_rdport_adr = mac_core_cdc_graycounter1_q_next_binary[4:0];
 assign mac_core_cdc_asyncfifo_dout = mac_core_cdc_rdport_dat_r;
 always @(*) begin
-    mac_core_cdc_graycounter0_q_next_binary <= 6'd0;
+    mac_core_cdc_graycounter0_q_next_binary = 6'd0;
     if (mac_core_cdc_graycounter0_ce) begin
-        mac_core_cdc_graycounter0_q_next_binary <= (mac_core_cdc_graycounter0_q_binary + 1'd1);
+        mac_core_cdc_graycounter0_q_next_binary = (mac_core_cdc_graycounter0_q_binary + 1'd1);
     end else begin
-        mac_core_cdc_graycounter0_q_next_binary <= mac_core_cdc_graycounter0_q_binary;
+        mac_core_cdc_graycounter0_q_next_binary = mac_core_cdc_graycounter0_q_binary;
     end
 end
 assign mac_core_cdc_graycounter0_q_next = (mac_core_cdc_graycounter0_q_next_binary ^ mac_core_cdc_graycounter0_q_next_binary[5:1]);
 always @(*) begin
-    mac_core_cdc_graycounter1_q_next_binary <= 6'd0;
+    mac_core_cdc_graycounter1_q_next_binary = 6'd0;
     if (mac_core_cdc_graycounter1_ce) begin
-        mac_core_cdc_graycounter1_q_next_binary <= (mac_core_cdc_graycounter1_q_binary + 1'd1);
+        mac_core_cdc_graycounter1_q_next_binary = (mac_core_cdc_graycounter1_q_binary + 1'd1);
     end else begin
-        mac_core_cdc_graycounter1_q_next_binary <= mac_core_cdc_graycounter1_q_binary;
+        mac_core_cdc_graycounter1_q_next_binary = mac_core_cdc_graycounter1_q_binary;
     end
 end
 assign mac_core_cdc_graycounter1_q_next = (mac_core_cdc_graycounter1_q_next_binary ^ mac_core_cdc_graycounter1_q_next_binary[5:1]);
-assign mac_core_rx_preamble_sink_valid = ethphy_liteethphyrgmiirx_source_valid;
-assign ethphy_liteethphyrgmiirx_source_ready = mac_core_rx_preamble_sink_ready;
-assign mac_core_rx_preamble_sink_first = ethphy_liteethphyrgmiirx_source_first;
-assign mac_core_rx_preamble_sink_last = ethphy_liteethphyrgmiirx_source_last;
-assign mac_core_rx_preamble_sink_payload_data = ethphy_liteethphyrgmiirx_source_payload_data;
-assign mac_core_rx_preamble_sink_payload_last_be = ethphy_liteethphyrgmiirx_source_payload_last_be;
-assign mac_core_rx_preamble_sink_payload_error = ethphy_liteethphyrgmiirx_source_payload_error;
+assign mac_core_rx_preamble_sink_valid = ethphy_source_valid;
+assign ethphy_source_ready = mac_core_rx_preamble_sink_ready;
+assign mac_core_rx_preamble_sink_first = ethphy_source_first;
+assign mac_core_rx_preamble_sink_last = ethphy_source_last;
+assign mac_core_rx_preamble_sink_payload_data = ethphy_source_payload_data;
+assign mac_core_rx_preamble_sink_payload_be = ethphy_source_payload_be;
+assign mac_core_rx_preamble_sink_payload_error = ethphy_source_payload_error;
 assign mac_core_bufferizeendpoints_sink_sink_valid = mac_core_rx_preamble_source_valid;
 assign mac_core_rx_preamble_source_ready = mac_core_bufferizeendpoints_sink_sink_ready;
 assign mac_core_bufferizeendpoints_sink_sink_first = mac_core_rx_preamble_source_first;
 assign mac_core_bufferizeendpoints_sink_sink_last = mac_core_rx_preamble_source_last;
 assign mac_core_bufferizeendpoints_sink_sink_payload_data = mac_core_rx_preamble_source_payload_data;
-assign mac_core_bufferizeendpoints_sink_sink_payload_last_be = mac_core_rx_preamble_source_payload_last_be;
+assign mac_core_bufferizeendpoints_sink_sink_payload_be = mac_core_rx_preamble_source_payload_be;
 assign mac_core_bufferizeendpoints_sink_sink_payload_error = mac_core_rx_preamble_source_payload_error;
 assign mac_core_rx_padding_sink_valid = mac_core_liteethmaccrc32checker_source_source_valid;
 assign mac_core_liteethmaccrc32checker_source_source_ready = mac_core_rx_padding_sink_ready;
 assign mac_core_rx_padding_sink_first = mac_core_liteethmaccrc32checker_source_source_first;
 assign mac_core_rx_padding_sink_last = mac_core_liteethmaccrc32checker_source_source_last;
 assign mac_core_rx_padding_sink_payload_data = mac_core_liteethmaccrc32checker_source_source_payload_data;
-assign mac_core_rx_padding_sink_payload_last_be = mac_core_liteethmaccrc32checker_source_source_payload_last_be;
+assign mac_core_rx_padding_sink_payload_be = mac_core_liteethmaccrc32checker_source_source_payload_be;
 assign mac_core_rx_padding_sink_payload_error = mac_core_liteethmaccrc32checker_source_source_payload_error;
 assign mac_core_sink_sink_valid = mac_core_rx_padding_source_valid;
 assign mac_core_rx_padding_source_ready = mac_core_sink_sink_ready;
 assign mac_core_sink_sink_first = mac_core_rx_padding_source_first;
 assign mac_core_sink_sink_last = mac_core_rx_padding_source_last;
 assign mac_core_sink_sink_payload_data = mac_core_rx_padding_source_payload_data;
-assign mac_core_sink_sink_payload_last_be = mac_core_rx_padding_source_payload_last_be;
+assign mac_core_sink_sink_payload_be = mac_core_rx_padding_source_payload_be;
 assign mac_core_sink_sink_payload_error = mac_core_rx_padding_source_payload_error;
 assign mac_core_source_valid = mac_core_source_source_valid;
 assign mac_core_source_source_ready = mac_core_source_ready;
 assign mac_core_source_first = mac_core_source_source_first;
 assign mac_core_source_last = mac_core_source_source_last;
 assign mac_core_source_payload_data = mac_core_source_source_payload_data;
-assign mac_core_source_payload_last_be = mac_core_source_source_payload_last_be;
+assign mac_core_source_payload_be = mac_core_source_source_payload_be;
 assign mac_core_source_payload_error = mac_core_source_source_payload_error;
 always @(*) begin
-    liteethmac_sel0 <= 2'd0;
+    liteethmac_sel0 = 2'd0;
     if ((mac_crossbar_sink_payload_ethernet_type == 12'd2054)) begin
-        liteethmac_sel0 <= 1'd1;
+        liteethmac_sel0 = 1'd1;
     end
-    if ((mac_crossbar_sink_payload_ethernet_type == 12'd2048)) begin
-        liteethmac_sel0 <= 2'd2;
+    if ((mac_crossbar_sink_payload_ethernet_type == 12'h800)) begin
+        liteethmac_sel0 = 2'd2;
     end
 end
 always @(*) begin
-    liteethmac_request <= 2'd0;
-    liteethmac_request[0] <= liteethmac_status0_ongoing0;
-    liteethmac_request[1] <= liteethmac_status1_ongoing0;
+    liteethmac_request = 2'd0;
+    liteethmac_request[0] = liteethmac_status0_ongoing0;
+    liteethmac_request[1] = liteethmac_status1_ongoing0;
 end
 always @(*) begin
-    arp_mac_port_sink_ready <= 1'd0;
-    ip_mac_port_sink_ready <= 1'd0;
-    mac_crossbar_source_first <= 1'd0;
-    mac_crossbar_source_last <= 1'd0;
-    mac_crossbar_source_payload_data <= 8'd0;
-    mac_crossbar_source_payload_error <= 1'd0;
-    mac_crossbar_source_payload_ethernet_type <= 16'd0;
-    mac_crossbar_source_payload_last_be <= 1'd0;
-    mac_crossbar_source_payload_sender_mac <= 48'd0;
-    mac_crossbar_source_payload_target_mac <= 48'd0;
-    mac_crossbar_source_valid <= 1'd0;
+    arp_mac_port_sink_ready = 1'd0;
+    ip_mac_port_sink_ready = 1'd0;
+    mac_crossbar_source_first = 1'd0;
+    mac_crossbar_source_last = 1'd0;
+    mac_crossbar_source_payload_be = 1'd0;
+    mac_crossbar_source_payload_data = 8'd0;
+    mac_crossbar_source_payload_error = 1'd0;
+    mac_crossbar_source_payload_ethernet_type = 16'd0;
+    mac_crossbar_source_payload_sender_mac = 48'd0;
+    mac_crossbar_source_payload_target_mac = 48'd0;
+    mac_crossbar_source_valid = 1'd0;
     case (liteethmac_grant)
         1'd0: begin
-            mac_crossbar_source_valid <= arp_mac_port_sink_valid;
-            arp_mac_port_sink_ready <= mac_crossbar_source_ready;
-            mac_crossbar_source_first <= arp_mac_port_sink_first;
-            mac_crossbar_source_last <= arp_mac_port_sink_last;
-            mac_crossbar_source_payload_ethernet_type <= arp_mac_port_sink_payload_ethernet_type;
-            mac_crossbar_source_payload_sender_mac <= arp_mac_port_sink_payload_sender_mac;
-            mac_crossbar_source_payload_target_mac <= arp_mac_port_sink_payload_target_mac;
-            mac_crossbar_source_payload_data <= arp_mac_port_sink_payload_data;
-            mac_crossbar_source_payload_last_be <= arp_mac_port_sink_payload_last_be;
-            mac_crossbar_source_payload_error <= arp_mac_port_sink_payload_error;
+            mac_crossbar_source_valid = arp_mac_port_sink_valid;
+            arp_mac_port_sink_ready = mac_crossbar_source_ready;
+            mac_crossbar_source_first = arp_mac_port_sink_first;
+            mac_crossbar_source_last = arp_mac_port_sink_last;
+            mac_crossbar_source_payload_ethernet_type = arp_mac_port_sink_payload_ethernet_type;
+            mac_crossbar_source_payload_sender_mac = arp_mac_port_sink_payload_sender_mac;
+            mac_crossbar_source_payload_target_mac = arp_mac_port_sink_payload_target_mac;
+            mac_crossbar_source_payload_data = arp_mac_port_sink_payload_data;
+            mac_crossbar_source_payload_be = arp_mac_port_sink_payload_be;
+            mac_crossbar_source_payload_error = arp_mac_port_sink_payload_error;
         end
         1'd1: begin
-            mac_crossbar_source_valid <= ip_mac_port_sink_valid;
-            ip_mac_port_sink_ready <= mac_crossbar_source_ready;
-            mac_crossbar_source_first <= ip_mac_port_sink_first;
-            mac_crossbar_source_last <= ip_mac_port_sink_last;
-            mac_crossbar_source_payload_ethernet_type <= ip_mac_port_sink_payload_ethernet_type;
-            mac_crossbar_source_payload_sender_mac <= ip_mac_port_sink_payload_sender_mac;
-            mac_crossbar_source_payload_target_mac <= ip_mac_port_sink_payload_target_mac;
-            mac_crossbar_source_payload_data <= ip_mac_port_sink_payload_data;
-            mac_crossbar_source_payload_last_be <= ip_mac_port_sink_payload_last_be;
-            mac_crossbar_source_payload_error <= ip_mac_port_sink_payload_error;
+            mac_crossbar_source_valid = ip_mac_port_sink_valid;
+            ip_mac_port_sink_ready = mac_crossbar_source_ready;
+            mac_crossbar_source_first = ip_mac_port_sink_first;
+            mac_crossbar_source_last = ip_mac_port_sink_last;
+            mac_crossbar_source_payload_ethernet_type = ip_mac_port_sink_payload_ethernet_type;
+            mac_crossbar_source_payload_sender_mac = ip_mac_port_sink_payload_sender_mac;
+            mac_crossbar_source_payload_target_mac = ip_mac_port_sink_payload_target_mac;
+            mac_crossbar_source_payload_data = ip_mac_port_sink_payload_data;
+            mac_crossbar_source_payload_be = ip_mac_port_sink_payload_be;
+            mac_crossbar_source_payload_error = ip_mac_port_sink_payload_error;
         end
     endcase
 end
@@ -3659,316 +3945,465 @@ assign liteethmac_status0_ongoing0 = ((arp_mac_port_sink_valid | liteethmac_stat
 assign liteethmac_status1_last = ((ip_mac_port_sink_valid & ip_mac_port_sink_last) & ip_mac_port_sink_ready);
 assign liteethmac_status1_ongoing0 = ((ip_mac_port_sink_valid | liteethmac_status1_ongoing1) & (~liteethmac_status1_last));
 always @(*) begin
-    liteethmac_sel1 <= 2'd0;
-    if (liteethmac_first) begin
-        liteethmac_sel1 <= liteethmac_sel0;
+    liteethmac_sel1 = 2'd0;
+    if ((~liteethmac_sel_locked)) begin
+        liteethmac_sel1 = liteethmac_sel0;
     end else begin
-        liteethmac_sel1 <= liteethmac_sel_ongoing;
+        liteethmac_sel1 = liteethmac_sel_ongoing;
     end
 end
 always @(*) begin
-    arp_mac_port_source_first <= 1'd0;
-    arp_mac_port_source_last <= 1'd0;
-    arp_mac_port_source_payload_data <= 8'd0;
-    arp_mac_port_source_payload_error <= 1'd0;
-    arp_mac_port_source_payload_ethernet_type <= 16'd0;
-    arp_mac_port_source_payload_last_be <= 1'd0;
-    arp_mac_port_source_payload_sender_mac <= 48'd0;
-    arp_mac_port_source_payload_target_mac <= 48'd0;
-    arp_mac_port_source_valid <= 1'd0;
-    ip_mac_port_source_first <= 1'd0;
-    ip_mac_port_source_last <= 1'd0;
-    ip_mac_port_source_payload_data <= 8'd0;
-    ip_mac_port_source_payload_error <= 1'd0;
-    ip_mac_port_source_payload_ethernet_type <= 16'd0;
-    ip_mac_port_source_payload_last_be <= 1'd0;
-    ip_mac_port_source_payload_sender_mac <= 48'd0;
-    ip_mac_port_source_payload_target_mac <= 48'd0;
-    ip_mac_port_source_valid <= 1'd0;
-    mac_crossbar_sink_ready <= 1'd0;
+    arp_mac_port_source_first = 1'd0;
+    arp_mac_port_source_last = 1'd0;
+    arp_mac_port_source_payload_be = 1'd0;
+    arp_mac_port_source_payload_data = 8'd0;
+    arp_mac_port_source_payload_error = 1'd0;
+    arp_mac_port_source_payload_ethernet_type = 16'd0;
+    arp_mac_port_source_payload_sender_mac = 48'd0;
+    arp_mac_port_source_payload_target_mac = 48'd0;
+    arp_mac_port_source_valid = 1'd0;
+    ip_mac_port_source_first = 1'd0;
+    ip_mac_port_source_last = 1'd0;
+    ip_mac_port_source_payload_be = 1'd0;
+    ip_mac_port_source_payload_data = 8'd0;
+    ip_mac_port_source_payload_error = 1'd0;
+    ip_mac_port_source_payload_ethernet_type = 16'd0;
+    ip_mac_port_source_payload_sender_mac = 48'd0;
+    ip_mac_port_source_payload_target_mac = 48'd0;
+    ip_mac_port_source_valid = 1'd0;
+    mac_crossbar_sink_ready = 1'd0;
     case (liteethmac_sel1)
         1'd1: begin
-            arp_mac_port_source_valid <= mac_crossbar_sink_valid;
-            mac_crossbar_sink_ready <= arp_mac_port_source_ready;
-            arp_mac_port_source_first <= mac_crossbar_sink_first;
-            arp_mac_port_source_last <= mac_crossbar_sink_last;
-            arp_mac_port_source_payload_ethernet_type <= mac_crossbar_sink_payload_ethernet_type;
-            arp_mac_port_source_payload_sender_mac <= mac_crossbar_sink_payload_sender_mac;
-            arp_mac_port_source_payload_target_mac <= mac_crossbar_sink_payload_target_mac;
-            arp_mac_port_source_payload_data <= mac_crossbar_sink_payload_data;
-            arp_mac_port_source_payload_last_be <= mac_crossbar_sink_payload_last_be;
-            arp_mac_port_source_payload_error <= mac_crossbar_sink_payload_error;
+            arp_mac_port_source_valid = mac_crossbar_sink_valid;
+            mac_crossbar_sink_ready = arp_mac_port_source_ready;
+            arp_mac_port_source_first = mac_crossbar_sink_first;
+            arp_mac_port_source_last = mac_crossbar_sink_last;
+            arp_mac_port_source_payload_ethernet_type = mac_crossbar_sink_payload_ethernet_type;
+            arp_mac_port_source_payload_sender_mac = mac_crossbar_sink_payload_sender_mac;
+            arp_mac_port_source_payload_target_mac = mac_crossbar_sink_payload_target_mac;
+            arp_mac_port_source_payload_data = mac_crossbar_sink_payload_data;
+            arp_mac_port_source_payload_be = mac_crossbar_sink_payload_be;
+            arp_mac_port_source_payload_error = mac_crossbar_sink_payload_error;
         end
         2'd2: begin
-            ip_mac_port_source_valid <= mac_crossbar_sink_valid;
-            mac_crossbar_sink_ready <= ip_mac_port_source_ready;
-            ip_mac_port_source_first <= mac_crossbar_sink_first;
-            ip_mac_port_source_last <= mac_crossbar_sink_last;
-            ip_mac_port_source_payload_ethernet_type <= mac_crossbar_sink_payload_ethernet_type;
-            ip_mac_port_source_payload_sender_mac <= mac_crossbar_sink_payload_sender_mac;
-            ip_mac_port_source_payload_target_mac <= mac_crossbar_sink_payload_target_mac;
-            ip_mac_port_source_payload_data <= mac_crossbar_sink_payload_data;
-            ip_mac_port_source_payload_last_be <= mac_crossbar_sink_payload_last_be;
-            ip_mac_port_source_payload_error <= mac_crossbar_sink_payload_error;
+            ip_mac_port_source_valid = mac_crossbar_sink_valid;
+            mac_crossbar_sink_ready = ip_mac_port_source_ready;
+            ip_mac_port_source_first = mac_crossbar_sink_first;
+            ip_mac_port_source_last = mac_crossbar_sink_last;
+            ip_mac_port_source_payload_ethernet_type = mac_crossbar_sink_payload_ethernet_type;
+            ip_mac_port_source_payload_sender_mac = mac_crossbar_sink_payload_sender_mac;
+            ip_mac_port_source_payload_target_mac = mac_crossbar_sink_payload_target_mac;
+            ip_mac_port_source_payload_data = mac_crossbar_sink_payload_data;
+            ip_mac_port_source_payload_be = mac_crossbar_sink_payload_be;
+            ip_mac_port_source_payload_error = mac_crossbar_sink_payload_error;
         end
         default: begin
-            mac_crossbar_sink_ready <= 1'd1;
+            mac_crossbar_sink_ready = 1'd1;
         end
     endcase
 end
 assign liteethmac_last = ((mac_crossbar_sink_valid & mac_crossbar_sink_last) & mac_crossbar_sink_ready);
 assign liteethmac_ongoing0 = ((mac_crossbar_sink_valid | liteethmac_ongoing1) & (~liteethmac_last));
 always @(*) begin
-    mac_packetizer_header <= 112'd0;
-    mac_packetizer_header[111:96] <= {mac_packetizer_sink_payload_ethernet_type[7:0], mac_packetizer_sink_payload_ethernet_type[15:8]};
-    mac_packetizer_header[95:48] <= {mac_packetizer_sink_payload_sender_mac[7:0], mac_packetizer_sink_payload_sender_mac[15:8], mac_packetizer_sink_payload_sender_mac[23:16], mac_packetizer_sink_payload_sender_mac[31:24], mac_packetizer_sink_payload_sender_mac[39:32], mac_packetizer_sink_payload_sender_mac[47:40]};
-    mac_packetizer_header[47:0] <= {mac_packetizer_sink_payload_target_mac[7:0], mac_packetizer_sink_payload_target_mac[15:8], mac_packetizer_sink_payload_target_mac[23:16], mac_packetizer_sink_payload_target_mac[31:24], mac_packetizer_sink_payload_target_mac[39:32], mac_packetizer_sink_payload_target_mac[47:40]};
+    mac_packetizer_header = 112'd0;
+    mac_packetizer_header[111:96] = {mac_packetizer_sink_payload_ethernet_type[7:0], mac_packetizer_sink_payload_ethernet_type[15:8]};
+    mac_packetizer_header[95:48] = {mac_packetizer_sink_payload_sender_mac[7:0], mac_packetizer_sink_payload_sender_mac[15:8], mac_packetizer_sink_payload_sender_mac[23:16], mac_packetizer_sink_payload_sender_mac[31:24], mac_packetizer_sink_payload_sender_mac[39:32], mac_packetizer_sink_payload_sender_mac[47:40]};
+    mac_packetizer_header[47:0] = {mac_packetizer_sink_payload_target_mac[7:0], mac_packetizer_sink_payload_target_mac[15:8], mac_packetizer_sink_payload_target_mac[23:16], mac_packetizer_sink_payload_target_mac[31:24], mac_packetizer_sink_payload_target_mac[39:32], mac_packetizer_sink_payload_target_mac[47:40]};
 end
-assign mac_packetizer_sink_last_be = mac_packetizer_sink_last;
-assign mac_packetizer_new_last_be = {mac_packetizer_sink_last_be};
-assign mac_packetizer_in_data_copy = (mac_packetizer_is_ongoing0 | mac_packetizer_is_ongoing1);
+assign mac_packetizer_source_payload_be = mac_packetizer_source_be;
 always @(*) begin
-    mac_packetizer_source_last <= 1'd0;
-    if (mac_packetizer_source_last_s) begin
-        mac_packetizer_source_last <= mac_packetizer_source_last_b;
-    end else begin
-        mac_packetizer_source_last <= mac_packetizer_source_last_a;
+    mac_packetizer_source_payload_error = 1'd0;
+    if (mac_packetizer_is_ongoing) begin
+        mac_packetizer_source_payload_error = mac_packetizer_sink_payload_error;
     end
 end
-assign mac_packetizer_source_payload_error = mac_packetizer_sink_payload_error;
 always @(*) begin
-    liteethmac_fsm0_next_state0 <= 2'd0;
-    liteethmac_fsm1_next_state0 <= 1'd0;
-    mac_packetizer_count_liteethmac_fsm0_next_value0 <= 4'd0;
-    mac_packetizer_count_liteethmac_fsm0_next_value_ce0 <= 1'd0;
-    mac_packetizer_delayed_last_be_liteethmac_fsm1_next_value0 <= 1'd0;
-    mac_packetizer_delayed_last_be_liteethmac_fsm1_next_value_ce0 <= 1'd0;
-    mac_packetizer_fsm_from_idle_liteethmac_fsm0_next_value1 <= 1'd0;
-    mac_packetizer_fsm_from_idle_liteethmac_fsm0_next_value_ce1 <= 1'd0;
-    mac_packetizer_is_ongoing0 <= 1'd0;
-    mac_packetizer_is_ongoing1 <= 1'd0;
-    mac_packetizer_is_ongoing2 <= 1'd0;
-    mac_packetizer_sink_ready <= 1'd0;
-    mac_packetizer_source_last_a <= 1'd0;
-    mac_packetizer_source_last_b <= 1'd0;
-    mac_packetizer_source_last_s <= 1'd0;
-    mac_packetizer_source_payload_data <= 8'd0;
-    mac_packetizer_source_payload_last_be <= 1'd0;
-    mac_packetizer_source_valid <= 1'd0;
-    mac_packetizer_sr_load <= 1'd0;
-    mac_packetizer_sr_shift <= 1'd0;
-    liteethmac_fsm0_next_state0 <= liteethmac_fsm0_state0;
-    case (liteethmac_fsm0_state0)
-        1'd1: begin
-            mac_packetizer_source_valid <= 1'd1;
-            mac_packetizer_source_last_a <= 1'd0;
-            mac_packetizer_source_payload_data <= mac_packetizer_sr[111:8];
-            if ((mac_packetizer_source_valid & mac_packetizer_source_ready)) begin
-                mac_packetizer_sr_shift <= 1'd1;
-                if ((mac_packetizer_count == 4'd13)) begin
-                    mac_packetizer_sr_shift <= 1'd0;
-                    liteethmac_fsm0_next_state0 <= 2'd2;
-                    mac_packetizer_count_liteethmac_fsm0_next_value0 <= (mac_packetizer_count + 1'd1);
-                    mac_packetizer_count_liteethmac_fsm0_next_value_ce0 <= 1'd1;
-                end else begin
-                    mac_packetizer_count_liteethmac_fsm0_next_value0 <= (mac_packetizer_count + 1'd1);
-                    mac_packetizer_count_liteethmac_fsm0_next_value_ce0 <= 1'd1;
-                end
-            end
-        end
-        2'd2: begin
-            mac_packetizer_source_valid <= mac_packetizer_sink_valid;
-            mac_packetizer_source_last_a <= mac_packetizer_sink_last;
-            mac_packetizer_source_payload_data <= mac_packetizer_sink_payload_data;
-            if ((mac_packetizer_source_valid & mac_packetizer_source_ready)) begin
-                mac_packetizer_sink_ready <= 1'd1;
-                if (mac_packetizer_source_last) begin
-                    liteethmac_fsm0_next_state0 <= 1'd0;
-                end
-            end
-            mac_packetizer_is_ongoing0 <= 1'd1;
-        end
-        2'd3: begin
-            mac_packetizer_is_ongoing1 <= 1'd1;
+    liteethmac_liteethmacpacketizer_next_state = 1'd0;
+    mac_packetizer_count_liteethmacpacketizer_next_value = 4'd0;
+    mac_packetizer_count_liteethmacpacketizer_next_value_ce = 1'd0;
+    mac_packetizer_is_ongoing = 1'd0;
+    mac_packetizer_sink_ready = 1'd0;
+    mac_packetizer_source_be = 1'd1;
+    mac_packetizer_source_first = 1'd0;
+    mac_packetizer_source_last = 1'd0;
+    mac_packetizer_source_payload_data = 8'd0;
+    mac_packetizer_source_valid = 1'd0;
+    case (liteethmac_liteethmacpacketizer_state)
+        1'd0: begin
         end
         default: begin
-            mac_packetizer_sink_ready <= 1'd1;
-            mac_packetizer_count_liteethmac_fsm0_next_value0 <= 1'd1;
-            mac_packetizer_count_liteethmac_fsm0_next_value_ce0 <= 1'd1;
-            if (mac_packetizer_sink_valid) begin
-                mac_packetizer_sink_ready <= 1'd0;
-                mac_packetizer_source_valid <= 1'd1;
-                mac_packetizer_source_last_a <= 1'd0;
-                mac_packetizer_source_payload_data <= mac_packetizer_header[7:0];
-                if ((mac_packetizer_source_valid & mac_packetizer_source_ready)) begin
-                    mac_packetizer_sr_load <= 1'd1;
-                    mac_packetizer_fsm_from_idle_liteethmac_fsm0_next_value1 <= 1'd1;
-                    mac_packetizer_fsm_from_idle_liteethmac_fsm0_next_value_ce1 <= 1'd1;
-                    if (1'd0) begin
-                        liteethmac_fsm0_next_state0 <= 2'd2;
+            if ((mac_packetizer_sink_valid & 1'd1)) begin
+                if (mac_packetizer_source_ready) begin
+                    if ((mac_packetizer_count == 4'd13)) begin
+                        mac_packetizer_count_liteethmacpacketizer_next_value = 1'd0;
                     end else begin
-                        liteethmac_fsm0_next_state0 <= 1'd1;
+                        mac_packetizer_count_liteethmacpacketizer_next_value = (mac_packetizer_count + 1'd1);
                     end
                 end
             end
-            mac_packetizer_is_ongoing2 <= 1'd1;
         end
     endcase
-    liteethmac_fsm1_next_state0 <= liteethmac_fsm1_state0;
-    case (liteethmac_fsm1_state0)
-        1'd1: begin
-            mac_packetizer_source_last_b <= 1'd1;
-            mac_packetizer_source_last_s <= 1'd1;
-            mac_packetizer_source_payload_last_be <= mac_packetizer_delayed_last_be;
-            mac_packetizer_sink_ready <= 1'd0;
-            if (mac_packetizer_source_ready) begin
-                liteethmac_fsm1_next_state0 <= 1'd0;
+    case (liteethmac_liteethmacpacketizer_state)
+        1'd0: begin
+        end
+        default: begin
+            if ((mac_packetizer_sink_valid & 1'd1)) begin
+                if (mac_packetizer_source_ready) begin
+                    if ((mac_packetizer_count == 4'd13)) begin
+                        mac_packetizer_count_liteethmacpacketizer_next_value_ce = 1'd1;
+                    end else begin
+                        mac_packetizer_count_liteethmacpacketizer_next_value_ce = 1'd1;
+                    end
+                end
+            end
+        end
+    endcase
+    case (liteethmac_liteethmacpacketizer_state)
+        1'd0: begin
+            mac_packetizer_is_ongoing = 1'd1;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethmac_liteethmacpacketizer_state)
+        1'd0: begin
+            mac_packetizer_sink_ready = mac_packetizer_source_ready;
+        end
+        default: begin
+            mac_packetizer_sink_ready = (mac_packetizer_count == 1'd0);
+            if ((mac_packetizer_sink_valid & 1'd1)) begin
+                mac_packetizer_sink_ready = (((mac_packetizer_count == 4'd13) & (mac_packetizer_sink_last & (mac_packetizer_sink_payload_be == 1'd0))) & mac_packetizer_source_ready);
+            end
+        end
+    endcase
+    case (liteethmac_liteethmacpacketizer_state)
+        1'd0: begin
+            mac_packetizer_source_be = mac_packetizer_sink_payload_be;
+        end
+        default: begin
+            if ((mac_packetizer_count == 4'd13)) begin
+                mac_packetizer_source_be = 1'd1;
+            end
+        end
+    endcase
+    case (liteethmac_liteethmacpacketizer_state)
+        1'd0: begin
+        end
+        default: begin
+            if ((mac_packetizer_sink_valid & 1'd1)) begin
+                mac_packetizer_source_first = (mac_packetizer_count == 1'd0);
+            end
+        end
+    endcase
+    case (liteethmac_liteethmacpacketizer_state)
+        1'd0: begin
+            mac_packetizer_source_last = mac_packetizer_sink_last;
+        end
+        default: begin
+            if ((mac_packetizer_sink_valid & 1'd1)) begin
+                mac_packetizer_source_last = ((mac_packetizer_count == 4'd13) & (mac_packetizer_sink_last & (mac_packetizer_sink_payload_be == 1'd0)));
+            end
+        end
+    endcase
+    case (liteethmac_liteethmacpacketizer_state)
+        1'd0: begin
+            mac_packetizer_source_payload_data = mac_packetizer_sink_payload_data;
+        end
+        default: begin
+            case (mac_packetizer_count)
+                1'd0: begin
+                    mac_packetizer_source_payload_data = mac_packetizer_header[7:0];
+                end
+                1'd1: begin
+                    mac_packetizer_source_payload_data = mac_packetizer_header[15:8];
+                end
+                2'd2: begin
+                    mac_packetizer_source_payload_data = mac_packetizer_header[23:16];
+                end
+                2'd3: begin
+                    mac_packetizer_source_payload_data = mac_packetizer_header[31:24];
+                end
+                3'd4: begin
+                    mac_packetizer_source_payload_data = mac_packetizer_header[39:32];
+                end
+                3'd5: begin
+                    mac_packetizer_source_payload_data = mac_packetizer_header[47:40];
+                end
+                3'd6: begin
+                    mac_packetizer_source_payload_data = mac_packetizer_header[55:48];
+                end
+                3'd7: begin
+                    mac_packetizer_source_payload_data = mac_packetizer_header[63:56];
+                end
+                4'd8: begin
+                    mac_packetizer_source_payload_data = mac_packetizer_header[71:64];
+                end
+                4'd9: begin
+                    mac_packetizer_source_payload_data = mac_packetizer_header[79:72];
+                end
+                4'd10: begin
+                    mac_packetizer_source_payload_data = mac_packetizer_header[87:80];
+                end
+                4'd11: begin
+                    mac_packetizer_source_payload_data = mac_packetizer_header[95:88];
+                end
+                4'd12: begin
+                    mac_packetizer_source_payload_data = mac_packetizer_header[103:96];
+                end
+                4'd13: begin
+                    mac_packetizer_source_payload_data = mac_packetizer_header[111:104];
+                end
+            endcase
+        end
+    endcase
+    case (liteethmac_liteethmacpacketizer_state)
+        1'd0: begin
+            mac_packetizer_source_valid = mac_packetizer_sink_valid;
+        end
+        default: begin
+            if ((mac_packetizer_sink_valid & 1'd1)) begin
+                mac_packetizer_source_valid = 1'd1;
+            end
+        end
+    endcase
+    liteethmac_liteethmacpacketizer_next_state = liteethmac_liteethmacpacketizer_state;
+    case (liteethmac_liteethmacpacketizer_state)
+        1'd0: begin
+            if (((mac_packetizer_source_valid & mac_packetizer_source_ready) & mac_packetizer_source_last)) begin
+                liteethmac_liteethmacpacketizer_next_state = 1'd1;
             end
         end
         default: begin
-            if (((mac_packetizer_in_data_copy & mac_packetizer_sink_last) & (mac_packetizer_sink_last_be > mac_packetizer_new_last_be))) begin
-                mac_packetizer_source_last_b <= 1'd0;
-                mac_packetizer_source_last_s <= 1'd1;
-                mac_packetizer_source_payload_last_be <= 1'd0;
-                if ((mac_packetizer_source_ready & mac_packetizer_source_valid)) begin
-                    mac_packetizer_delayed_last_be_liteethmac_fsm1_next_value0 <= mac_packetizer_new_last_be;
-                    mac_packetizer_delayed_last_be_liteethmac_fsm1_next_value_ce0 <= 1'd1;
-                    liteethmac_fsm1_next_state0 <= 1'd1;
-                end
-            end else begin
-                if (mac_packetizer_in_data_copy) begin
-                    mac_packetizer_source_last_b <= mac_packetizer_sink_last;
-                    mac_packetizer_source_last_s <= 1'd1;
-                    mac_packetizer_source_payload_last_be <= mac_packetizer_new_last_be;
-                end
-            end
-            if (mac_packetizer_in_data_copy) begin
-                mac_packetizer_sink_ready <= mac_packetizer_source_ready;
-            end else begin
-                if (mac_packetizer_is_ongoing2) begin
-                    mac_packetizer_sink_ready <= (~mac_packetizer_sink_valid);
+            if ((mac_packetizer_sink_valid & 1'd1)) begin
+                if (mac_packetizer_source_ready) begin
+                    if ((mac_packetizer_count == 4'd13)) begin
+                        if ((~mac_packetizer_source_last)) begin
+                            liteethmac_liteethmacpacketizer_next_state = 1'd0;
+                        end
+                    end else begin
+                    end
                 end
             end
         end
     endcase
 end
 assign mac_depacketizer_header = mac_depacketizer_sr;
-assign mac_depacketizer_source_payload_ethernet_type = {rhs_slice_proxy1[7:0], rhs_slice_proxy0[15:8]};
-assign mac_depacketizer_source_payload_sender_mac = {rhs_slice_proxy7[7:0], rhs_slice_proxy6[15:8], rhs_slice_proxy5[23:16], rhs_slice_proxy4[31:24], rhs_slice_proxy3[39:32], rhs_slice_proxy2[47:40]};
-assign mac_depacketizer_source_payload_target_mac = {rhs_slice_proxy13[7:0], rhs_slice_proxy12[15:8], rhs_slice_proxy11[23:16], rhs_slice_proxy10[31:24], rhs_slice_proxy9[39:32], rhs_slice_proxy8[47:40]};
+assign mac_depacketizer_source_payload_ethernet_type = {mac_depacketizer_header[103:96], mac_depacketizer_header[111:104]};
+assign mac_depacketizer_source_payload_sender_mac = {mac_depacketizer_header[55:48], mac_depacketizer_header[63:56], mac_depacketizer_header[71:64], mac_depacketizer_header[79:72], mac_depacketizer_header[87:80], mac_depacketizer_header[95:88]};
+assign mac_depacketizer_source_payload_target_mac = {mac_depacketizer_header[7:0], mac_depacketizer_header[15:8], mac_depacketizer_header[23:16], mac_depacketizer_header[31:24], mac_depacketizer_header[39:32], mac_depacketizer_header[47:40]};
+assign mac_depacketizer_sink_be = mac_depacketizer_sink_payload_be;
+assign mac_depacketizer_source_payload_be = mac_depacketizer_source_be;
 assign mac_depacketizer_source_payload_error = mac_depacketizer_sink_payload_error;
-assign mac_depacketizer_sink_last_be = mac_depacketizer_sink_last;
-assign mac_depacketizer_new_last_be = {mac_depacketizer_sink_last_be};
-assign mac_depacketizer_is_in_copy = (mac_depacketizer_is_ongoing0 | mac_depacketizer_is_ongoing1);
 always @(*) begin
-    mac_depacketizer_source_last <= 1'd0;
-    if (mac_depacketizer_source_last_s) begin
-        mac_depacketizer_source_last <= mac_depacketizer_source_last_b;
-    end else begin
-        mac_depacketizer_source_last <= mac_depacketizer_source_last_a;
-    end
-end
-always @(*) begin
-    liteethmac_fsm0_next_state1 <= 2'd0;
-    liteethmac_fsm1_next_state1 <= 1'd0;
-    mac_depacketizer_count_liteethmac_fsm0_next_value2 <= 4'd0;
-    mac_depacketizer_count_liteethmac_fsm0_next_value_ce2 <= 1'd0;
-    mac_depacketizer_delayed_last_be_liteethmac_fsm1_next_value1 <= 1'd0;
-    mac_depacketizer_delayed_last_be_liteethmac_fsm1_next_value_ce1 <= 1'd0;
-    mac_depacketizer_fsm_from_idle_liteethmac_fsm0_next_value3 <= 1'd0;
-    mac_depacketizer_fsm_from_idle_liteethmac_fsm0_next_value_ce3 <= 1'd0;
-    mac_depacketizer_is_ongoing0 <= 1'd0;
-    mac_depacketizer_is_ongoing1 <= 1'd0;
-    mac_depacketizer_is_ongoing2 <= 1'd0;
-    mac_depacketizer_is_ongoing3 <= 1'd0;
-    mac_depacketizer_sink_ready <= 1'd0;
-    mac_depacketizer_source_last_a <= 1'd0;
-    mac_depacketizer_source_last_b <= 1'd0;
-    mac_depacketizer_source_last_s <= 1'd0;
-    mac_depacketizer_source_payload_data <= 8'd0;
-    mac_depacketizer_source_payload_last_be <= 1'd0;
-    mac_depacketizer_source_valid <= 1'd0;
-    mac_depacketizer_sr_shift <= 1'd0;
-    liteethmac_fsm0_next_state1 <= liteethmac_fsm0_state1;
-    case (liteethmac_fsm0_state1)
+    liteethmac_liteethmacdepacketizer_next_state = 2'd0;
+    mac_depacketizer_count_liteethmacdepacketizer_next_value0 = 4'd0;
+    mac_depacketizer_count_liteethmacdepacketizer_next_value_ce0 = 1'd0;
+    mac_depacketizer_data_copy_first_liteethmacdepacketizer_next_value2 = 1'd0;
+    mac_depacketizer_data_copy_first_liteethmacdepacketizer_next_value_ce2 = 1'd0;
+    mac_depacketizer_fsm_from_idle_liteethmacdepacketizer_next_value1 = 1'd0;
+    mac_depacketizer_fsm_from_idle_liteethmacdepacketizer_next_value_ce1 = 1'd0;
+    mac_depacketizer_sink_ready = 1'd0;
+    mac_depacketizer_source_be = 1'd1;
+    mac_depacketizer_source_first = 1'd0;
+    mac_depacketizer_source_last = 1'd0;
+    mac_depacketizer_source_payload_data = 8'd0;
+    mac_depacketizer_source_valid = 1'd0;
+    mac_depacketizer_sr_shift = 1'd0;
+    case (liteethmac_liteethmacdepacketizer_state)
         1'd1: begin
-            mac_depacketizer_sink_ready <= 1'd1;
             if (mac_depacketizer_sink_valid) begin
-                mac_depacketizer_count_liteethmac_fsm0_next_value2 <= (mac_depacketizer_count + 1'd1);
-                mac_depacketizer_count_liteethmac_fsm0_next_value_ce2 <= 1'd1;
-                mac_depacketizer_sr_shift <= 1'd1;
+                mac_depacketizer_count_liteethmacdepacketizer_next_value0 = (mac_depacketizer_count + 1'd1);
                 if ((mac_depacketizer_count == 4'd13)) begin
-                    liteethmac_fsm0_next_state1 <= 2'd2;
-                    mac_depacketizer_count_liteethmac_fsm0_next_value2 <= (mac_depacketizer_count + 1'd1);
-                    mac_depacketizer_count_liteethmac_fsm0_next_value_ce2 <= 1'd1;
+                    mac_depacketizer_count_liteethmacdepacketizer_next_value0 = (mac_depacketizer_count + 1'd1);
                 end
             end
         end
         2'd2: begin
-            mac_depacketizer_source_valid <= (mac_depacketizer_sink_valid | mac_depacketizer_sink_d_last);
-            mac_depacketizer_source_last_a <= (mac_depacketizer_sink_last | mac_depacketizer_sink_d_last);
-            mac_depacketizer_sink_ready <= mac_depacketizer_source_ready;
-            mac_depacketizer_source_payload_data <= mac_depacketizer_sink_payload_data;
-            if ((mac_depacketizer_source_valid & mac_depacketizer_source_ready)) begin
-                if (mac_depacketizer_source_last) begin
-                    liteethmac_fsm0_next_state1 <= 1'd0;
-                end
-            end
-            mac_depacketizer_is_ongoing0 <= 1'd1;
-            mac_depacketizer_is_ongoing2 <= 1'd1;
-        end
-        2'd3: begin
-            mac_depacketizer_is_ongoing1 <= 1'd1;
-            mac_depacketizer_is_ongoing3 <= 1'd1;
         end
         default: begin
-            mac_depacketizer_sink_ready <= 1'd1;
-            mac_depacketizer_count_liteethmac_fsm0_next_value2 <= 1'd1;
-            mac_depacketizer_count_liteethmac_fsm0_next_value_ce2 <= 1'd1;
+            mac_depacketizer_count_liteethmacdepacketizer_next_value0 = 1'd1;
+        end
+    endcase
+    case (liteethmac_liteethmacdepacketizer_state)
+        1'd1: begin
             if (mac_depacketizer_sink_valid) begin
-                mac_depacketizer_sr_shift <= 1'd1;
-                mac_depacketizer_fsm_from_idle_liteethmac_fsm0_next_value3 <= 1'd1;
-                mac_depacketizer_fsm_from_idle_liteethmac_fsm0_next_value_ce3 <= 1'd1;
+                mac_depacketizer_count_liteethmacdepacketizer_next_value_ce0 = 1'd1;
+                if ((mac_depacketizer_count == 4'd13)) begin
+                    mac_depacketizer_count_liteethmacdepacketizer_next_value_ce0 = 1'd1;
+                end
+            end
+        end
+        2'd2: begin
+        end
+        default: begin
+            mac_depacketizer_count_liteethmacdepacketizer_next_value_ce0 = 1'd1;
+        end
+    endcase
+    case (liteethmac_liteethmacdepacketizer_state)
+        1'd1: begin
+            mac_depacketizer_sink_ready = 1'd1;
+        end
+        2'd2: begin
+            mac_depacketizer_sink_ready = mac_depacketizer_source_ready;
+        end
+        default: begin
+            mac_depacketizer_sink_ready = 1'd1;
+        end
+    endcase
+    case (liteethmac_liteethmacdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            mac_depacketizer_source_be = mac_depacketizer_sink_be;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethmac_liteethmacdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            mac_depacketizer_source_first = mac_depacketizer_data_copy_first;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethmac_liteethmacdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            mac_depacketizer_source_last = mac_depacketizer_sink_last;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethmac_liteethmacdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            mac_depacketizer_source_payload_data = mac_depacketizer_sink_payload_data;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethmac_liteethmacdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            mac_depacketizer_source_valid = mac_depacketizer_sink_valid;
+        end
+        default: begin
+        end
+    endcase
+    liteethmac_liteethmacdepacketizer_next_state = liteethmac_liteethmacdepacketizer_state;
+    case (liteethmac_liteethmacdepacketizer_state)
+        1'd1: begin
+            if (mac_depacketizer_sink_valid) begin
+                if ((mac_depacketizer_count == 4'd13)) begin
+                    liteethmac_liteethmacdepacketizer_next_state = 2'd2;
+                end
+                if (mac_depacketizer_sink_last) begin
+                    liteethmac_liteethmacdepacketizer_next_state = 1'd0;
+                end
+            end
+        end
+        2'd2: begin
+            if ((mac_depacketizer_source_valid & mac_depacketizer_source_ready)) begin
+                if (mac_depacketizer_source_last) begin
+                    liteethmac_liteethmacdepacketizer_next_state = 1'd0;
+                end
+            end
+        end
+        default: begin
+            if (mac_depacketizer_sink_valid) begin
                 if (1'd0) begin
-                    liteethmac_fsm0_next_state1 <= 2'd2;
+                    liteethmac_liteethmacdepacketizer_next_state = 2'd2;
                 end else begin
-                    liteethmac_fsm0_next_state1 <= 1'd1;
+                    liteethmac_liteethmacdepacketizer_next_state = 1'd1;
+                end
+                if (($signed({1'd0, mac_depacketizer_sink_last}) & $signed(1'd1))) begin
+                    liteethmac_liteethmacdepacketizer_next_state = 1'd0;
                 end
             end
         end
     endcase
-    liteethmac_fsm1_next_state1 <= liteethmac_fsm1_state1;
-    case (liteethmac_fsm1_state1)
+    case (liteethmac_liteethmacdepacketizer_state)
         1'd1: begin
-            mac_depacketizer_source_last_b <= 1'd1;
-            mac_depacketizer_source_last_s <= 1'd1;
-            mac_depacketizer_source_payload_last_be <= mac_depacketizer_delayed_last_be;
-            mac_depacketizer_sink_ready <= 1'd0;
-            if ((mac_depacketizer_source_ready & mac_depacketizer_source_valid)) begin
-                liteethmac_fsm1_next_state1 <= 1'd0;
+            if (mac_depacketizer_sink_valid) begin
+                if ((mac_depacketizer_count == 4'd13)) begin
+                    mac_depacketizer_data_copy_first_liteethmacdepacketizer_next_value2 = 1'd1;
+                end
+            end
+        end
+        2'd2: begin
+            if ((mac_depacketizer_source_valid & mac_depacketizer_source_ready)) begin
+                mac_depacketizer_data_copy_first_liteethmacdepacketizer_next_value2 = 1'd0;
             end
         end
         default: begin
-            if (((mac_depacketizer_sink_valid & mac_depacketizer_sink_last) & (mac_depacketizer_sink_last_be > mac_depacketizer_new_last_be))) begin
-                mac_depacketizer_source_last_b <= 1'd0;
-                mac_depacketizer_source_last_s <= 1'd1;
-                mac_depacketizer_source_payload_last_be <= 1'd0;
-                if (((mac_depacketizer_source_ready & mac_depacketizer_source_valid) | ((~mac_depacketizer_was_in_copy) & mac_depacketizer_is_in_copy))) begin
-                    mac_depacketizer_delayed_last_be_liteethmac_fsm1_next_value1 <= mac_depacketizer_new_last_be;
-                    mac_depacketizer_delayed_last_be_liteethmac_fsm1_next_value_ce1 <= 1'd1;
-                    liteethmac_fsm1_next_state1 <= 1'd1;
-                end
-            end else begin
-                if (mac_depacketizer_sink_last) begin
-                    mac_depacketizer_source_last_b <= 1'd1;
-                    mac_depacketizer_source_last_s <= 1'd1;
-                    mac_depacketizer_source_payload_last_be <= mac_depacketizer_new_last_be;
+            if (mac_depacketizer_sink_valid) begin
+                mac_depacketizer_data_copy_first_liteethmacdepacketizer_next_value2 = 1'd1;
+            end
+        end
+    endcase
+    case (liteethmac_liteethmacdepacketizer_state)
+        1'd1: begin
+            if (mac_depacketizer_sink_valid) begin
+                if ((mac_depacketizer_count == 4'd13)) begin
+                    mac_depacketizer_data_copy_first_liteethmacdepacketizer_next_value_ce2 = 1'd1;
                 end
             end
-            if ((mac_depacketizer_is_ongoing2 | (mac_depacketizer_is_ongoing3 & (~mac_depacketizer_fsm_from_idle)))) begin
-                mac_depacketizer_sink_ready <= mac_depacketizer_source_ready;
-            end else begin
-                mac_depacketizer_sink_ready <= 1'd1;
+        end
+        2'd2: begin
+            if ((mac_depacketizer_source_valid & mac_depacketizer_source_ready)) begin
+                mac_depacketizer_data_copy_first_liteethmacdepacketizer_next_value_ce2 = 1'd1;
+            end
+        end
+        default: begin
+            if (mac_depacketizer_sink_valid) begin
+                mac_depacketizer_data_copy_first_liteethmacdepacketizer_next_value_ce2 = 1'd1;
+            end
+        end
+    endcase
+    case (liteethmac_liteethmacdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            if ((mac_depacketizer_source_valid & mac_depacketizer_source_ready)) begin
+                mac_depacketizer_fsm_from_idle_liteethmacdepacketizer_next_value1 = 1'd0;
+            end
+        end
+        default: begin
+            if (mac_depacketizer_sink_valid) begin
+                mac_depacketizer_fsm_from_idle_liteethmacdepacketizer_next_value1 = 1'd1;
+            end
+        end
+    endcase
+    case (liteethmac_liteethmacdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            if ((mac_depacketizer_source_valid & mac_depacketizer_source_ready)) begin
+                mac_depacketizer_fsm_from_idle_liteethmacdepacketizer_next_value_ce1 = 1'd1;
+            end
+        end
+        default: begin
+            if (mac_depacketizer_sink_valid) begin
+                mac_depacketizer_fsm_from_idle_liteethmacdepacketizer_next_value_ce1 = 1'd1;
+            end
+        end
+    endcase
+    case (liteethmac_liteethmacdepacketizer_state)
+        1'd1: begin
+            if (mac_depacketizer_sink_valid) begin
+                mac_depacketizer_sr_shift = 1'd1;
+            end
+        end
+        2'd2: begin
+        end
+        default: begin
+            if (mac_depacketizer_sink_valid) begin
+                mac_depacketizer_sr_shift = 1'd1;
             end
         end
     endcase
@@ -3997,7 +4432,7 @@ assign arp_mac_port_sink_payload_ethernet_type = arp_tx_source_source_payload_et
 assign arp_mac_port_sink_payload_sender_mac = arp_tx_source_source_payload_sender_mac;
 assign arp_mac_port_sink_payload_target_mac = arp_tx_source_source_payload_target_mac;
 assign arp_mac_port_sink_payload_data = arp_tx_source_source_payload_data;
-assign arp_mac_port_sink_payload_last_be = arp_tx_source_source_payload_last_be;
+assign arp_mac_port_sink_payload_be = arp_tx_source_source_payload_be;
 assign arp_mac_port_sink_payload_error = arp_tx_source_source_payload_error;
 assign arp_rx_sink_sink_valid = arp_mac_port_source_valid;
 assign arp_mac_port_source_ready = arp_rx_sink_sink_ready;
@@ -4007,223 +4442,353 @@ assign arp_rx_sink_sink_payload_ethernet_type = arp_mac_port_source_payload_ethe
 assign arp_rx_sink_sink_payload_sender_mac = arp_mac_port_source_payload_sender_mac;
 assign arp_rx_sink_sink_payload_target_mac = arp_mac_port_source_payload_target_mac;
 assign arp_rx_sink_sink_payload_data = arp_mac_port_source_payload_data;
-assign arp_rx_sink_sink_payload_last_be = arp_mac_port_source_payload_last_be;
+assign arp_rx_sink_sink_payload_be = arp_mac_port_source_payload_be;
 assign arp_rx_sink_sink_payload_error = arp_mac_port_source_payload_error;
-assign arp_tx_packetizer_sink_last = (arp_tx_counter == 6'd45);
-always @(*) begin
-    arp_tx_packetizer_sink_payload_last_be <= 1'd0;
-    if (arp_tx_packetizer_sink_last) begin
-        arp_tx_packetizer_sink_payload_last_be <= 1'd1;
-    end
-end
+assign arp_tx_packetizer_sink_last = (arp_tx_counter == 5'd17);
+assign arp_tx_packetizer_sink_payload_be = (arp_tx_packetizer_sink_last ? 1'd1 : 1'd1);
 assign arp_tx_packetizer_sink_param_hwtype = 1'd1;
-assign arp_tx_packetizer_sink_param_proto = 12'd2048;
+assign arp_tx_packetizer_sink_param_proto = 12'h800;
 assign arp_tx_packetizer_sink_param_hwsize = 3'd6;
 assign arp_tx_packetizer_sink_param_protosize = 3'd4;
-assign arp_tx_packetizer_sink_param_sender_mac = 45'd18566422200342;
+assign arp_tx_packetizer_sink_param_sender_mac = 45'h10e2d5000016;
 assign arp_tx_packetizer_sink_param_sender_ip = 32'd3232235792;
 assign arp_tx_packetizer_sink_param_target_ip = arp_tx_sink_sink_payload_ip_address;
 always @(*) begin
-    arp_tx_packetizer_sink_param_opcode <= 16'd0;
-    arp_tx_packetizer_sink_param_target_mac <= 48'd0;
+    arp_tx_packetizer_sink_param_opcode = 16'd0;
+    arp_tx_packetizer_sink_param_target_mac = 48'd0;
     if (arp_tx_sink_sink_payload_reply) begin
-        arp_tx_packetizer_sink_param_opcode <= 2'd2;
-        arp_tx_packetizer_sink_param_target_mac <= arp_tx_sink_sink_payload_mac_address;
+        arp_tx_packetizer_sink_param_opcode = 2'd2;
+        arp_tx_packetizer_sink_param_target_mac = arp_tx_sink_sink_payload_mac_address;
     end else begin
         if (arp_tx_sink_sink_payload_request) begin
-            arp_tx_packetizer_sink_param_opcode <= 1'd1;
-            arp_tx_packetizer_sink_param_target_mac <= 48'd281474976710655;
+            arp_tx_packetizer_sink_param_opcode = 1'd1;
+            arp_tx_packetizer_sink_param_target_mac = 48'hffffffffffff;
         end
     end
 end
 assign arp_tx_source_source_first = arp_tx_packetizer_source_first;
 assign arp_tx_source_source_last = arp_tx_packetizer_source_last;
 assign arp_tx_source_source_payload_data = arp_tx_packetizer_source_payload_data;
-assign arp_tx_source_source_payload_last_be = arp_tx_packetizer_source_payload_last_be;
+assign arp_tx_source_source_payload_be = arp_tx_packetizer_source_payload_be;
 assign arp_tx_source_source_payload_error = arp_tx_packetizer_source_payload_error;
 always @(*) begin
-    arp_tx_source_source_payload_target_mac <= 48'd0;
-    arp_tx_source_source_payload_target_mac <= arp_tx_packetizer_source_payload_target_mac;
-    arp_tx_source_source_payload_target_mac <= arp_tx_packetizer_sink_param_target_mac;
+    arp_tx_source_source_payload_target_mac = 48'd0;
+    arp_tx_source_source_payload_target_mac = arp_tx_packetizer_source_payload_target_mac;
+    arp_tx_source_source_payload_target_mac = arp_tx_packetizer_sink_param_target_mac;
 end
 always @(*) begin
-    arp_tx_source_source_payload_sender_mac <= 48'd0;
-    arp_tx_source_source_payload_sender_mac <= arp_tx_packetizer_source_payload_sender_mac;
-    arp_tx_source_source_payload_sender_mac <= 45'd18566422200342;
+    arp_tx_source_source_payload_sender_mac = 48'd0;
+    arp_tx_source_source_payload_sender_mac = arp_tx_packetizer_source_payload_sender_mac;
+    arp_tx_source_source_payload_sender_mac = 45'h10e2d5000016;
 end
 always @(*) begin
-    arp_tx_source_source_payload_ethernet_type <= 16'd0;
-    arp_tx_source_source_payload_ethernet_type <= arp_tx_packetizer_source_payload_ethernet_type;
-    arp_tx_source_source_payload_ethernet_type <= 12'd2054;
+    arp_tx_source_source_payload_ethernet_type = 16'd0;
+    arp_tx_source_source_payload_ethernet_type = arp_tx_packetizer_source_payload_ethernet_type;
+    arp_tx_source_source_payload_ethernet_type = 12'd2054;
 end
 always @(*) begin
-    arp_tx_packetizer_header <= 224'd0;
-    arp_tx_packetizer_header[39:32] <= {arp_tx_packetizer_sink_param_hwsize[7:0]};
-    arp_tx_packetizer_header[15:0] <= {arp_tx_packetizer_sink_param_hwtype[7:0], arp_tx_packetizer_sink_param_hwtype[15:8]};
-    arp_tx_packetizer_header[63:48] <= {arp_tx_packetizer_sink_param_opcode[7:0], arp_tx_packetizer_sink_param_opcode[15:8]};
-    arp_tx_packetizer_header[31:16] <= {arp_tx_packetizer_sink_param_proto[7:0], arp_tx_packetizer_sink_param_proto[15:8]};
-    arp_tx_packetizer_header[47:40] <= {arp_tx_packetizer_sink_param_protosize[7:0]};
-    arp_tx_packetizer_header[143:112] <= {arp_tx_packetizer_sink_param_sender_ip[7:0], arp_tx_packetizer_sink_param_sender_ip[15:8], arp_tx_packetizer_sink_param_sender_ip[23:16], arp_tx_packetizer_sink_param_sender_ip[31:24]};
-    arp_tx_packetizer_header[111:64] <= {arp_tx_packetizer_sink_param_sender_mac[7:0], arp_tx_packetizer_sink_param_sender_mac[15:8], arp_tx_packetizer_sink_param_sender_mac[23:16], arp_tx_packetizer_sink_param_sender_mac[31:24], arp_tx_packetizer_sink_param_sender_mac[39:32], arp_tx_packetizer_sink_param_sender_mac[47:40]};
-    arp_tx_packetizer_header[223:192] <= {arp_tx_packetizer_sink_param_target_ip[7:0], arp_tx_packetizer_sink_param_target_ip[15:8], arp_tx_packetizer_sink_param_target_ip[23:16], arp_tx_packetizer_sink_param_target_ip[31:24]};
-    arp_tx_packetizer_header[191:144] <= {arp_tx_packetizer_sink_param_target_mac[7:0], arp_tx_packetizer_sink_param_target_mac[15:8], arp_tx_packetizer_sink_param_target_mac[23:16], arp_tx_packetizer_sink_param_target_mac[31:24], arp_tx_packetizer_sink_param_target_mac[39:32], arp_tx_packetizer_sink_param_target_mac[47:40]};
+    arp_tx_packetizer_header = 224'd0;
+    arp_tx_packetizer_header[39:32] = {arp_tx_packetizer_sink_param_hwsize};
+    arp_tx_packetizer_header[15:0] = {arp_tx_packetizer_sink_param_hwtype[7:0], arp_tx_packetizer_sink_param_hwtype[15:8]};
+    arp_tx_packetizer_header[63:48] = {arp_tx_packetizer_sink_param_opcode[7:0], arp_tx_packetizer_sink_param_opcode[15:8]};
+    arp_tx_packetizer_header[31:16] = {arp_tx_packetizer_sink_param_proto[7:0], arp_tx_packetizer_sink_param_proto[15:8]};
+    arp_tx_packetizer_header[47:40] = {arp_tx_packetizer_sink_param_protosize};
+    arp_tx_packetizer_header[143:112] = {arp_tx_packetizer_sink_param_sender_ip[7:0], arp_tx_packetizer_sink_param_sender_ip[15:8], arp_tx_packetizer_sink_param_sender_ip[23:16], arp_tx_packetizer_sink_param_sender_ip[31:24]};
+    arp_tx_packetizer_header[111:64] = {arp_tx_packetizer_sink_param_sender_mac[7:0], arp_tx_packetizer_sink_param_sender_mac[15:8], arp_tx_packetizer_sink_param_sender_mac[23:16], arp_tx_packetizer_sink_param_sender_mac[31:24], arp_tx_packetizer_sink_param_sender_mac[39:32], arp_tx_packetizer_sink_param_sender_mac[47:40]};
+    arp_tx_packetizer_header[223:192] = {arp_tx_packetizer_sink_param_target_ip[7:0], arp_tx_packetizer_sink_param_target_ip[15:8], arp_tx_packetizer_sink_param_target_ip[23:16], arp_tx_packetizer_sink_param_target_ip[31:24]};
+    arp_tx_packetizer_header[191:144] = {arp_tx_packetizer_sink_param_target_mac[7:0], arp_tx_packetizer_sink_param_target_mac[15:8], arp_tx_packetizer_sink_param_target_mac[23:16], arp_tx_packetizer_sink_param_target_mac[31:24], arp_tx_packetizer_sink_param_target_mac[39:32], arp_tx_packetizer_sink_param_target_mac[47:40]};
 end
-assign arp_tx_packetizer_sink_last_be = arp_tx_packetizer_sink_last;
-assign arp_tx_packetizer_new_last_be = {arp_tx_packetizer_sink_last_be};
-assign arp_tx_packetizer_in_data_copy = (arp_tx_packetizer_is_ongoing0 | arp_tx_packetizer_is_ongoing1);
+assign arp_tx_packetizer_source_payload_be = arp_tx_packetizer_source_be;
 always @(*) begin
-    arp_tx_packetizer_source_last <= 1'd0;
-    if (arp_tx_packetizer_source_last_s) begin
-        arp_tx_packetizer_source_last <= arp_tx_packetizer_source_last_b;
-    end else begin
-        arp_tx_packetizer_source_last <= arp_tx_packetizer_source_last_a;
+    arp_tx_packetizer_source_payload_error = 1'd0;
+    if (arp_tx_packetizer_is_ongoing) begin
+        arp_tx_packetizer_source_payload_error = arp_tx_packetizer_sink_payload_error;
     end
 end
-assign arp_tx_packetizer_source_payload_error = arp_tx_packetizer_sink_payload_error;
 always @(*) begin
-    arp_tx_packetizer_count_liteetharp_fsm0_next_value0 <= 5'd0;
-    arp_tx_packetizer_count_liteetharp_fsm0_next_value_ce0 <= 1'd0;
-    arp_tx_packetizer_delayed_last_be_liteetharp_fsm1_next_value0 <= 1'd0;
-    arp_tx_packetizer_delayed_last_be_liteetharp_fsm1_next_value_ce0 <= 1'd0;
-    arp_tx_packetizer_fsm_from_idle_liteetharp_fsm0_next_value1 <= 1'd0;
-    arp_tx_packetizer_fsm_from_idle_liteetharp_fsm0_next_value_ce1 <= 1'd0;
-    arp_tx_packetizer_is_ongoing0 <= 1'd0;
-    arp_tx_packetizer_is_ongoing1 <= 1'd0;
-    arp_tx_packetizer_is_ongoing2 <= 1'd0;
-    arp_tx_packetizer_sink_ready <= 1'd0;
-    arp_tx_packetizer_source_last_a <= 1'd0;
-    arp_tx_packetizer_source_last_b <= 1'd0;
-    arp_tx_packetizer_source_last_s <= 1'd0;
-    arp_tx_packetizer_source_payload_data <= 8'd0;
-    arp_tx_packetizer_source_payload_last_be <= 1'd0;
-    arp_tx_packetizer_source_valid <= 1'd0;
-    arp_tx_packetizer_sr_load <= 1'd0;
-    arp_tx_packetizer_sr_shift <= 1'd0;
-    liteetharptx_fsm0_next_state <= 2'd0;
-    liteetharptx_fsm1_next_state <= 1'd0;
-    liteetharptx_fsm0_next_state <= liteetharptx_fsm0_state;
-    case (liteetharptx_fsm0_state)
-        1'd1: begin
-            arp_tx_packetizer_source_valid <= 1'd1;
-            arp_tx_packetizer_source_last_a <= 1'd0;
-            arp_tx_packetizer_source_payload_data <= arp_tx_packetizer_sr[223:8];
-            if ((arp_tx_packetizer_source_valid & arp_tx_packetizer_source_ready)) begin
-                arp_tx_packetizer_sr_shift <= 1'd1;
-                if ((arp_tx_packetizer_count == 5'd27)) begin
-                    arp_tx_packetizer_sr_shift <= 1'd0;
-                    liteetharptx_fsm0_next_state <= 2'd2;
-                    arp_tx_packetizer_count_liteetharp_fsm0_next_value0 <= (arp_tx_packetizer_count + 1'd1);
-                    arp_tx_packetizer_count_liteetharp_fsm0_next_value_ce0 <= 1'd1;
-                end else begin
-                    arp_tx_packetizer_count_liteetharp_fsm0_next_value0 <= (arp_tx_packetizer_count + 1'd1);
-                    arp_tx_packetizer_count_liteetharp_fsm0_next_value_ce0 <= 1'd1;
-                end
-            end
-        end
-        2'd2: begin
-            arp_tx_packetizer_source_valid <= arp_tx_packetizer_sink_valid;
-            arp_tx_packetizer_source_last_a <= arp_tx_packetizer_sink_last;
-            arp_tx_packetizer_source_payload_data <= arp_tx_packetizer_sink_payload_data;
-            if ((arp_tx_packetizer_source_valid & arp_tx_packetizer_source_ready)) begin
-                arp_tx_packetizer_sink_ready <= 1'd1;
-                if (arp_tx_packetizer_source_last) begin
-                    liteetharptx_fsm0_next_state <= 1'd0;
-                end
-            end
-            arp_tx_packetizer_is_ongoing0 <= 1'd1;
-        end
-        2'd3: begin
-            arp_tx_packetizer_is_ongoing1 <= 1'd1;
+    arp_tx_packetizer_count_liteetharp_liteetharptx_liteetharppacketizer_next_value = 5'd0;
+    arp_tx_packetizer_count_liteetharp_liteetharptx_liteetharppacketizer_next_value_ce = 1'd0;
+    arp_tx_packetizer_is_ongoing = 1'd0;
+    arp_tx_packetizer_sink_ready = 1'd0;
+    arp_tx_packetizer_source_be = 1'd1;
+    arp_tx_packetizer_source_first = 1'd0;
+    arp_tx_packetizer_source_last = 1'd0;
+    arp_tx_packetizer_source_payload_data = 8'd0;
+    arp_tx_packetizer_source_valid = 1'd0;
+    liteetharptx_liteetharppacketizer_next_state = 1'd0;
+    case (liteetharptx_liteetharppacketizer_state)
+        1'd0: begin
         end
         default: begin
-            arp_tx_packetizer_sink_ready <= 1'd1;
-            arp_tx_packetizer_count_liteetharp_fsm0_next_value0 <= 1'd1;
-            arp_tx_packetizer_count_liteetharp_fsm0_next_value_ce0 <= 1'd1;
-            if (arp_tx_packetizer_sink_valid) begin
-                arp_tx_packetizer_sink_ready <= 1'd0;
-                arp_tx_packetizer_source_valid <= 1'd1;
-                arp_tx_packetizer_source_last_a <= 1'd0;
-                arp_tx_packetizer_source_payload_data <= arp_tx_packetizer_header[7:0];
-                if ((arp_tx_packetizer_source_valid & arp_tx_packetizer_source_ready)) begin
-                    arp_tx_packetizer_sr_load <= 1'd1;
-                    arp_tx_packetizer_fsm_from_idle_liteetharp_fsm0_next_value1 <= 1'd1;
-                    arp_tx_packetizer_fsm_from_idle_liteetharp_fsm0_next_value_ce1 <= 1'd1;
-                    if (1'd0) begin
-                        liteetharptx_fsm0_next_state <= 2'd2;
+            if ((arp_tx_packetizer_sink_valid & 1'd1)) begin
+                if (arp_tx_packetizer_source_ready) begin
+                    if ((arp_tx_packetizer_count == 5'd27)) begin
+                        arp_tx_packetizer_count_liteetharp_liteetharptx_liteetharppacketizer_next_value = 1'd0;
                     end else begin
-                        liteetharptx_fsm0_next_state <= 1'd1;
+                        arp_tx_packetizer_count_liteetharp_liteetharptx_liteetharppacketizer_next_value = (arp_tx_packetizer_count + 1'd1);
                     end
                 end
             end
-            arp_tx_packetizer_is_ongoing2 <= 1'd1;
         end
     endcase
-    liteetharptx_fsm1_next_state <= liteetharptx_fsm1_state;
-    case (liteetharptx_fsm1_state)
-        1'd1: begin
-            arp_tx_packetizer_source_last_b <= 1'd1;
-            arp_tx_packetizer_source_last_s <= 1'd1;
-            arp_tx_packetizer_source_payload_last_be <= arp_tx_packetizer_delayed_last_be;
-            arp_tx_packetizer_sink_ready <= 1'd0;
-            if (arp_tx_packetizer_source_ready) begin
-                liteetharptx_fsm1_next_state <= 1'd0;
+    case (liteetharptx_liteetharppacketizer_state)
+        1'd0: begin
+        end
+        default: begin
+            if ((arp_tx_packetizer_sink_valid & 1'd1)) begin
+                if (arp_tx_packetizer_source_ready) begin
+                    if ((arp_tx_packetizer_count == 5'd27)) begin
+                        arp_tx_packetizer_count_liteetharp_liteetharptx_liteetharppacketizer_next_value_ce = 1'd1;
+                    end else begin
+                        arp_tx_packetizer_count_liteetharp_liteetharptx_liteetharppacketizer_next_value_ce = 1'd1;
+                    end
+                end
+            end
+        end
+    endcase
+    case (liteetharptx_liteetharppacketizer_state)
+        1'd0: begin
+            arp_tx_packetizer_is_ongoing = 1'd1;
+        end
+        default: begin
+        end
+    endcase
+    case (liteetharptx_liteetharppacketizer_state)
+        1'd0: begin
+            arp_tx_packetizer_sink_ready = arp_tx_packetizer_source_ready;
+        end
+        default: begin
+            arp_tx_packetizer_sink_ready = (arp_tx_packetizer_count == 1'd0);
+            if ((arp_tx_packetizer_sink_valid & 1'd1)) begin
+                arp_tx_packetizer_sink_ready = (((arp_tx_packetizer_count == 5'd27) & (arp_tx_packetizer_sink_last & (arp_tx_packetizer_sink_payload_be == 1'd0))) & arp_tx_packetizer_source_ready);
+            end
+        end
+    endcase
+    case (liteetharptx_liteetharppacketizer_state)
+        1'd0: begin
+            arp_tx_packetizer_source_be = arp_tx_packetizer_sink_payload_be;
+        end
+        default: begin
+            if ((arp_tx_packetizer_count == 5'd27)) begin
+                arp_tx_packetizer_source_be = 1'd1;
+            end
+        end
+    endcase
+    case (liteetharptx_liteetharppacketizer_state)
+        1'd0: begin
+        end
+        default: begin
+            if ((arp_tx_packetizer_sink_valid & 1'd1)) begin
+                arp_tx_packetizer_source_first = (arp_tx_packetizer_count == 1'd0);
+            end
+        end
+    endcase
+    case (liteetharptx_liteetharppacketizer_state)
+        1'd0: begin
+            arp_tx_packetizer_source_last = arp_tx_packetizer_sink_last;
+        end
+        default: begin
+            if ((arp_tx_packetizer_sink_valid & 1'd1)) begin
+                arp_tx_packetizer_source_last = ((arp_tx_packetizer_count == 5'd27) & (arp_tx_packetizer_sink_last & (arp_tx_packetizer_sink_payload_be == 1'd0)));
+            end
+        end
+    endcase
+    case (liteetharptx_liteetharppacketizer_state)
+        1'd0: begin
+            arp_tx_packetizer_source_payload_data = arp_tx_packetizer_sink_payload_data;
+        end
+        default: begin
+            case (arp_tx_packetizer_count)
+                1'd0: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[7:0];
+                end
+                1'd1: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[15:8];
+                end
+                2'd2: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[23:16];
+                end
+                2'd3: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[31:24];
+                end
+                3'd4: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[39:32];
+                end
+                3'd5: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[47:40];
+                end
+                3'd6: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[55:48];
+                end
+                3'd7: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[63:56];
+                end
+                4'd8: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[71:64];
+                end
+                4'd9: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[79:72];
+                end
+                4'd10: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[87:80];
+                end
+                4'd11: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[95:88];
+                end
+                4'd12: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[103:96];
+                end
+                4'd13: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[111:104];
+                end
+                4'd14: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[119:112];
+                end
+                4'd15: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[127:120];
+                end
+                5'd16: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[135:128];
+                end
+                5'd17: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[143:136];
+                end
+                5'd18: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[151:144];
+                end
+                5'd19: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[159:152];
+                end
+                5'd20: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[167:160];
+                end
+                5'd21: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[175:168];
+                end
+                5'd22: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[183:176];
+                end
+                5'd23: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[191:184];
+                end
+                5'd24: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[199:192];
+                end
+                5'd25: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[207:200];
+                end
+                5'd26: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[215:208];
+                end
+                5'd27: begin
+                    arp_tx_packetizer_source_payload_data = arp_tx_packetizer_header[223:216];
+                end
+            endcase
+        end
+    endcase
+    case (liteetharptx_liteetharppacketizer_state)
+        1'd0: begin
+            arp_tx_packetizer_source_valid = arp_tx_packetizer_sink_valid;
+        end
+        default: begin
+            if ((arp_tx_packetizer_sink_valid & 1'd1)) begin
+                arp_tx_packetizer_source_valid = 1'd1;
+            end
+        end
+    endcase
+    liteetharptx_liteetharppacketizer_next_state = liteetharptx_liteetharppacketizer_state;
+    case (liteetharptx_liteetharppacketizer_state)
+        1'd0: begin
+            if (((arp_tx_packetizer_source_valid & arp_tx_packetizer_source_ready) & arp_tx_packetizer_source_last)) begin
+                liteetharptx_liteetharppacketizer_next_state = 1'd1;
             end
         end
         default: begin
-            if (((arp_tx_packetizer_in_data_copy & arp_tx_packetizer_sink_last) & (arp_tx_packetizer_sink_last_be > arp_tx_packetizer_new_last_be))) begin
-                arp_tx_packetizer_source_last_b <= 1'd0;
-                arp_tx_packetizer_source_last_s <= 1'd1;
-                arp_tx_packetizer_source_payload_last_be <= 1'd0;
-                if ((arp_tx_packetizer_source_ready & arp_tx_packetizer_source_valid)) begin
-                    arp_tx_packetizer_delayed_last_be_liteetharp_fsm1_next_value0 <= arp_tx_packetizer_new_last_be;
-                    arp_tx_packetizer_delayed_last_be_liteetharp_fsm1_next_value_ce0 <= 1'd1;
-                    liteetharptx_fsm1_next_state <= 1'd1;
-                end
-            end else begin
-                if (arp_tx_packetizer_in_data_copy) begin
-                    arp_tx_packetizer_source_last_b <= arp_tx_packetizer_sink_last;
-                    arp_tx_packetizer_source_last_s <= 1'd1;
-                    arp_tx_packetizer_source_payload_last_be <= arp_tx_packetizer_new_last_be;
-                end
-            end
-            if (arp_tx_packetizer_in_data_copy) begin
-                arp_tx_packetizer_sink_ready <= arp_tx_packetizer_source_ready;
-            end else begin
-                if (arp_tx_packetizer_is_ongoing2) begin
-                    arp_tx_packetizer_sink_ready <= (~arp_tx_packetizer_sink_valid);
+            if ((arp_tx_packetizer_sink_valid & 1'd1)) begin
+                if (arp_tx_packetizer_source_ready) begin
+                    if ((arp_tx_packetizer_count == 5'd27)) begin
+                        if ((~arp_tx_packetizer_source_last)) begin
+                            liteetharptx_liteetharppacketizer_next_state = 1'd0;
+                        end
+                    end else begin
+                    end
                 end
             end
         end
     endcase
 end
 always @(*) begin
-    arp_tx_counter_liteetharp_next_value <= 6'd0;
-    arp_tx_counter_liteetharp_next_value_ce <= 1'd0;
-    arp_tx_packetizer_sink_valid <= 1'd0;
-    arp_tx_packetizer_source_ready <= 1'd0;
-    arp_tx_sink_sink_ready <= 1'd0;
-    arp_tx_source_source_valid <= 1'd0;
-    liteetharptx_next_state <= 1'd0;
-    liteetharptx_next_state <= liteetharptx_state;
-    case (liteetharptx_state)
+    arp_tx_counter_liteetharp_liteetharptx_fsm_next_value = 5'd0;
+    arp_tx_counter_liteetharp_liteetharptx_fsm_next_value_ce = 1'd0;
+    arp_tx_packetizer_sink_valid = 1'd0;
+    arp_tx_packetizer_source_ready = 1'd0;
+    arp_tx_sink_sink_ready = 1'd0;
+    arp_tx_source_source_valid = 1'd0;
+    liteetharptx_fsm_next_state = 1'd0;
+    case (liteetharptx_fsm_state)
         1'd1: begin
-            arp_tx_packetizer_sink_valid <= 1'd1;
-            arp_tx_source_source_valid <= arp_tx_packetizer_source_valid;
-            arp_tx_packetizer_source_ready <= arp_tx_source_source_ready;
+            arp_tx_packetizer_sink_valid = 1'd1;
+        end
+        default: begin
+        end
+    endcase
+    case (liteetharptx_fsm_state)
+        1'd1: begin
+            if ((arp_tx_packetizer_sink_valid & arp_tx_packetizer_sink_ready)) begin
+                arp_tx_counter_liteetharp_liteetharptx_fsm_next_value = (arp_tx_counter + 1'd1);
+            end
+        end
+        default: begin
+            arp_tx_counter_liteetharp_liteetharptx_fsm_next_value = 1'd0;
+        end
+    endcase
+    case (liteetharptx_fsm_state)
+        1'd1: begin
+            if ((arp_tx_packetizer_sink_valid & arp_tx_packetizer_sink_ready)) begin
+                arp_tx_counter_liteetharp_liteetharptx_fsm_next_value_ce = 1'd1;
+            end
+        end
+        default: begin
+            arp_tx_counter_liteetharp_liteetharptx_fsm_next_value_ce = 1'd1;
+        end
+    endcase
+    case (liteetharptx_fsm_state)
+        1'd1: begin
+            arp_tx_packetizer_source_ready = arp_tx_source_source_ready;
+        end
+        default: begin
+        end
+    endcase
+    case (liteetharptx_fsm_state)
+        1'd1: begin
+            arp_tx_source_source_valid = arp_tx_packetizer_source_valid;
+        end
+        default: begin
+        end
+    endcase
+    case (liteetharptx_fsm_state)
+        1'd1: begin
             if ((arp_tx_source_source_valid & arp_tx_source_source_ready)) begin
-                arp_tx_counter_liteetharp_next_value <= (arp_tx_counter + 1'd1);
-                arp_tx_counter_liteetharp_next_value_ce <= 1'd1;
                 if (arp_tx_source_source_last) begin
-                    arp_tx_sink_sink_ready <= 1'd1;
-                    liteetharptx_next_state <= 1'd0;
+                    arp_tx_sink_sink_ready = 1'd1;
                 end
             end
         end
         default: begin
-            arp_tx_counter_liteetharp_next_value <= 1'd0;
-            arp_tx_counter_liteetharp_next_value_ce <= 1'd1;
+        end
+    endcase
+    liteetharptx_fsm_next_state = liteetharptx_fsm_state;
+    case (liteetharptx_fsm_state)
+        1'd1: begin
+            if ((arp_tx_source_source_valid & arp_tx_source_source_ready)) begin
+                if (arp_tx_source_source_last) begin
+                    liteetharptx_fsm_next_state = 1'd0;
+                end
+            end
+        end
+        default: begin
             if (arp_tx_sink_sink_valid) begin
-                liteetharptx_next_state <= 1'd1;
+                liteetharptx_fsm_next_state = 1'd1;
             end
         end
     endcase
@@ -4236,17 +4801,17 @@ assign arp_rx_depacketizer_sink_payload_ethernet_type = arp_rx_sink_sink_payload
 assign arp_rx_depacketizer_sink_payload_sender_mac = arp_rx_sink_sink_payload_sender_mac;
 assign arp_rx_depacketizer_sink_payload_target_mac = arp_rx_sink_sink_payload_target_mac;
 assign arp_rx_depacketizer_sink_payload_data = arp_rx_sink_sink_payload_data;
-assign arp_rx_depacketizer_sink_payload_last_be = arp_rx_sink_sink_payload_last_be;
+assign arp_rx_depacketizer_sink_payload_be = arp_rx_sink_sink_payload_be;
 assign arp_rx_depacketizer_sink_payload_error = arp_rx_sink_sink_payload_error;
 always @(*) begin
-    arp_rx_reply <= 1'd0;
-    arp_rx_request <= 1'd0;
+    arp_rx_reply = 1'd0;
+    arp_rx_request = 1'd0;
     case (arp_rx_depacketizer_source_param_opcode)
         1'd1: begin
-            arp_rx_request <= 1'd1;
+            arp_rx_request = 1'd1;
         end
         2'd2: begin
-            arp_rx_reply <= 1'd1;
+            arp_rx_reply = 1'd1;
         end
         default: begin
         end
@@ -4255,159 +4820,259 @@ end
 assign arp_rx_source_source_payload_ip_address = arp_rx_depacketizer_source_param_sender_ip;
 assign arp_rx_source_source_payload_mac_address = arp_rx_depacketizer_source_param_sender_mac;
 assign arp_rx_depacketizer_header = arp_rx_depacketizer_sr;
-assign arp_rx_depacketizer_source_param_hwsize = {rhs_slice_proxy14[7:0]};
-assign arp_rx_depacketizer_source_param_hwtype = {rhs_slice_proxy16[7:0], rhs_slice_proxy15[15:8]};
-assign arp_rx_depacketizer_source_param_opcode = {rhs_slice_proxy18[7:0], rhs_slice_proxy17[15:8]};
-assign arp_rx_depacketizer_source_param_proto = {rhs_slice_proxy20[7:0], rhs_slice_proxy19[15:8]};
-assign arp_rx_depacketizer_source_param_protosize = {rhs_slice_proxy21[7:0]};
-assign arp_rx_depacketizer_source_param_sender_ip = {rhs_slice_proxy25[7:0], rhs_slice_proxy24[15:8], rhs_slice_proxy23[23:16], rhs_slice_proxy22[31:24]};
-assign arp_rx_depacketizer_source_param_sender_mac = {rhs_slice_proxy31[7:0], rhs_slice_proxy30[15:8], rhs_slice_proxy29[23:16], rhs_slice_proxy28[31:24], rhs_slice_proxy27[39:32], rhs_slice_proxy26[47:40]};
-assign arp_rx_depacketizer_source_param_target_ip = {rhs_slice_proxy35[7:0], rhs_slice_proxy34[15:8], rhs_slice_proxy33[23:16], rhs_slice_proxy32[31:24]};
-assign arp_rx_depacketizer_source_param_target_mac = {rhs_slice_proxy41[7:0], rhs_slice_proxy40[15:8], rhs_slice_proxy39[23:16], rhs_slice_proxy38[31:24], rhs_slice_proxy37[39:32], rhs_slice_proxy36[47:40]};
+assign arp_rx_depacketizer_source_param_hwsize = {arp_rx_depacketizer_header[39:32]};
+assign arp_rx_depacketizer_source_param_hwtype = {arp_rx_depacketizer_header[7:0], arp_rx_depacketizer_header[15:8]};
+assign arp_rx_depacketizer_source_param_opcode = {arp_rx_depacketizer_header[55:48], arp_rx_depacketizer_header[63:56]};
+assign arp_rx_depacketizer_source_param_proto = {arp_rx_depacketizer_header[23:16], arp_rx_depacketizer_header[31:24]};
+assign arp_rx_depacketizer_source_param_protosize = {arp_rx_depacketizer_header[47:40]};
+assign arp_rx_depacketizer_source_param_sender_ip = {arp_rx_depacketizer_header[119:112], arp_rx_depacketizer_header[127:120], arp_rx_depacketizer_header[135:128], arp_rx_depacketizer_header[143:136]};
+assign arp_rx_depacketizer_source_param_sender_mac = {arp_rx_depacketizer_header[71:64], arp_rx_depacketizer_header[79:72], arp_rx_depacketizer_header[87:80], arp_rx_depacketizer_header[95:88], arp_rx_depacketizer_header[103:96], arp_rx_depacketizer_header[111:104]};
+assign arp_rx_depacketizer_source_param_target_ip = {arp_rx_depacketizer_header[199:192], arp_rx_depacketizer_header[207:200], arp_rx_depacketizer_header[215:208], arp_rx_depacketizer_header[223:216]};
+assign arp_rx_depacketizer_source_param_target_mac = {arp_rx_depacketizer_header[151:144], arp_rx_depacketizer_header[159:152], arp_rx_depacketizer_header[167:160], arp_rx_depacketizer_header[175:168], arp_rx_depacketizer_header[183:176], arp_rx_depacketizer_header[191:184]};
+assign arp_rx_depacketizer_sink_be = arp_rx_depacketizer_sink_payload_be;
+assign arp_rx_depacketizer_source_payload_be = arp_rx_depacketizer_source_be;
 assign arp_rx_depacketizer_source_payload_error = arp_rx_depacketizer_sink_payload_error;
-assign arp_rx_depacketizer_sink_last_be = arp_rx_depacketizer_sink_last;
-assign arp_rx_depacketizer_new_last_be = {arp_rx_depacketizer_sink_last_be};
-assign arp_rx_depacketizer_is_in_copy = (arp_rx_depacketizer_is_ongoing0 | arp_rx_depacketizer_is_ongoing1);
 always @(*) begin
-    arp_rx_depacketizer_source_last <= 1'd0;
-    if (arp_rx_depacketizer_source_last_s) begin
-        arp_rx_depacketizer_source_last <= arp_rx_depacketizer_source_last_b;
-    end else begin
-        arp_rx_depacketizer_source_last <= arp_rx_depacketizer_source_last_a;
-    end
-end
-always @(*) begin
-    arp_rx_depacketizer_count_liteetharp_fsm0_next_value2 <= 5'd0;
-    arp_rx_depacketizer_count_liteetharp_fsm0_next_value_ce2 <= 1'd0;
-    arp_rx_depacketizer_delayed_last_be_liteetharp_fsm1_next_value1 <= 1'd0;
-    arp_rx_depacketizer_delayed_last_be_liteetharp_fsm1_next_value_ce1 <= 1'd0;
-    arp_rx_depacketizer_fsm_from_idle_liteetharp_fsm0_next_value3 <= 1'd0;
-    arp_rx_depacketizer_fsm_from_idle_liteetharp_fsm0_next_value_ce3 <= 1'd0;
-    arp_rx_depacketizer_is_ongoing0 <= 1'd0;
-    arp_rx_depacketizer_is_ongoing1 <= 1'd0;
-    arp_rx_depacketizer_is_ongoing2 <= 1'd0;
-    arp_rx_depacketizer_is_ongoing3 <= 1'd0;
-    arp_rx_depacketizer_sink_ready <= 1'd0;
-    arp_rx_depacketizer_source_last_a <= 1'd0;
-    arp_rx_depacketizer_source_last_b <= 1'd0;
-    arp_rx_depacketizer_source_last_s <= 1'd0;
-    arp_rx_depacketizer_source_payload_data <= 8'd0;
-    arp_rx_depacketizer_source_payload_last_be <= 1'd0;
-    arp_rx_depacketizer_source_valid <= 1'd0;
-    arp_rx_depacketizer_sr_shift <= 1'd0;
-    liteetharprx_fsm0_next_state <= 2'd0;
-    liteetharprx_fsm1_next_state <= 1'd0;
-    liteetharprx_fsm0_next_state <= liteetharprx_fsm0_state;
-    case (liteetharprx_fsm0_state)
+    arp_rx_depacketizer_count_liteetharp_next_value0 = 5'd0;
+    arp_rx_depacketizer_count_liteetharp_next_value_ce0 = 1'd0;
+    arp_rx_depacketizer_data_copy_first_liteetharp_next_value2 = 1'd0;
+    arp_rx_depacketizer_data_copy_first_liteetharp_next_value_ce2 = 1'd0;
+    arp_rx_depacketizer_fsm_from_idle_liteetharp_next_value1 = 1'd0;
+    arp_rx_depacketizer_fsm_from_idle_liteetharp_next_value_ce1 = 1'd0;
+    arp_rx_depacketizer_sink_ready = 1'd0;
+    arp_rx_depacketizer_source_be = 1'd1;
+    arp_rx_depacketizer_source_first = 1'd0;
+    arp_rx_depacketizer_source_last = 1'd0;
+    arp_rx_depacketizer_source_payload_data = 8'd0;
+    arp_rx_depacketizer_source_valid = 1'd0;
+    arp_rx_depacketizer_sr_shift = 1'd0;
+    liteetharprx_liteetharpdepacketizer_next_state = 2'd0;
+    case (liteetharprx_liteetharpdepacketizer_state)
         1'd1: begin
-            arp_rx_depacketizer_sink_ready <= 1'd1;
             if (arp_rx_depacketizer_sink_valid) begin
-                arp_rx_depacketizer_count_liteetharp_fsm0_next_value2 <= (arp_rx_depacketizer_count + 1'd1);
-                arp_rx_depacketizer_count_liteetharp_fsm0_next_value_ce2 <= 1'd1;
-                arp_rx_depacketizer_sr_shift <= 1'd1;
+                arp_rx_depacketizer_count_liteetharp_next_value0 = (arp_rx_depacketizer_count + 1'd1);
                 if ((arp_rx_depacketizer_count == 5'd27)) begin
-                    liteetharprx_fsm0_next_state <= 2'd2;
-                    arp_rx_depacketizer_count_liteetharp_fsm0_next_value2 <= (arp_rx_depacketizer_count + 1'd1);
-                    arp_rx_depacketizer_count_liteetharp_fsm0_next_value_ce2 <= 1'd1;
+                    arp_rx_depacketizer_count_liteetharp_next_value0 = (arp_rx_depacketizer_count + 1'd1);
                 end
             end
         end
         2'd2: begin
-            arp_rx_depacketizer_source_valid <= (arp_rx_depacketizer_sink_valid | arp_rx_depacketizer_sink_d_last);
-            arp_rx_depacketizer_source_last_a <= (arp_rx_depacketizer_sink_last | arp_rx_depacketizer_sink_d_last);
-            arp_rx_depacketizer_sink_ready <= arp_rx_depacketizer_source_ready;
-            arp_rx_depacketizer_source_payload_data <= arp_rx_depacketizer_sink_payload_data;
+        end
+        default: begin
+            arp_rx_depacketizer_count_liteetharp_next_value0 = 1'd1;
+        end
+    endcase
+    case (liteetharprx_liteetharpdepacketizer_state)
+        1'd1: begin
+            if (arp_rx_depacketizer_sink_valid) begin
+                arp_rx_depacketizer_count_liteetharp_next_value_ce0 = 1'd1;
+                if ((arp_rx_depacketizer_count == 5'd27)) begin
+                    arp_rx_depacketizer_count_liteetharp_next_value_ce0 = 1'd1;
+                end
+            end
+        end
+        2'd2: begin
+        end
+        default: begin
+            arp_rx_depacketizer_count_liteetharp_next_value_ce0 = 1'd1;
+        end
+    endcase
+    case (liteetharprx_liteetharpdepacketizer_state)
+        1'd1: begin
+            arp_rx_depacketizer_sink_ready = 1'd1;
+        end
+        2'd2: begin
+            arp_rx_depacketizer_sink_ready = arp_rx_depacketizer_source_ready;
+        end
+        default: begin
+            arp_rx_depacketizer_sink_ready = 1'd1;
+        end
+    endcase
+    case (liteetharprx_liteetharpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            arp_rx_depacketizer_source_be = arp_rx_depacketizer_sink_be;
+        end
+        default: begin
+        end
+    endcase
+    case (liteetharprx_liteetharpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            arp_rx_depacketizer_source_first = arp_rx_depacketizer_data_copy_first;
+        end
+        default: begin
+        end
+    endcase
+    case (liteetharprx_liteetharpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            arp_rx_depacketizer_source_last = arp_rx_depacketizer_sink_last;
+        end
+        default: begin
+        end
+    endcase
+    case (liteetharprx_liteetharpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            arp_rx_depacketizer_source_payload_data = arp_rx_depacketizer_sink_payload_data;
+        end
+        default: begin
+        end
+    endcase
+    case (liteetharprx_liteetharpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            arp_rx_depacketizer_source_valid = arp_rx_depacketizer_sink_valid;
+        end
+        default: begin
+        end
+    endcase
+    case (liteetharprx_liteetharpdepacketizer_state)
+        1'd1: begin
+            if (arp_rx_depacketizer_sink_valid) begin
+                if ((arp_rx_depacketizer_count == 5'd27)) begin
+                    arp_rx_depacketizer_data_copy_first_liteetharp_next_value2 = 1'd1;
+                end
+            end
+        end
+        2'd2: begin
+            if ((arp_rx_depacketizer_source_valid & arp_rx_depacketizer_source_ready)) begin
+                arp_rx_depacketizer_data_copy_first_liteetharp_next_value2 = 1'd0;
+            end
+        end
+        default: begin
+            if (arp_rx_depacketizer_sink_valid) begin
+                arp_rx_depacketizer_data_copy_first_liteetharp_next_value2 = 1'd1;
+            end
+        end
+    endcase
+    case (liteetharprx_liteetharpdepacketizer_state)
+        1'd1: begin
+            if (arp_rx_depacketizer_sink_valid) begin
+                if ((arp_rx_depacketizer_count == 5'd27)) begin
+                    arp_rx_depacketizer_data_copy_first_liteetharp_next_value_ce2 = 1'd1;
+                end
+            end
+        end
+        2'd2: begin
+            if ((arp_rx_depacketizer_source_valid & arp_rx_depacketizer_source_ready)) begin
+                arp_rx_depacketizer_data_copy_first_liteetharp_next_value_ce2 = 1'd1;
+            end
+        end
+        default: begin
+            if (arp_rx_depacketizer_sink_valid) begin
+                arp_rx_depacketizer_data_copy_first_liteetharp_next_value_ce2 = 1'd1;
+            end
+        end
+    endcase
+    case (liteetharprx_liteetharpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            if ((arp_rx_depacketizer_source_valid & arp_rx_depacketizer_source_ready)) begin
+                arp_rx_depacketizer_fsm_from_idle_liteetharp_next_value1 = 1'd0;
+            end
+        end
+        default: begin
+            if (arp_rx_depacketizer_sink_valid) begin
+                arp_rx_depacketizer_fsm_from_idle_liteetharp_next_value1 = 1'd1;
+            end
+        end
+    endcase
+    case (liteetharprx_liteetharpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            if ((arp_rx_depacketizer_source_valid & arp_rx_depacketizer_source_ready)) begin
+                arp_rx_depacketizer_fsm_from_idle_liteetharp_next_value_ce1 = 1'd1;
+            end
+        end
+        default: begin
+            if (arp_rx_depacketizer_sink_valid) begin
+                arp_rx_depacketizer_fsm_from_idle_liteetharp_next_value_ce1 = 1'd1;
+            end
+        end
+    endcase
+    case (liteetharprx_liteetharpdepacketizer_state)
+        1'd1: begin
+            if (arp_rx_depacketizer_sink_valid) begin
+                arp_rx_depacketizer_sr_shift = 1'd1;
+            end
+        end
+        2'd2: begin
+        end
+        default: begin
+            if (arp_rx_depacketizer_sink_valid) begin
+                arp_rx_depacketizer_sr_shift = 1'd1;
+            end
+        end
+    endcase
+    liteetharprx_liteetharpdepacketizer_next_state = liteetharprx_liteetharpdepacketizer_state;
+    case (liteetharprx_liteetharpdepacketizer_state)
+        1'd1: begin
+            if (arp_rx_depacketizer_sink_valid) begin
+                if ((arp_rx_depacketizer_count == 5'd27)) begin
+                    liteetharprx_liteetharpdepacketizer_next_state = 2'd2;
+                end
+                if (arp_rx_depacketizer_sink_last) begin
+                    liteetharprx_liteetharpdepacketizer_next_state = 1'd0;
+                end
+            end
+        end
+        2'd2: begin
             if ((arp_rx_depacketizer_source_valid & arp_rx_depacketizer_source_ready)) begin
                 if (arp_rx_depacketizer_source_last) begin
-                    liteetharprx_fsm0_next_state <= 1'd0;
+                    liteetharprx_liteetharpdepacketizer_next_state = 1'd0;
                 end
             end
-            arp_rx_depacketizer_is_ongoing0 <= 1'd1;
-            arp_rx_depacketizer_is_ongoing2 <= 1'd1;
-        end
-        2'd3: begin
-            arp_rx_depacketizer_is_ongoing1 <= 1'd1;
-            arp_rx_depacketizer_is_ongoing3 <= 1'd1;
         end
         default: begin
-            arp_rx_depacketizer_sink_ready <= 1'd1;
-            arp_rx_depacketizer_count_liteetharp_fsm0_next_value2 <= 1'd1;
-            arp_rx_depacketizer_count_liteetharp_fsm0_next_value_ce2 <= 1'd1;
             if (arp_rx_depacketizer_sink_valid) begin
-                arp_rx_depacketizer_sr_shift <= 1'd1;
-                arp_rx_depacketizer_fsm_from_idle_liteetharp_fsm0_next_value3 <= 1'd1;
-                arp_rx_depacketizer_fsm_from_idle_liteetharp_fsm0_next_value_ce3 <= 1'd1;
                 if (1'd0) begin
-                    liteetharprx_fsm0_next_state <= 2'd2;
+                    liteetharprx_liteetharpdepacketizer_next_state = 2'd2;
                 end else begin
-                    liteetharprx_fsm0_next_state <= 1'd1;
+                    liteetharprx_liteetharpdepacketizer_next_state = 1'd1;
                 end
-            end
-        end
-    endcase
-    liteetharprx_fsm1_next_state <= liteetharprx_fsm1_state;
-    case (liteetharprx_fsm1_state)
-        1'd1: begin
-            arp_rx_depacketizer_source_last_b <= 1'd1;
-            arp_rx_depacketizer_source_last_s <= 1'd1;
-            arp_rx_depacketizer_source_payload_last_be <= arp_rx_depacketizer_delayed_last_be;
-            arp_rx_depacketizer_sink_ready <= 1'd0;
-            if ((arp_rx_depacketizer_source_ready & arp_rx_depacketizer_source_valid)) begin
-                liteetharprx_fsm1_next_state <= 1'd0;
-            end
-        end
-        default: begin
-            if (((arp_rx_depacketizer_sink_valid & arp_rx_depacketizer_sink_last) & (arp_rx_depacketizer_sink_last_be > arp_rx_depacketizer_new_last_be))) begin
-                arp_rx_depacketizer_source_last_b <= 1'd0;
-                arp_rx_depacketizer_source_last_s <= 1'd1;
-                arp_rx_depacketizer_source_payload_last_be <= 1'd0;
-                if (((arp_rx_depacketizer_source_ready & arp_rx_depacketizer_source_valid) | ((~arp_rx_depacketizer_was_in_copy) & arp_rx_depacketizer_is_in_copy))) begin
-                    arp_rx_depacketizer_delayed_last_be_liteetharp_fsm1_next_value1 <= arp_rx_depacketizer_new_last_be;
-                    arp_rx_depacketizer_delayed_last_be_liteetharp_fsm1_next_value_ce1 <= 1'd1;
-                    liteetharprx_fsm1_next_state <= 1'd1;
+                if (($signed({1'd0, arp_rx_depacketizer_sink_last}) & $signed(1'd1))) begin
+                    liteetharprx_liteetharpdepacketizer_next_state = 1'd0;
                 end
-            end else begin
-                if (arp_rx_depacketizer_sink_last) begin
-                    arp_rx_depacketizer_source_last_b <= 1'd1;
-                    arp_rx_depacketizer_source_last_s <= 1'd1;
-                    arp_rx_depacketizer_source_payload_last_be <= arp_rx_depacketizer_new_last_be;
-                end
-            end
-            if ((arp_rx_depacketizer_is_ongoing2 | (arp_rx_depacketizer_is_ongoing3 & (~arp_rx_depacketizer_fsm_from_idle)))) begin
-                arp_rx_depacketizer_sink_ready <= arp_rx_depacketizer_source_ready;
-            end else begin
-                arp_rx_depacketizer_sink_ready <= 1'd1;
             end
         end
     endcase
 end
 always @(*) begin
-    arp_rx_depacketizer_source_ready <= 1'd0;
-    arp_rx_source_source_payload_reply <= 1'd0;
-    arp_rx_source_source_payload_request <= 1'd0;
-    arp_rx_source_source_valid <= 1'd0;
-    liteetharprx_next_state <= 2'd0;
-    liteetharprx_next_state <= liteetharprx_state;
-    case (liteetharprx_state)
+    arp_rx_depacketizer_source_ready = 1'd0;
+    arp_rx_source_source_payload_reply = 1'd0;
+    arp_rx_source_source_payload_request = 1'd0;
+    arp_rx_source_source_valid = 1'd0;
+    liteetharprx_fsm_next_state = 2'd0;
+    liteetharprx_fsm_next_state = liteetharprx_fsm_state;
+    case (liteetharprx_fsm_state)
         1'd1: begin
             if (arp_rx_valid) begin
-                arp_rx_source_source_valid <= 1'd1;
-                arp_rx_source_source_payload_reply <= arp_rx_reply;
-                arp_rx_source_source_payload_request <= arp_rx_request;
+                arp_rx_source_source_valid = 1'd1;
+                arp_rx_source_source_payload_reply = arp_rx_reply;
+                arp_rx_source_source_payload_request = arp_rx_request;
             end
-            liteetharprx_next_state <= 2'd2;
+            liteetharprx_fsm_next_state = 2'd2;
         end
         2'd2: begin
-            arp_rx_depacketizer_source_ready <= 1'd1;
+            arp_rx_depacketizer_source_ready = 1'd1;
             if ((arp_rx_depacketizer_source_valid & arp_rx_depacketizer_source_last)) begin
-                liteetharprx_next_state <= 1'd0;
+                liteetharprx_fsm_next_state = 1'd0;
             end
         end
         default: begin
-            arp_rx_depacketizer_source_ready <= 1'd1;
+            arp_rx_depacketizer_source_ready = 1'd1;
             if (arp_rx_depacketizer_source_valid) begin
-                arp_rx_depacketizer_source_ready <= 1'd0;
-                liteetharprx_next_state <= 1'd1;
+                arp_rx_depacketizer_source_ready = 1'd0;
+                liteetharprx_fsm_next_state = 1'd1;
             end
         end
     endcase
@@ -4415,221 +5080,222 @@ end
 assign arp_table_request_timer_wait = (arp_table_request_pending & (~arp_table_request_timer_done));
 assign arp_table_request_timer_done = (arp_table_request_timer_count == 1'd0);
 always @(*) begin
-    arp_table_cache_mem_wr_port_dat_w <= 81'd0;
-    arp_table_cache_mem_wr_port_dat_w[80] <= arp_table_cache_mem_wr_port_valid;
-    arp_table_cache_mem_wr_port_dat_w[31:0] <= arp_table_cache_mem_wr_port_ip_address;
-    arp_table_cache_mem_wr_port_dat_w[79:32] <= arp_table_cache_mem_wr_port_mac_address;
+    arp_table_cache_mem_wr_port_dat_w = 81'd0;
+    arp_table_cache_mem_wr_port_dat_w[80] = arp_table_cache_mem_wr_port_valid;
+    arp_table_cache_mem_wr_port_dat_w[31:0] = arp_table_cache_mem_wr_port_ip_address;
+    arp_table_cache_mem_wr_port_dat_w[79:32] = arp_table_cache_mem_wr_port_mac_address;
 end
 assign arp_table_cache_mem_rd_port_valid = arp_table_cache_mem_rd_port_dat_r[80];
 assign arp_table_cache_mem_rd_port_ip_address = arp_table_cache_mem_rd_port_dat_r[31:0];
 assign arp_table_cache_mem_rd_port_mac_address = arp_table_cache_mem_rd_port_dat_r[79:32];
 assign arp_table_cache_done = (arp_table_cache_count == 1'd0);
 always @(*) begin
-    arp_table_cache_error_liteetharp_liteetharpcache_next_value2 <= 1'd0;
-    arp_table_cache_error_liteetharp_liteetharpcache_next_value_ce2 <= 1'd0;
-    arp_table_cache_mem_rd_port_adr <= 1'd0;
-    arp_table_cache_mem_wr_port_adr <= 1'd0;
-    arp_table_cache_mem_wr_port_ip_address <= 32'd0;
-    arp_table_cache_mem_wr_port_mac_address <= 48'd0;
-    arp_table_cache_mem_wr_port_valid <= 1'd0;
-    arp_table_cache_mem_wr_port_we <= 1'd0;
-    arp_table_cache_request_ready <= 1'd0;
-    arp_table_cache_response_payload_error <= 1'd0;
-    arp_table_cache_response_payload_mac_address <= 48'd0;
-    arp_table_cache_response_valid <= 1'd0;
-    arp_table_cache_search_count_liteetharp_liteetharpcache_next_value1 <= 1'd0;
-    arp_table_cache_search_count_liteetharp_liteetharpcache_next_value_ce1 <= 1'd0;
-    arp_table_cache_update_count_liteetharp_liteetharpcache_next_value0 <= 1'd0;
-    arp_table_cache_update_count_liteetharp_liteetharpcache_next_value_ce0 <= 1'd0;
-    arp_table_cache_update_ready <= 1'd0;
-    arp_table_cache_wait <= 1'd0;
-    liteetharpcache_next_state <= 3'd0;
-    liteetharpcache_next_state <= liteetharpcache_state;
-    case (liteetharpcache_state)
+    arp_table_cache_error_liteetharp_liteetharptable_liteetharpcache_next_value2 = 1'd0;
+    arp_table_cache_error_liteetharp_liteetharptable_liteetharpcache_next_value_ce2 = 1'd0;
+    arp_table_cache_mem_rd_port_adr = 1'd0;
+    arp_table_cache_mem_wr_port_adr = 1'd0;
+    arp_table_cache_mem_wr_port_ip_address = 32'd0;
+    arp_table_cache_mem_wr_port_mac_address = 48'd0;
+    arp_table_cache_mem_wr_port_valid = 1'd0;
+    arp_table_cache_mem_wr_port_we = 1'd0;
+    arp_table_cache_request_ready = 1'd0;
+    arp_table_cache_response_payload_error = 1'd0;
+    arp_table_cache_response_payload_mac_address = 48'd0;
+    arp_table_cache_response_valid = 1'd0;
+    arp_table_cache_search_count_liteetharp_liteetharptable_liteetharpcache_next_value1 = 1'd0;
+    arp_table_cache_search_count_liteetharp_liteetharptable_liteetharpcache_next_value_ce1 = 1'd0;
+    arp_table_cache_update_count_liteetharp_liteetharptable_liteetharpcache_next_value0 = 1'd0;
+    arp_table_cache_update_count_liteetharp_liteetharptable_liteetharpcache_next_value_ce0 = 1'd0;
+    arp_table_cache_update_ready = 1'd0;
+    arp_table_cache_wait = 1'd0;
+    liteetharptable_liteetharpcache_next_state = 3'd0;
+    liteetharptable_liteetharpcache_next_state = liteetharptable_liteetharpcache_state;
+    case (liteetharptable_liteetharpcache_state)
         1'd1: begin
             if ((arp_table_cache_enable & arp_table_cache_update_valid)) begin
-                liteetharpcache_next_state <= 2'd2;
+                liteetharptable_liteetharpcache_next_state = 2'd2;
             end
             if ((arp_table_cache_enable & arp_table_cache_request_valid)) begin
-                arp_table_cache_search_count_liteetharp_liteetharpcache_next_value1 <= 1'd0;
-                arp_table_cache_search_count_liteetharp_liteetharpcache_next_value_ce1 <= 1'd1;
-                liteetharpcache_next_state <= 2'd3;
+                arp_table_cache_search_count_liteetharp_liteetharptable_liteetharpcache_next_value1 = 1'd0;
+                arp_table_cache_search_count_liteetharp_liteetharptable_liteetharpcache_next_value_ce1 = 1'd1;
+                liteetharptable_liteetharpcache_next_state = 2'd3;
             end
-            arp_table_cache_wait <= arp_table_cache_clear_enable;
+            arp_table_cache_wait = arp_table_cache_clear_enable;
             if (arp_table_cache_done) begin
-                arp_table_cache_update_count_liteetharp_liteetharpcache_next_value0 <= 1'd0;
-                arp_table_cache_update_count_liteetharp_liteetharpcache_next_value_ce0 <= 1'd1;
-                liteetharpcache_next_state <= 1'd0;
+                arp_table_cache_update_count_liteetharp_liteetharptable_liteetharpcache_next_value0 = 1'd0;
+                arp_table_cache_update_count_liteetharp_liteetharptable_liteetharpcache_next_value_ce0 = 1'd1;
+                liteetharptable_liteetharpcache_next_state = 1'd0;
             end
         end
         2'd2: begin
-            arp_table_cache_mem_wr_port_we <= 1'd1;
-            arp_table_cache_mem_wr_port_adr <= arp_table_cache_update_count;
-            arp_table_cache_mem_wr_port_valid <= 1'd1;
-            arp_table_cache_mem_wr_port_ip_address <= arp_table_cache_update_payload_ip_address;
-            arp_table_cache_mem_wr_port_mac_address <= arp_table_cache_update_payload_mac_address;
-            arp_table_cache_update_ready <= 1'd1;
+            arp_table_cache_mem_wr_port_we = 1'd1;
+            arp_table_cache_mem_wr_port_adr = arp_table_cache_update_count;
+            arp_table_cache_mem_wr_port_valid = 1'd1;
+            arp_table_cache_mem_wr_port_ip_address = arp_table_cache_update_payload_ip_address;
+            arp_table_cache_mem_wr_port_mac_address = arp_table_cache_update_payload_mac_address;
+            arp_table_cache_update_ready = 1'd1;
             if ((arp_table_cache_update_count == 1'd1)) begin
-                arp_table_cache_update_count_liteetharp_liteetharpcache_next_value0 <= 1'd0;
-                arp_table_cache_update_count_liteetharp_liteetharpcache_next_value_ce0 <= 1'd1;
+                arp_table_cache_update_count_liteetharp_liteetharptable_liteetharpcache_next_value0 = 1'd0;
+                arp_table_cache_update_count_liteetharp_liteetharptable_liteetharpcache_next_value_ce0 = 1'd1;
             end else begin
-                arp_table_cache_update_count_liteetharp_liteetharpcache_next_value0 <= (arp_table_cache_update_count + 1'd1);
-                arp_table_cache_update_count_liteetharp_liteetharpcache_next_value_ce0 <= 1'd1;
+                arp_table_cache_update_count_liteetharp_liteetharptable_liteetharpcache_next_value0 = (arp_table_cache_update_count + 1'd1);
+                arp_table_cache_update_count_liteetharp_liteetharptable_liteetharpcache_next_value_ce0 = 1'd1;
             end
-            liteetharpcache_next_state <= 1'd1;
+            liteetharptable_liteetharpcache_next_state = 1'd1;
         end
         2'd3: begin
-            arp_table_cache_mem_rd_port_adr <= arp_table_cache_search_count;
+            arp_table_cache_mem_rd_port_adr = arp_table_cache_search_count;
             if ((arp_table_cache_mem_rd_port_valid & (arp_table_cache_mem_rd_port_ip_address == arp_table_cache_request_payload_ip_address))) begin
-                arp_table_cache_error_liteetharp_liteetharpcache_next_value2 <= 1'd0;
-                arp_table_cache_error_liteetharp_liteetharpcache_next_value_ce2 <= 1'd1;
-                liteetharpcache_next_state <= 3'd4;
+                arp_table_cache_error_liteetharp_liteetharptable_liteetharpcache_next_value2 = 1'd0;
+                arp_table_cache_error_liteetharp_liteetharptable_liteetharpcache_next_value_ce2 = 1'd1;
+                liteetharptable_liteetharpcache_next_state = 3'd4;
             end else begin
                 if ((arp_table_cache_search_count == 1'd1)) begin
-                    arp_table_cache_error_liteetharp_liteetharpcache_next_value2 <= 1'd1;
-                    arp_table_cache_error_liteetharp_liteetharpcache_next_value_ce2 <= 1'd1;
-                    liteetharpcache_next_state <= 3'd4;
+                    arp_table_cache_error_liteetharp_liteetharptable_liteetharpcache_next_value2 = 1'd1;
+                    arp_table_cache_error_liteetharp_liteetharptable_liteetharpcache_next_value_ce2 = 1'd1;
+                    liteetharptable_liteetharpcache_next_state = 3'd4;
                 end else begin
-                    arp_table_cache_search_count_liteetharp_liteetharpcache_next_value1 <= (arp_table_cache_search_count + 1'd1);
-                    arp_table_cache_search_count_liteetharp_liteetharpcache_next_value_ce1 <= 1'd1;
+                    arp_table_cache_search_count_liteetharp_liteetharptable_liteetharpcache_next_value1 = (arp_table_cache_search_count + 1'd1);
+                    arp_table_cache_search_count_liteetharp_liteetharptable_liteetharpcache_next_value_ce1 = 1'd1;
                 end
             end
         end
         3'd4: begin
-            arp_table_cache_request_ready <= 1'd1;
-            arp_table_cache_response_valid <= 1'd1;
-            arp_table_cache_response_payload_error <= arp_table_cache_error;
-            arp_table_cache_response_payload_mac_address <= arp_table_cache_mem_rd_port_mac_address;
-            liteetharpcache_next_state <= 1'd1;
+            arp_table_cache_mem_rd_port_adr = arp_table_cache_search_count;
+            arp_table_cache_request_ready = 1'd1;
+            arp_table_cache_response_valid = 1'd1;
+            arp_table_cache_response_payload_error = arp_table_cache_error;
+            arp_table_cache_response_payload_mac_address = arp_table_cache_mem_rd_port_mac_address;
+            liteetharptable_liteetharpcache_next_state = 1'd1;
         end
         default: begin
-            arp_table_cache_mem_wr_port_we <= 1'd1;
-            arp_table_cache_mem_wr_port_adr <= arp_table_cache_update_count;
-            arp_table_cache_mem_wr_port_valid <= 1'd0;
-            arp_table_cache_update_count_liteetharp_liteetharpcache_next_value0 <= (arp_table_cache_update_count + 1'd1);
-            arp_table_cache_update_count_liteetharp_liteetharpcache_next_value_ce0 <= 1'd1;
+            arp_table_cache_mem_wr_port_we = 1'd1;
+            arp_table_cache_mem_wr_port_adr = arp_table_cache_update_count;
+            arp_table_cache_mem_wr_port_valid = 1'd0;
+            arp_table_cache_update_count_liteetharp_liteetharptable_liteetharpcache_next_value0 = (arp_table_cache_update_count + 1'd1);
+            arp_table_cache_update_count_liteetharp_liteetharptable_liteetharpcache_next_value_ce0 = 1'd1;
             if ((arp_table_cache_update_count == 1'd1)) begin
-                arp_table_cache_update_count_liteetharp_liteetharpcache_next_value0 <= 1'd0;
-                arp_table_cache_update_count_liteetharp_liteetharpcache_next_value_ce0 <= 1'd1;
-                liteetharpcache_next_state <= 1'd1;
+                arp_table_cache_update_count_liteetharp_liteetharptable_liteetharpcache_next_value0 = 1'd0;
+                arp_table_cache_update_count_liteetharp_liteetharptable_liteetharpcache_next_value_ce0 = 1'd1;
+                liteetharptable_liteetharpcache_next_state = 1'd1;
             end
         end
     endcase
 end
 always @(*) begin
-    arp_table_cache_request_payload_ip_address <= 32'd0;
-    arp_table_cache_request_valid <= 1'd0;
-    arp_table_cache_update_payload_ip_address <= 32'd0;
-    arp_table_cache_update_payload_mac_address <= 48'd0;
-    arp_table_cache_update_valid <= 1'd0;
-    arp_table_request_counter_liteetharp_fsm_next_value3 <= 3'd0;
-    arp_table_request_counter_liteetharp_fsm_next_value_ce3 <= 1'd0;
-    arp_table_request_ip_address_liteetharp_fsm_next_value4 <= 32'd0;
-    arp_table_request_ip_address_liteetharp_fsm_next_value_ce4 <= 1'd0;
-    arp_table_request_pending_liteetharp_fsm_next_value0 <= 1'd0;
-    arp_table_request_pending_liteetharp_fsm_next_value_ce0 <= 1'd0;
-    arp_table_request_request_ready <= 1'd0;
-    arp_table_response_response_payload_failed_liteetharp_fsm_next_value2 <= 1'd0;
-    arp_table_response_response_payload_failed_liteetharp_fsm_next_value_ce2 <= 1'd0;
-    arp_table_response_response_payload_mac_address_liteetharp_fsm_next_value1 <= 48'd0;
-    arp_table_response_response_payload_mac_address_liteetharp_fsm_next_value_ce1 <= 1'd0;
-    arp_table_response_response_valid <= 1'd0;
-    arp_table_source_payload_ip_address <= 32'd0;
-    arp_table_source_payload_mac_address <= 48'd0;
-    arp_table_source_payload_reply <= 1'd0;
-    arp_table_source_payload_request <= 1'd0;
-    arp_table_source_valid <= 1'd0;
-    fsm_next_state <= 3'd0;
-    fsm_next_state <= fsm_state;
-    case (fsm_state)
+    arp_table_cache_request_payload_ip_address = 32'd0;
+    arp_table_cache_request_valid = 1'd0;
+    arp_table_cache_update_payload_ip_address = 32'd0;
+    arp_table_cache_update_payload_mac_address = 48'd0;
+    arp_table_cache_update_valid = 1'd0;
+    arp_table_request_counter_liteetharp_liteetharptable_fsm_next_value3 = 3'd0;
+    arp_table_request_counter_liteetharp_liteetharptable_fsm_next_value_ce3 = 1'd0;
+    arp_table_request_ip_address_liteetharp_liteetharptable_fsm_next_value4 = 32'd0;
+    arp_table_request_ip_address_liteetharp_liteetharptable_fsm_next_value_ce4 = 1'd0;
+    arp_table_request_pending_liteetharp_liteetharptable_fsm_next_value0 = 1'd0;
+    arp_table_request_pending_liteetharp_liteetharptable_fsm_next_value_ce0 = 1'd0;
+    arp_table_request_request_ready = 1'd0;
+    arp_table_response_response_payload_failed_liteetharp_liteetharptable_fsm_next_value2 = 1'd0;
+    arp_table_response_response_payload_failed_liteetharp_liteetharptable_fsm_next_value_ce2 = 1'd0;
+    arp_table_response_response_payload_mac_address_liteetharp_liteetharptable_fsm_next_value1 = 48'd0;
+    arp_table_response_response_payload_mac_address_liteetharp_liteetharptable_fsm_next_value_ce1 = 1'd0;
+    arp_table_response_response_valid = 1'd0;
+    arp_table_source_payload_ip_address = 32'd0;
+    arp_table_source_payload_mac_address = 48'd0;
+    arp_table_source_payload_reply = 1'd0;
+    arp_table_source_payload_request = 1'd0;
+    arp_table_source_valid = 1'd0;
+    liteetharptable_fsm_next_state = 3'd0;
+    liteetharptable_fsm_next_state = liteetharptable_fsm_state;
+    case (liteetharptable_fsm_state)
         1'd1: begin
-            arp_table_source_valid <= 1'd1;
-            arp_table_source_payload_reply <= 1'd1;
-            arp_table_source_payload_ip_address <= arp_table_sink_payload_ip_address;
-            arp_table_source_payload_mac_address <= arp_table_sink_payload_mac_address;
+            arp_table_source_valid = 1'd1;
+            arp_table_source_payload_reply = 1'd1;
+            arp_table_source_payload_ip_address = arp_table_sink_payload_ip_address;
+            arp_table_source_payload_mac_address = arp_table_sink_payload_mac_address;
             if (arp_table_source_ready) begin
-                fsm_next_state <= 1'd0;
+                liteetharptable_fsm_next_state = 1'd0;
             end
         end
         2'd2: begin
             if ((arp_table_request_pending & (arp_table_request_ip_address == arp_table_sink_payload_ip_address))) begin
-                arp_table_cache_update_valid <= 1'd1;
-                arp_table_cache_update_payload_ip_address <= arp_table_sink_payload_ip_address;
-                arp_table_cache_update_payload_mac_address <= arp_table_sink_payload_mac_address;
+                arp_table_cache_update_valid = 1'd1;
+                arp_table_cache_update_payload_ip_address = arp_table_sink_payload_ip_address;
+                arp_table_cache_update_payload_mac_address = arp_table_sink_payload_mac_address;
                 if (arp_table_cache_update_ready) begin
-                    arp_table_request_pending_liteetharp_fsm_next_value0 <= 1'd0;
-                    arp_table_request_pending_liteetharp_fsm_next_value_ce0 <= 1'd1;
-                    arp_table_response_response_payload_mac_address_liteetharp_fsm_next_value1 <= arp_table_sink_payload_mac_address;
-                    arp_table_response_response_payload_mac_address_liteetharp_fsm_next_value_ce1 <= 1'd1;
-                    fsm_next_state <= 3'd6;
+                    arp_table_request_pending_liteetharp_liteetharptable_fsm_next_value0 = 1'd0;
+                    arp_table_request_pending_liteetharp_liteetharptable_fsm_next_value_ce0 = 1'd1;
+                    arp_table_response_response_payload_mac_address_liteetharp_liteetharptable_fsm_next_value1 = arp_table_sink_payload_mac_address;
+                    arp_table_response_response_payload_mac_address_liteetharp_liteetharptable_fsm_next_value_ce1 = 1'd1;
+                    liteetharptable_fsm_next_state = 3'd6;
                 end
             end else begin
-                fsm_next_state <= 1'd0;
+                liteetharptable_fsm_next_state = 1'd0;
             end
         end
         2'd3: begin
             if ((arp_table_request_counter == 3'd7)) begin
-                arp_table_response_response_payload_failed_liteetharp_fsm_next_value2 <= 1'd1;
-                arp_table_response_response_payload_failed_liteetharp_fsm_next_value_ce2 <= 1'd1;
-                arp_table_request_counter_liteetharp_fsm_next_value3 <= 1'd0;
-                arp_table_request_counter_liteetharp_fsm_next_value_ce3 <= 1'd1;
-                arp_table_request_pending_liteetharp_fsm_next_value0 <= 1'd0;
-                arp_table_request_pending_liteetharp_fsm_next_value_ce0 <= 1'd1;
-                fsm_next_state <= 3'd6;
+                arp_table_response_response_payload_failed_liteetharp_liteetharptable_fsm_next_value2 = 1'd1;
+                arp_table_response_response_payload_failed_liteetharp_liteetharptable_fsm_next_value_ce2 = 1'd1;
+                arp_table_request_counter_liteetharp_liteetharptable_fsm_next_value3 = 1'd0;
+                arp_table_request_counter_liteetharp_liteetharptable_fsm_next_value_ce3 = 1'd1;
+                arp_table_request_pending_liteetharp_liteetharptable_fsm_next_value0 = 1'd0;
+                arp_table_request_pending_liteetharp_liteetharptable_fsm_next_value_ce0 = 1'd1;
+                liteetharptable_fsm_next_state = 3'd6;
             end else begin
-                fsm_next_state <= 3'd5;
+                liteetharptable_fsm_next_state = 3'd5;
             end
         end
         3'd4: begin
-            arp_table_cache_request_valid <= 1'd1;
-            arp_table_cache_request_payload_ip_address <= arp_table_request_request_payload_ip_address;
+            arp_table_cache_request_valid = 1'd1;
+            arp_table_cache_request_payload_ip_address = arp_table_request_request_payload_ip_address;
             if (arp_table_cache_response_valid) begin
-                arp_table_request_request_ready <= 1'd1;
+                arp_table_request_request_ready = 1'd1;
                 if (arp_table_cache_response_payload_error) begin
-                    arp_table_request_counter_liteetharp_fsm_next_value3 <= 1'd0;
-                    arp_table_request_counter_liteetharp_fsm_next_value_ce3 <= 1'd1;
-                    arp_table_request_pending_liteetharp_fsm_next_value0 <= 1'd1;
-                    arp_table_request_pending_liteetharp_fsm_next_value_ce0 <= 1'd1;
-                    arp_table_request_ip_address_liteetharp_fsm_next_value4 <= arp_table_request_request_payload_ip_address;
-                    arp_table_request_ip_address_liteetharp_fsm_next_value_ce4 <= 1'd1;
-                    fsm_next_state <= 3'd5;
+                    arp_table_request_counter_liteetharp_liteetharptable_fsm_next_value3 = 1'd0;
+                    arp_table_request_counter_liteetharp_liteetharptable_fsm_next_value_ce3 = 1'd1;
+                    arp_table_request_pending_liteetharp_liteetharptable_fsm_next_value0 = 1'd1;
+                    arp_table_request_pending_liteetharp_liteetharptable_fsm_next_value_ce0 = 1'd1;
+                    arp_table_request_ip_address_liteetharp_liteetharptable_fsm_next_value4 = arp_table_request_request_payload_ip_address;
+                    arp_table_request_ip_address_liteetharp_liteetharptable_fsm_next_value_ce4 = 1'd1;
+                    liteetharptable_fsm_next_state = 3'd5;
                 end else begin
-                    arp_table_response_response_payload_mac_address_liteetharp_fsm_next_value1 <= arp_table_cache_response_payload_mac_address;
-                    arp_table_response_response_payload_mac_address_liteetharp_fsm_next_value_ce1 <= 1'd1;
-                    fsm_next_state <= 3'd6;
+                    arp_table_response_response_payload_mac_address_liteetharp_liteetharptable_fsm_next_value1 = arp_table_cache_response_payload_mac_address;
+                    arp_table_response_response_payload_mac_address_liteetharp_liteetharptable_fsm_next_value_ce1 = 1'd1;
+                    liteetharptable_fsm_next_state = 3'd6;
                 end
             end
         end
         3'd5: begin
-            arp_table_source_valid <= 1'd1;
-            arp_table_source_payload_request <= 1'd1;
-            arp_table_source_payload_ip_address <= arp_table_request_ip_address;
+            arp_table_source_valid = 1'd1;
+            arp_table_source_payload_request = 1'd1;
+            arp_table_source_payload_ip_address = arp_table_request_ip_address;
             if (arp_table_source_ready) begin
-                arp_table_request_counter_liteetharp_fsm_next_value3 <= (arp_table_request_counter + 1'd1);
-                arp_table_request_counter_liteetharp_fsm_next_value_ce3 <= 1'd1;
-                fsm_next_state <= 1'd0;
+                arp_table_request_counter_liteetharp_liteetharptable_fsm_next_value3 = (arp_table_request_counter + 1'd1);
+                arp_table_request_counter_liteetharp_liteetharptable_fsm_next_value_ce3 = 1'd1;
+                liteetharptable_fsm_next_state = 1'd0;
             end
         end
         3'd6: begin
-            arp_table_response_response_valid <= 1'd1;
+            arp_table_response_response_valid = 1'd1;
             if (arp_table_response_response_ready) begin
-                arp_table_response_response_payload_failed_liteetharp_fsm_next_value2 <= 1'd0;
-                arp_table_response_response_payload_failed_liteetharp_fsm_next_value_ce2 <= 1'd1;
-                fsm_next_state <= 1'd0;
+                arp_table_response_response_payload_failed_liteetharp_liteetharptable_fsm_next_value2 = 1'd0;
+                arp_table_response_response_payload_failed_liteetharp_liteetharptable_fsm_next_value_ce2 = 1'd1;
+                liteetharptable_fsm_next_state = 1'd0;
             end
         end
         default: begin
             if ((arp_table_sink_valid & arp_table_sink_payload_request)) begin
-                fsm_next_state <= 1'd1;
+                liteetharptable_fsm_next_state = 1'd1;
             end else begin
                 if ((arp_table_sink_valid & arp_table_sink_payload_reply)) begin
-                    fsm_next_state <= 2'd2;
+                    liteetharptable_fsm_next_state = 2'd2;
                 end else begin
                     if (arp_table_request_request_valid) begin
-                        fsm_next_state <= 3'd4;
+                        liteetharptable_fsm_next_state = 3'd4;
                     end else begin
                         if (arp_table_request_timer_done) begin
-                            fsm_next_state <= 2'd3;
+                            liteetharptable_fsm_next_state = 2'd3;
                         end
                     end
                 end
@@ -4645,7 +5311,7 @@ assign ip_mac_port_sink_payload_ethernet_type = ip_tx_source_source_payload_ethe
 assign ip_mac_port_sink_payload_sender_mac = ip_tx_source_source_payload_sender_mac;
 assign ip_mac_port_sink_payload_target_mac = ip_tx_source_source_payload_target_mac;
 assign ip_mac_port_sink_payload_data = ip_tx_source_source_payload_data0;
-assign ip_mac_port_sink_payload_last_be = ip_tx_source_source_payload_last_be0;
+assign ip_mac_port_sink_payload_be = ip_tx_source_source_payload_be0;
 assign ip_mac_port_sink_payload_error = ip_tx_source_source_payload_error0;
 assign ip_rx_sink_sink_valid = ip_mac_port_source_valid;
 assign ip_mac_port_source_ready = ip_rx_sink_sink_ready;
@@ -4655,14 +5321,14 @@ assign ip_rx_sink_sink_payload_ethernet_type = ip_mac_port_source_payload_ethern
 assign ip_rx_sink_sink_payload_sender_mac = ip_mac_port_source_payload_sender_mac;
 assign ip_rx_sink_sink_payload_target_mac = ip_mac_port_source_payload_target_mac;
 assign ip_rx_sink_sink_payload_data = ip_mac_port_source_payload_data;
-assign ip_rx_sink_sink_payload_last_be = ip_mac_port_source_payload_last_be;
+assign ip_rx_sink_sink_payload_be = ip_mac_port_source_payload_be;
 assign ip_rx_sink_sink_payload_error = ip_mac_port_source_payload_error;
 assign ip_tx_sink_sink_valid0 = ip_crossbar_source_valid;
 assign ip_crossbar_source_ready = ip_tx_sink_sink_ready0;
 assign ip_tx_sink_sink_first0 = ip_crossbar_source_first;
 assign ip_tx_sink_sink_last0 = ip_crossbar_source_last;
 assign ip_tx_sink_sink_payload_data0 = ip_crossbar_source_payload_data;
-assign ip_tx_sink_sink_payload_last_be0 = ip_crossbar_source_payload_last_be;
+assign ip_tx_sink_sink_payload_be0 = ip_crossbar_source_payload_be;
 assign ip_tx_sink_sink_payload_error0 = ip_crossbar_source_payload_error;
 assign ip_tx_sink_sink_param_length0 = ip_crossbar_source_param_length;
 assign ip_tx_sink_sink_param_protocol0 = ip_crossbar_source_param_protocol;
@@ -4672,7 +5338,7 @@ assign ip_rx_source_source_ready = ip_crossbar_sink_ready;
 assign ip_crossbar_sink_first = ip_rx_source_source_first;
 assign ip_crossbar_sink_last = ip_rx_source_source_last;
 assign ip_crossbar_sink_payload_data = ip_rx_source_source_payload_data;
-assign ip_crossbar_sink_payload_last_be = ip_rx_source_source_payload_last_be;
+assign ip_crossbar_sink_payload_be = ip_rx_source_source_payload_be;
 assign ip_crossbar_sink_payload_error = ip_rx_source_source_payload_error;
 assign ip_crossbar_sink_param_length = ip_rx_source_source_param_length;
 assign ip_crossbar_sink_param_protocol = ip_rx_source_source_param_protocol;
@@ -4682,16 +5348,16 @@ assign ip_tx_sink_sink_ready0 = ip_tx_sink_sink_ready1;
 assign ip_tx_sink_sink_first1 = ip_tx_sink_sink_first0;
 assign ip_tx_sink_sink_last1 = ip_tx_sink_sink_last0;
 assign ip_tx_sink_sink_payload_data1 = ip_tx_sink_sink_payload_data0;
-assign ip_tx_sink_sink_payload_last_be1 = ip_tx_sink_sink_payload_last_be0;
+assign ip_tx_sink_sink_payload_be1 = ip_tx_sink_sink_payload_be0;
 assign ip_tx_sink_sink_payload_error1 = ip_tx_sink_sink_payload_error0;
 assign ip_tx_sink_sink_param_length1 = ip_tx_sink_sink_param_length0;
 assign ip_tx_sink_sink_param_protocol1 = ip_tx_sink_sink_param_protocol0;
 assign ip_tx_sink_sink_param_ip_address1 = ip_tx_sink_sink_param_ip_address0;
 assign ip_tx_ce = ip_tx_source_source_valid1;
-assign ip_tx_reset = ((ip_tx_source_source_valid0 & ip_tx_source_source_last0) & ip_tx_source_source_ready0);
+assign ip_tx_reset = ((ip_tx_packetizer_source_valid & ip_tx_packetizer_source_last) & ip_tx_packetizer_source_ready);
 assign ip_tx_packetizer_sink_last = ip_tx_source_source_last1;
 assign ip_tx_packetizer_sink_payload_data = ip_tx_source_source_payload_data1;
-assign ip_tx_packetizer_sink_payload_last_be = ip_tx_source_source_payload_last_be1;
+assign ip_tx_packetizer_sink_payload_be = ip_tx_source_source_payload_be1;
 assign ip_tx_packetizer_sink_param_protocol = ip_tx_source_source_param_protocol;
 assign ip_tx_packetizer_sink_valid = (ip_tx_source_source_valid1 & ip_tx_liteethipv4checksum_done);
 assign ip_tx_source_source_ready1 = (ip_tx_packetizer_sink_ready & ip_tx_liteethipv4checksum_done);
@@ -4700,10 +5366,21 @@ assign ip_tx_packetizer_sink_param_total_length = (5'd20 + ip_tx_source_source_p
 assign ip_tx_packetizer_sink_param_version = 3'd4;
 assign ip_tx_packetizer_sink_param_ihl = 3'd5;
 assign ip_tx_packetizer_sink_param_identification = 1'd0;
+assign ip_tx_packetizer_sink_param_flags_offset = 1'd0;
 assign ip_tx_packetizer_sink_param_ttl = 8'd128;
 assign ip_tx_packetizer_sink_param_sender_ip = 32'd3232235792;
 assign ip_tx_liteethipv4checksum_header = ip_tx_packetizer_header;
 assign ip_tx_packetizer_sink_param_checksum = ip_tx_liteethipv4checksum_value;
+assign ip_tx_source_source_first0 = ip_tx_packetizer_source_first;
+assign ip_tx_source_source_last0 = ip_tx_packetizer_source_last;
+assign ip_tx_source_source_payload_data0 = ip_tx_packetizer_source_payload_data;
+assign ip_tx_source_source_payload_be0 = ip_tx_packetizer_source_payload_be;
+assign ip_tx_source_source_payload_error0 = ip_tx_packetizer_source_payload_error;
+assign ip_tx_source_source_valid0 = (ip_tx_packetizer_source_valid & ip_tx_fsm_is_ongoing0);
+assign ip_tx_packetizer_source_ready = (ip_tx_fsm_is_ongoing1 | (ip_tx_fsm_is_ongoing2 & ip_tx_source_source_ready0));
+assign ip_tx_source_source_payload_ethernet_type = 12'h800;
+assign ip_tx_source_source_payload_target_mac = ip_tx_target_mac;
+assign ip_tx_source_source_payload_sender_mac = 45'h10e2d5000016;
 assign arp_table_request_request_payload_ip_address = ip_tx_source_source_param_ip_address;
 assign ip_tx_pipe_valid_sink_ready = ((~ip_tx_pipe_valid_source_valid) | ip_tx_pipe_valid_source_ready);
 assign ip_tx_pipe_valid_sink_valid = ip_tx_sink_sink_valid1;
@@ -4711,7 +5388,7 @@ assign ip_tx_sink_sink_ready1 = ip_tx_pipe_valid_sink_ready;
 assign ip_tx_pipe_valid_sink_first = ip_tx_sink_sink_first1;
 assign ip_tx_pipe_valid_sink_last = ip_tx_sink_sink_last1;
 assign ip_tx_pipe_valid_sink_payload_data = ip_tx_sink_sink_payload_data1;
-assign ip_tx_pipe_valid_sink_payload_last_be = ip_tx_sink_sink_payload_last_be1;
+assign ip_tx_pipe_valid_sink_payload_be = ip_tx_sink_sink_payload_be1;
 assign ip_tx_pipe_valid_sink_payload_error = ip_tx_sink_sink_payload_error1;
 assign ip_tx_pipe_valid_sink_param_length = ip_tx_sink_sink_param_length1;
 assign ip_tx_pipe_valid_sink_param_protocol = ip_tx_sink_sink_param_protocol1;
@@ -4721,7 +5398,7 @@ assign ip_tx_pipe_valid_source_ready = ip_tx_source_source_ready1;
 assign ip_tx_source_source_first1 = ip_tx_pipe_valid_source_first;
 assign ip_tx_source_source_last1 = ip_tx_pipe_valid_source_last;
 assign ip_tx_source_source_payload_data1 = ip_tx_pipe_valid_source_payload_data;
-assign ip_tx_source_source_payload_last_be1 = ip_tx_pipe_valid_source_payload_last_be;
+assign ip_tx_source_source_payload_be1 = ip_tx_pipe_valid_source_payload_be;
 assign ip_tx_source_source_payload_error1 = ip_tx_pipe_valid_source_payload_error;
 assign ip_tx_source_source_param_length = ip_tx_pipe_valid_source_param_length;
 assign ip_tx_source_source_param_protocol = ip_tx_pipe_valid_source_param_protocol;
@@ -4739,220 +5416,393 @@ assign ip_tx_liteethipv4checksum_value = (~{ip_tx_liteethipv4checksum_r_next8[7:
 assign ip_tx_liteethipv4checksum_counter_ce = (~ip_tx_liteethipv4checksum_done);
 assign ip_tx_liteethipv4checksum_done = (ip_tx_liteethipv4checksum_counter == 4'd9);
 always @(*) begin
-    ip_tx_packetizer_header <= 160'd0;
-    ip_tx_packetizer_header[95:80] <= {ip_tx_packetizer_sink_param_checksum[7:0], ip_tx_packetizer_sink_param_checksum[15:8]};
-    ip_tx_packetizer_header[47:32] <= {ip_tx_packetizer_sink_param_identification[7:0], ip_tx_packetizer_sink_param_identification[15:8]};
-    ip_tx_packetizer_header[3:0] <= {ip_tx_packetizer_sink_param_ihl[3:0]};
-    ip_tx_packetizer_header[79:72] <= {ip_tx_packetizer_sink_param_protocol[7:0]};
-    ip_tx_packetizer_header[127:96] <= {ip_tx_packetizer_sink_param_sender_ip[7:0], ip_tx_packetizer_sink_param_sender_ip[15:8], ip_tx_packetizer_sink_param_sender_ip[23:16], ip_tx_packetizer_sink_param_sender_ip[31:24]};
-    ip_tx_packetizer_header[159:128] <= {ip_tx_packetizer_sink_param_target_ip[7:0], ip_tx_packetizer_sink_param_target_ip[15:8], ip_tx_packetizer_sink_param_target_ip[23:16], ip_tx_packetizer_sink_param_target_ip[31:24]};
-    ip_tx_packetizer_header[31:16] <= {ip_tx_packetizer_sink_param_total_length[7:0], ip_tx_packetizer_sink_param_total_length[15:8]};
-    ip_tx_packetizer_header[71:64] <= {ip_tx_packetizer_sink_param_ttl[7:0]};
-    ip_tx_packetizer_header[7:4] <= {ip_tx_packetizer_sink_param_version[3:0]};
+    ip_tx_packetizer_header = 160'd0;
+    ip_tx_packetizer_header[95:80] = {ip_tx_packetizer_sink_param_checksum[7:0], ip_tx_packetizer_sink_param_checksum[15:8]};
+    ip_tx_packetizer_header[63:48] = {ip_tx_packetizer_sink_param_flags_offset[7:0], ip_tx_packetizer_sink_param_flags_offset[15:8]};
+    ip_tx_packetizer_header[47:32] = {ip_tx_packetizer_sink_param_identification[7:0], ip_tx_packetizer_sink_param_identification[15:8]};
+    ip_tx_packetizer_header[3:0] = {ip_tx_packetizer_sink_param_ihl};
+    ip_tx_packetizer_header[79:72] = {ip_tx_packetizer_sink_param_protocol};
+    ip_tx_packetizer_header[127:96] = {ip_tx_packetizer_sink_param_sender_ip[7:0], ip_tx_packetizer_sink_param_sender_ip[15:8], ip_tx_packetizer_sink_param_sender_ip[23:16], ip_tx_packetizer_sink_param_sender_ip[31:24]};
+    ip_tx_packetizer_header[159:128] = {ip_tx_packetizer_sink_param_target_ip[7:0], ip_tx_packetizer_sink_param_target_ip[15:8], ip_tx_packetizer_sink_param_target_ip[23:16], ip_tx_packetizer_sink_param_target_ip[31:24]};
+    ip_tx_packetizer_header[31:16] = {ip_tx_packetizer_sink_param_total_length[7:0], ip_tx_packetizer_sink_param_total_length[15:8]};
+    ip_tx_packetizer_header[71:64] = {ip_tx_packetizer_sink_param_ttl};
+    ip_tx_packetizer_header[7:4] = {ip_tx_packetizer_sink_param_version};
 end
-assign ip_tx_packetizer_sink_last_be = ip_tx_packetizer_sink_last;
-assign ip_tx_packetizer_new_last_be = {ip_tx_packetizer_sink_last_be};
-assign ip_tx_packetizer_in_data_copy = (ip_tx_packetizer_is_ongoing0 | ip_tx_packetizer_is_ongoing1);
+assign ip_tx_packetizer_source_payload_be = ip_tx_packetizer_source_be;
 always @(*) begin
-    ip_tx_packetizer_source_last <= 1'd0;
-    if (ip_tx_packetizer_source_last_s) begin
-        ip_tx_packetizer_source_last <= ip_tx_packetizer_source_last_b;
-    end else begin
-        ip_tx_packetizer_source_last <= ip_tx_packetizer_source_last_a;
+    ip_tx_packetizer_source_payload_error = 1'd0;
+    if (ip_tx_packetizer_is_ongoing) begin
+        ip_tx_packetizer_source_payload_error = ip_tx_packetizer_sink_payload_error;
     end
 end
-assign ip_tx_packetizer_source_payload_error = ip_tx_packetizer_sink_payload_error;
 always @(*) begin
-    ip_tx_packetizer_count_liteethip_fsm0_next_value0 <= 5'd0;
-    ip_tx_packetizer_count_liteethip_fsm0_next_value_ce0 <= 1'd0;
-    ip_tx_packetizer_delayed_last_be_liteethip_fsm1_next_value0 <= 1'd0;
-    ip_tx_packetizer_delayed_last_be_liteethip_fsm1_next_value_ce0 <= 1'd0;
-    ip_tx_packetizer_fsm_from_idle_liteethip_fsm0_next_value1 <= 1'd0;
-    ip_tx_packetizer_fsm_from_idle_liteethip_fsm0_next_value_ce1 <= 1'd0;
-    ip_tx_packetizer_is_ongoing0 <= 1'd0;
-    ip_tx_packetizer_is_ongoing1 <= 1'd0;
-    ip_tx_packetizer_is_ongoing2 <= 1'd0;
-    ip_tx_packetizer_sink_ready <= 1'd0;
-    ip_tx_packetizer_source_last_a <= 1'd0;
-    ip_tx_packetizer_source_last_b <= 1'd0;
-    ip_tx_packetizer_source_last_s <= 1'd0;
-    ip_tx_packetizer_source_payload_data <= 8'd0;
-    ip_tx_packetizer_source_payload_last_be <= 1'd0;
-    ip_tx_packetizer_source_valid <= 1'd0;
-    ip_tx_packetizer_sr_load <= 1'd0;
-    ip_tx_packetizer_sr_shift <= 1'd0;
-    liteethip_liteethiptx_fsm0_next_state <= 2'd0;
-    liteethip_liteethiptx_fsm1_next_state <= 1'd0;
-    liteethip_liteethiptx_fsm0_next_state <= liteethip_liteethiptx_fsm0_state;
-    case (liteethip_liteethiptx_fsm0_state)
-        1'd1: begin
-            ip_tx_packetizer_source_valid <= 1'd1;
-            ip_tx_packetizer_source_last_a <= 1'd0;
-            ip_tx_packetizer_source_payload_data <= ip_tx_packetizer_sr[159:8];
-            if ((ip_tx_packetizer_source_valid & ip_tx_packetizer_source_ready)) begin
-                ip_tx_packetizer_sr_shift <= 1'd1;
-                if ((ip_tx_packetizer_count == 5'd19)) begin
-                    ip_tx_packetizer_sr_shift <= 1'd0;
-                    liteethip_liteethiptx_fsm0_next_state <= 2'd2;
-                    ip_tx_packetizer_count_liteethip_fsm0_next_value0 <= (ip_tx_packetizer_count + 1'd1);
-                    ip_tx_packetizer_count_liteethip_fsm0_next_value_ce0 <= 1'd1;
-                end else begin
-                    ip_tx_packetizer_count_liteethip_fsm0_next_value0 <= (ip_tx_packetizer_count + 1'd1);
-                    ip_tx_packetizer_count_liteethip_fsm0_next_value_ce0 <= 1'd1;
-                end
-            end
-        end
-        2'd2: begin
-            ip_tx_packetizer_source_valid <= ip_tx_packetizer_sink_valid;
-            ip_tx_packetizer_source_last_a <= ip_tx_packetizer_sink_last;
-            ip_tx_packetizer_source_payload_data <= ip_tx_packetizer_sink_payload_data;
-            if ((ip_tx_packetizer_source_valid & ip_tx_packetizer_source_ready)) begin
-                ip_tx_packetizer_sink_ready <= 1'd1;
-                if (ip_tx_packetizer_source_last) begin
-                    liteethip_liteethiptx_fsm0_next_state <= 1'd0;
-                end
-            end
-            ip_tx_packetizer_is_ongoing0 <= 1'd1;
-        end
-        2'd3: begin
-            ip_tx_packetizer_is_ongoing1 <= 1'd1;
+    ip_tx_packetizer_count_liteethip_liteethipv4packetizer_next_value = 5'd0;
+    ip_tx_packetizer_count_liteethip_liteethipv4packetizer_next_value_ce = 1'd0;
+    ip_tx_packetizer_is_ongoing = 1'd0;
+    ip_tx_packetizer_sink_ready = 1'd0;
+    ip_tx_packetizer_source_be = 1'd1;
+    ip_tx_packetizer_source_first = 1'd0;
+    ip_tx_packetizer_source_last = 1'd0;
+    ip_tx_packetizer_source_payload_data = 8'd0;
+    ip_tx_packetizer_source_valid = 1'd0;
+    liteethip_liteethiptx_liteethipv4packetizer_next_state = 1'd0;
+    case (liteethip_liteethiptx_liteethipv4packetizer_state)
+        1'd0: begin
         end
         default: begin
-            ip_tx_packetizer_sink_ready <= 1'd1;
-            ip_tx_packetizer_count_liteethip_fsm0_next_value0 <= 1'd1;
-            ip_tx_packetizer_count_liteethip_fsm0_next_value_ce0 <= 1'd1;
-            if (ip_tx_packetizer_sink_valid) begin
-                ip_tx_packetizer_sink_ready <= 1'd0;
-                ip_tx_packetizer_source_valid <= 1'd1;
-                ip_tx_packetizer_source_last_a <= 1'd0;
-                ip_tx_packetizer_source_payload_data <= ip_tx_packetizer_header[7:0];
-                if ((ip_tx_packetizer_source_valid & ip_tx_packetizer_source_ready)) begin
-                    ip_tx_packetizer_sr_load <= 1'd1;
-                    ip_tx_packetizer_fsm_from_idle_liteethip_fsm0_next_value1 <= 1'd1;
-                    ip_tx_packetizer_fsm_from_idle_liteethip_fsm0_next_value_ce1 <= 1'd1;
-                    if (1'd0) begin
-                        liteethip_liteethiptx_fsm0_next_state <= 2'd2;
+            if ((ip_tx_packetizer_sink_valid & 1'd1)) begin
+                if (ip_tx_packetizer_source_ready) begin
+                    if ((ip_tx_packetizer_count == 5'd19)) begin
+                        ip_tx_packetizer_count_liteethip_liteethipv4packetizer_next_value = 1'd0;
                     end else begin
-                        liteethip_liteethiptx_fsm0_next_state <= 1'd1;
+                        ip_tx_packetizer_count_liteethip_liteethipv4packetizer_next_value = (ip_tx_packetizer_count + 1'd1);
                     end
                 end
             end
-            ip_tx_packetizer_is_ongoing2 <= 1'd1;
         end
     endcase
-    liteethip_liteethiptx_fsm1_next_state <= liteethip_liteethiptx_fsm1_state;
-    case (liteethip_liteethiptx_fsm1_state)
-        1'd1: begin
-            ip_tx_packetizer_source_last_b <= 1'd1;
-            ip_tx_packetizer_source_last_s <= 1'd1;
-            ip_tx_packetizer_source_payload_last_be <= ip_tx_packetizer_delayed_last_be;
-            ip_tx_packetizer_sink_ready <= 1'd0;
-            if (ip_tx_packetizer_source_ready) begin
-                liteethip_liteethiptx_fsm1_next_state <= 1'd0;
+    case (liteethip_liteethiptx_liteethipv4packetizer_state)
+        1'd0: begin
+        end
+        default: begin
+            if ((ip_tx_packetizer_sink_valid & 1'd1)) begin
+                if (ip_tx_packetizer_source_ready) begin
+                    if ((ip_tx_packetizer_count == 5'd19)) begin
+                        ip_tx_packetizer_count_liteethip_liteethipv4packetizer_next_value_ce = 1'd1;
+                    end else begin
+                        ip_tx_packetizer_count_liteethip_liteethipv4packetizer_next_value_ce = 1'd1;
+                    end
+                end
+            end
+        end
+    endcase
+    case (liteethip_liteethiptx_liteethipv4packetizer_state)
+        1'd0: begin
+            ip_tx_packetizer_is_ongoing = 1'd1;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethip_liteethiptx_liteethipv4packetizer_state)
+        1'd0: begin
+            ip_tx_packetizer_sink_ready = ip_tx_packetizer_source_ready;
+        end
+        default: begin
+            ip_tx_packetizer_sink_ready = (ip_tx_packetizer_count == 1'd0);
+            if ((ip_tx_packetizer_sink_valid & 1'd1)) begin
+                ip_tx_packetizer_sink_ready = (((ip_tx_packetizer_count == 5'd19) & (ip_tx_packetizer_sink_last & (ip_tx_packetizer_sink_payload_be == 1'd0))) & ip_tx_packetizer_source_ready);
+            end
+        end
+    endcase
+    case (liteethip_liteethiptx_liteethipv4packetizer_state)
+        1'd0: begin
+            ip_tx_packetizer_source_be = ip_tx_packetizer_sink_payload_be;
+        end
+        default: begin
+            if ((ip_tx_packetizer_count == 5'd19)) begin
+                ip_tx_packetizer_source_be = 1'd1;
+            end
+        end
+    endcase
+    case (liteethip_liteethiptx_liteethipv4packetizer_state)
+        1'd0: begin
+        end
+        default: begin
+            if ((ip_tx_packetizer_sink_valid & 1'd1)) begin
+                ip_tx_packetizer_source_first = (ip_tx_packetizer_count == 1'd0);
+            end
+        end
+    endcase
+    case (liteethip_liteethiptx_liteethipv4packetizer_state)
+        1'd0: begin
+            ip_tx_packetizer_source_last = ip_tx_packetizer_sink_last;
+        end
+        default: begin
+            if ((ip_tx_packetizer_sink_valid & 1'd1)) begin
+                ip_tx_packetizer_source_last = ((ip_tx_packetizer_count == 5'd19) & (ip_tx_packetizer_sink_last & (ip_tx_packetizer_sink_payload_be == 1'd0)));
+            end
+        end
+    endcase
+    case (liteethip_liteethiptx_liteethipv4packetizer_state)
+        1'd0: begin
+            ip_tx_packetizer_source_payload_data = ip_tx_packetizer_sink_payload_data;
+        end
+        default: begin
+            case (ip_tx_packetizer_count)
+                1'd0: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[7:0];
+                end
+                1'd1: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[15:8];
+                end
+                2'd2: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[23:16];
+                end
+                2'd3: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[31:24];
+                end
+                3'd4: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[39:32];
+                end
+                3'd5: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[47:40];
+                end
+                3'd6: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[55:48];
+                end
+                3'd7: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[63:56];
+                end
+                4'd8: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[71:64];
+                end
+                4'd9: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[79:72];
+                end
+                4'd10: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[87:80];
+                end
+                4'd11: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[95:88];
+                end
+                4'd12: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[103:96];
+                end
+                4'd13: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[111:104];
+                end
+                4'd14: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[119:112];
+                end
+                4'd15: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[127:120];
+                end
+                5'd16: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[135:128];
+                end
+                5'd17: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[143:136];
+                end
+                5'd18: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[151:144];
+                end
+                5'd19: begin
+                    ip_tx_packetizer_source_payload_data = ip_tx_packetizer_header[159:152];
+                end
+            endcase
+        end
+    endcase
+    case (liteethip_liteethiptx_liteethipv4packetizer_state)
+        1'd0: begin
+            ip_tx_packetizer_source_valid = ip_tx_packetizer_sink_valid;
+        end
+        default: begin
+            if ((ip_tx_packetizer_sink_valid & 1'd1)) begin
+                ip_tx_packetizer_source_valid = 1'd1;
+            end
+        end
+    endcase
+    liteethip_liteethiptx_liteethipv4packetizer_next_state = liteethip_liteethiptx_liteethipv4packetizer_state;
+    case (liteethip_liteethiptx_liteethipv4packetizer_state)
+        1'd0: begin
+            if (((ip_tx_packetizer_source_valid & ip_tx_packetizer_source_ready) & ip_tx_packetizer_source_last)) begin
+                liteethip_liteethiptx_liteethipv4packetizer_next_state = 1'd1;
             end
         end
         default: begin
-            if (((ip_tx_packetizer_in_data_copy & ip_tx_packetizer_sink_last) & (ip_tx_packetizer_sink_last_be > ip_tx_packetizer_new_last_be))) begin
-                ip_tx_packetizer_source_last_b <= 1'd0;
-                ip_tx_packetizer_source_last_s <= 1'd1;
-                ip_tx_packetizer_source_payload_last_be <= 1'd0;
-                if ((ip_tx_packetizer_source_ready & ip_tx_packetizer_source_valid)) begin
-                    ip_tx_packetizer_delayed_last_be_liteethip_fsm1_next_value0 <= ip_tx_packetizer_new_last_be;
-                    ip_tx_packetizer_delayed_last_be_liteethip_fsm1_next_value_ce0 <= 1'd1;
-                    liteethip_liteethiptx_fsm1_next_state <= 1'd1;
-                end
-            end else begin
-                if (ip_tx_packetizer_in_data_copy) begin
-                    ip_tx_packetizer_source_last_b <= ip_tx_packetizer_sink_last;
-                    ip_tx_packetizer_source_last_s <= 1'd1;
-                    ip_tx_packetizer_source_payload_last_be <= ip_tx_packetizer_new_last_be;
-                end
-            end
-            if (ip_tx_packetizer_in_data_copy) begin
-                ip_tx_packetizer_sink_ready <= ip_tx_packetizer_source_ready;
-            end else begin
-                if (ip_tx_packetizer_is_ongoing2) begin
-                    ip_tx_packetizer_sink_ready <= (~ip_tx_packetizer_sink_valid);
+            if ((ip_tx_packetizer_sink_valid & 1'd1)) begin
+                if (ip_tx_packetizer_source_ready) begin
+                    if ((ip_tx_packetizer_count == 5'd19)) begin
+                        if ((~ip_tx_packetizer_source_last)) begin
+                            liteethip_liteethiptx_liteethipv4packetizer_next_state = 1'd0;
+                        end
+                    end else begin
+                    end
                 end
             end
         end
     endcase
 end
 always @(*) begin
-    arp_table_request_request_valid <= 1'd0;
-    arp_table_response_response_ready <= 1'd0;
-    ip_tx_packetizer_source_ready <= 1'd0;
-    ip_tx_source_source_first0 <= 1'd0;
-    ip_tx_source_source_last0 <= 1'd0;
-    ip_tx_source_source_payload_data0 <= 8'd0;
-    ip_tx_source_source_payload_error0 <= 1'd0;
-    ip_tx_source_source_payload_ethernet_type <= 16'd0;
-    ip_tx_source_source_payload_last_be0 <= 1'd0;
-    ip_tx_source_source_payload_sender_mac <= 48'd0;
-    ip_tx_source_source_payload_target_mac <= 48'd0;
-    ip_tx_source_source_valid0 <= 1'd0;
-    ip_tx_target_mac_liteethip_next_value <= 48'd0;
-    ip_tx_target_mac_liteethip_next_value_ce <= 1'd0;
-    ip_tx_target_unreachable <= 1'd0;
-    liteethip_liteethiptx_next_state <= 3'd0;
-    liteethip_liteethiptx_next_state <= liteethip_liteethiptx_state;
-    case (liteethip_liteethiptx_state)
-        1'd1: begin
-            arp_table_request_request_valid <= 1'd1;
-            if ((arp_table_request_request_valid & arp_table_request_request_ready)) begin
-                liteethip_liteethiptx_next_state <= 2'd2;
-            end
+    arp_table_request_request_valid = 1'd0;
+    arp_table_response_response_ready = 1'd0;
+    ip_tx_fsm_is_ongoing0 = 1'd0;
+    ip_tx_fsm_is_ongoing1 = 1'd0;
+    ip_tx_fsm_is_ongoing2 = 1'd0;
+    ip_tx_target_mac_liteethip_fsm_next_value = 48'd0;
+    ip_tx_target_mac_liteethip_fsm_next_value_ce = 1'd0;
+    ip_tx_target_unreachable = 1'd0;
+    liteethip_liteethiptx_fsm_next_state = 3'd0;
+    case (liteethip_liteethiptx_fsm_state)
+        1'd0: begin
         end
-        2'd2: begin
-            if (arp_table_response_response_valid) begin
-                ip_tx_target_mac_liteethip_next_value <= arp_table_response_response_payload_mac_address;
-                ip_tx_target_mac_liteethip_next_value_ce <= 1'd1;
-                arp_table_response_response_ready <= 1'd1;
-                if (arp_table_response_response_payload_failed) begin
-                    ip_tx_target_unreachable <= 1'd1;
-                    liteethip_liteethiptx_next_state <= 3'd4;
-                end else begin
-                    liteethip_liteethiptx_next_state <= 2'd3;
-                end
-            end
+        1'd1: begin
         end
         2'd3: begin
-            ip_tx_source_source_valid0 <= ip_tx_packetizer_source_valid;
-            ip_tx_packetizer_source_ready <= ip_tx_source_source_ready0;
-            ip_tx_source_source_first0 <= ip_tx_packetizer_source_first;
-            ip_tx_source_source_last0 <= ip_tx_packetizer_source_last;
-            ip_tx_source_source_payload_ethernet_type <= ip_tx_packetizer_source_payload_ethernet_type;
-            ip_tx_source_source_payload_sender_mac <= ip_tx_packetizer_source_payload_sender_mac;
-            ip_tx_source_source_payload_target_mac <= ip_tx_packetizer_source_payload_target_mac;
-            ip_tx_source_source_payload_data0 <= ip_tx_packetizer_source_payload_data;
-            ip_tx_source_source_payload_last_be0 <= ip_tx_packetizer_source_payload_last_be;
-            ip_tx_source_source_payload_error0 <= ip_tx_packetizer_source_payload_error;
-            ip_tx_source_source_payload_ethernet_type <= 12'd2048;
-            ip_tx_source_source_payload_target_mac <= ip_tx_target_mac;
-            ip_tx_source_source_payload_sender_mac <= 45'd18566422200342;
-            if (((ip_tx_source_source_valid0 & ip_tx_source_source_last0) & ip_tx_source_source_ready0)) begin
-                liteethip_liteethiptx_next_state <= 1'd0;
-            end
+            arp_table_request_request_valid = 1'd1;
         end
         3'd4: begin
-            ip_tx_packetizer_source_ready <= 1'd1;
-            if (((ip_tx_packetizer_source_valid & ip_tx_packetizer_source_last) & ip_tx_packetizer_source_ready)) begin
-                liteethip_liteethiptx_next_state <= 1'd0;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethip_liteethiptx_fsm_state)
+        1'd0: begin
+        end
+        1'd1: begin
+        end
+        2'd3: begin
+        end
+        3'd4: begin
+            if (arp_table_response_response_valid) begin
+                arp_table_response_response_ready = 1'd1;
+            end
+        end
+        default: begin
+        end
+    endcase
+    case (liteethip_liteethiptx_fsm_state)
+        1'd0: begin
+            ip_tx_fsm_is_ongoing0 = 1'd1;
+        end
+        1'd1: begin
+        end
+        2'd3: begin
+        end
+        3'd4: begin
+        end
+        default: begin
+        end
+    endcase
+    case (liteethip_liteethiptx_fsm_state)
+        1'd0: begin
+        end
+        1'd1: begin
+            ip_tx_fsm_is_ongoing1 = 1'd1;
+        end
+        2'd3: begin
+        end
+        3'd4: begin
+        end
+        default: begin
+        end
+    endcase
+    case (liteethip_liteethiptx_fsm_state)
+        1'd0: begin
+            ip_tx_fsm_is_ongoing2 = 1'd1;
+        end
+        1'd1: begin
+        end
+        2'd3: begin
+        end
+        3'd4: begin
+        end
+        default: begin
+        end
+    endcase
+    case (liteethip_liteethiptx_fsm_state)
+        1'd0: begin
+        end
+        1'd1: begin
+        end
+        2'd3: begin
+        end
+        3'd4: begin
+            if (arp_table_response_response_valid) begin
+                ip_tx_target_mac_liteethip_fsm_next_value = arp_table_response_response_payload_mac_address;
             end
         end
         default: begin
             if (ip_tx_packetizer_source_valid) begin
-                if ((ip_tx_source_source_param_ip_address[7:0] == 8'd255)) begin
-                    ip_tx_target_mac_liteethip_next_value <= 48'd281474976710655;
-                    ip_tx_target_mac_liteethip_next_value_ce <= 1'd1;
-                    liteethip_liteethiptx_next_state <= 2'd3;
+                if ((ip_tx_source_source_param_ip_address[7:0] == 8'hff)) begin
+                    ip_tx_target_mac_liteethip_fsm_next_value = 48'hffffffffffff;
                 end else begin
                     if ((ip_tx_source_source_param_ip_address[31:28] == 4'd14)) begin
-                        ip_tx_target_mac_liteethip_next_value <= {24'd65630, 1'd0, ip_tx_source_source_param_ip_address[22:0]};
-                        ip_tx_target_mac_liteethip_next_value_ce <= 1'd1;
-                        liteethip_liteethiptx_next_state <= 2'd3;
+                        ip_tx_target_mac_liteethip_fsm_next_value = {24'd65630, 1'd0, ip_tx_source_source_param_ip_address[22:0]};
                     end else begin
-                        liteethip_liteethiptx_next_state <= 1'd1;
+                    end
+                end
+            end
+        end
+    endcase
+    case (liteethip_liteethiptx_fsm_state)
+        1'd0: begin
+        end
+        1'd1: begin
+        end
+        2'd3: begin
+        end
+        3'd4: begin
+            if (arp_table_response_response_valid) begin
+                ip_tx_target_mac_liteethip_fsm_next_value_ce = 1'd1;
+            end
+        end
+        default: begin
+            if (ip_tx_packetizer_source_valid) begin
+                if ((ip_tx_source_source_param_ip_address[7:0] == 8'hff)) begin
+                    ip_tx_target_mac_liteethip_fsm_next_value_ce = 1'd1;
+                end else begin
+                    if ((ip_tx_source_source_param_ip_address[31:28] == 4'd14)) begin
+                        ip_tx_target_mac_liteethip_fsm_next_value_ce = 1'd1;
+                    end else begin
+                    end
+                end
+            end
+        end
+    endcase
+    case (liteethip_liteethiptx_fsm_state)
+        1'd0: begin
+        end
+        1'd1: begin
+        end
+        2'd3: begin
+        end
+        3'd4: begin
+            if (arp_table_response_response_valid) begin
+                if (arp_table_response_response_payload_failed) begin
+                    ip_tx_target_unreachable = 1'd1;
+                end else begin
+                end
+            end
+        end
+        default: begin
+        end
+    endcase
+    liteethip_liteethiptx_fsm_next_state = liteethip_liteethiptx_fsm_state;
+    case (liteethip_liteethiptx_fsm_state)
+        1'd0: begin
+            if (((ip_tx_source_source_valid0 & ip_tx_source_source_last0) & ip_tx_source_source_ready0)) begin
+                liteethip_liteethiptx_fsm_next_state = 2'd2;
+            end
+        end
+        1'd1: begin
+            if (((ip_tx_packetizer_source_valid & ip_tx_packetizer_source_last) & ip_tx_packetizer_source_ready)) begin
+                liteethip_liteethiptx_fsm_next_state = 2'd2;
+            end
+        end
+        2'd3: begin
+            if ((arp_table_request_request_valid & arp_table_request_request_ready)) begin
+                liteethip_liteethiptx_fsm_next_state = 3'd4;
+            end
+        end
+        3'd4: begin
+            if (arp_table_response_response_valid) begin
+                if (arp_table_response_response_payload_failed) begin
+                    liteethip_liteethiptx_fsm_next_state = 1'd1;
+                end else begin
+                    liteethip_liteethiptx_fsm_next_state = 1'd0;
+                end
+            end
+        end
+        default: begin
+            if (ip_tx_packetizer_source_valid) begin
+                if ((ip_tx_source_source_param_ip_address[7:0] == 8'hff)) begin
+                    liteethip_liteethiptx_fsm_next_state = 1'd0;
+                end else begin
+                    if ((ip_tx_source_source_param_ip_address[31:28] == 4'd14)) begin
+                        liteethip_liteethiptx_fsm_next_state = 1'd0;
+                    end else begin
+                        liteethip_liteethiptx_fsm_next_state = 2'd3;
                     end
                 end
             end
@@ -4967,141 +5817,246 @@ assign ip_rx_depacketizer_sink_payload_ethernet_type = ip_rx_sink_sink_payload_e
 assign ip_rx_depacketizer_sink_payload_sender_mac = ip_rx_sink_sink_payload_sender_mac;
 assign ip_rx_depacketizer_sink_payload_target_mac = ip_rx_sink_sink_payload_target_mac;
 assign ip_rx_depacketizer_sink_payload_data = ip_rx_sink_sink_payload_data;
-assign ip_rx_depacketizer_sink_payload_last_be = ip_rx_sink_sink_payload_last_be;
+assign ip_rx_depacketizer_sink_payload_be = ip_rx_sink_sink_payload_be;
 assign ip_rx_depacketizer_sink_payload_error = ip_rx_sink_sink_payload_error;
 assign ip_rx_liteethipv4checksum_header = ip_rx_depacketizer_header;
 assign ip_rx_reset = (~ip_rx_depacketizer_source_valid);
 assign ip_rx_ce = 1'd1;
+assign ip_rx_accepted = (((((((ip_rx_depacketizer_source_param_target_ip == 32'd3232235792) | 1'd1) & (ip_rx_depacketizer_source_param_version == 3'd4)) & (ip_rx_depacketizer_source_param_ihl == 3'd5)) & (ip_rx_depacketizer_source_param_total_length > 5'd20)) & ((ip_rx_depacketizer_source_param_flags_offset & 14'h3fff) == 1'd0)) & (ip_rx_liteethipv4checksum_value == 1'd0));
+assign ip_rx_receiving = ip_rx_is_ongoing0;
+assign ip_rx_source_source_valid = (ip_rx_depacketizer_source_valid & ip_rx_receiving);
+assign ip_rx_depacketizer_source_ready = (ip_rx_is_ongoing1 | (ip_rx_receiving & ip_rx_source_source_ready));
 assign ip_rx_source_source_last = ip_rx_depacketizer_source_last;
 assign ip_rx_source_source_payload_data = ip_rx_depacketizer_source_payload_data;
-assign ip_rx_source_source_payload_last_be = ip_rx_depacketizer_source_payload_last_be;
+assign ip_rx_source_source_payload_be = ip_rx_depacketizer_source_payload_be;
 assign ip_rx_source_source_payload_error = ip_rx_depacketizer_source_payload_error;
 assign ip_rx_source_source_param_protocol = ip_rx_depacketizer_source_param_protocol;
 assign ip_rx_source_source_param_length = (ip_rx_depacketizer_source_param_total_length - 5'd20);
 assign ip_rx_source_source_param_ip_address = ip_rx_depacketizer_source_param_sender_ip;
 assign ip_rx_depacketizer_header = ip_rx_depacketizer_sr;
-assign ip_rx_depacketizer_source_param_checksum = {rhs_slice_proxy43[7:0], rhs_slice_proxy42[15:8]};
-assign ip_rx_depacketizer_source_param_identification = {rhs_slice_proxy45[7:0], rhs_slice_proxy44[15:8]};
-assign ip_rx_depacketizer_source_param_ihl = {rhs_slice_proxy46[3:0]};
-assign ip_rx_depacketizer_source_param_protocol = {rhs_slice_proxy47[7:0]};
-assign ip_rx_depacketizer_source_param_sender_ip = {rhs_slice_proxy51[7:0], rhs_slice_proxy50[15:8], rhs_slice_proxy49[23:16], rhs_slice_proxy48[31:24]};
-assign ip_rx_depacketizer_source_param_target_ip = {rhs_slice_proxy55[7:0], rhs_slice_proxy54[15:8], rhs_slice_proxy53[23:16], rhs_slice_proxy52[31:24]};
-assign ip_rx_depacketizer_source_param_total_length = {rhs_slice_proxy57[7:0], rhs_slice_proxy56[15:8]};
-assign ip_rx_depacketizer_source_param_ttl = {rhs_slice_proxy58[7:0]};
-assign ip_rx_depacketizer_source_param_version = {rhs_slice_proxy59[3:0]};
+assign ip_rx_depacketizer_source_param_checksum = {ip_rx_depacketizer_header[87:80], ip_rx_depacketizer_header[95:88]};
+assign ip_rx_depacketizer_source_param_flags_offset = {ip_rx_depacketizer_header[55:48], ip_rx_depacketizer_header[63:56]};
+assign ip_rx_depacketizer_source_param_identification = {ip_rx_depacketizer_header[39:32], ip_rx_depacketizer_header[47:40]};
+assign ip_rx_depacketizer_source_param_ihl = {ip_rx_depacketizer_header[3:0]};
+assign ip_rx_depacketizer_source_param_protocol = {ip_rx_depacketizer_header[79:72]};
+assign ip_rx_depacketizer_source_param_sender_ip = {ip_rx_depacketizer_header[103:96], ip_rx_depacketizer_header[111:104], ip_rx_depacketizer_header[119:112], ip_rx_depacketizer_header[127:120]};
+assign ip_rx_depacketizer_source_param_target_ip = {ip_rx_depacketizer_header[135:128], ip_rx_depacketizer_header[143:136], ip_rx_depacketizer_header[151:144], ip_rx_depacketizer_header[159:152]};
+assign ip_rx_depacketizer_source_param_total_length = {ip_rx_depacketizer_header[23:16], ip_rx_depacketizer_header[31:24]};
+assign ip_rx_depacketizer_source_param_ttl = {ip_rx_depacketizer_header[71:64]};
+assign ip_rx_depacketizer_source_param_version = {ip_rx_depacketizer_header[7:4]};
+assign ip_rx_depacketizer_sink_be = ip_rx_depacketizer_sink_payload_be;
+assign ip_rx_depacketizer_source_payload_be = ip_rx_depacketizer_source_be;
 assign ip_rx_depacketizer_source_payload_error = ip_rx_depacketizer_sink_payload_error;
-assign ip_rx_depacketizer_sink_last_be = ip_rx_depacketizer_sink_last;
-assign ip_rx_depacketizer_new_last_be = {ip_rx_depacketizer_sink_last_be};
-assign ip_rx_depacketizer_is_in_copy = (ip_rx_depacketizer_is_ongoing0 | ip_rx_depacketizer_is_ongoing1);
 always @(*) begin
-    ip_rx_depacketizer_source_last <= 1'd0;
-    if (ip_rx_depacketizer_source_last_s) begin
-        ip_rx_depacketizer_source_last <= ip_rx_depacketizer_source_last_b;
-    end else begin
-        ip_rx_depacketizer_source_last <= ip_rx_depacketizer_source_last_a;
-    end
-end
-always @(*) begin
-    ip_rx_depacketizer_count_liteethip_fsm0_next_value2 <= 5'd0;
-    ip_rx_depacketizer_count_liteethip_fsm0_next_value_ce2 <= 1'd0;
-    ip_rx_depacketizer_delayed_last_be_liteethip_fsm1_next_value1 <= 1'd0;
-    ip_rx_depacketizer_delayed_last_be_liteethip_fsm1_next_value_ce1 <= 1'd0;
-    ip_rx_depacketizer_fsm_from_idle_liteethip_fsm0_next_value3 <= 1'd0;
-    ip_rx_depacketizer_fsm_from_idle_liteethip_fsm0_next_value_ce3 <= 1'd0;
-    ip_rx_depacketizer_is_ongoing0 <= 1'd0;
-    ip_rx_depacketizer_is_ongoing1 <= 1'd0;
-    ip_rx_depacketizer_is_ongoing2 <= 1'd0;
-    ip_rx_depacketizer_is_ongoing3 <= 1'd0;
-    ip_rx_depacketizer_sink_ready <= 1'd0;
-    ip_rx_depacketizer_source_last_a <= 1'd0;
-    ip_rx_depacketizer_source_last_b <= 1'd0;
-    ip_rx_depacketizer_source_last_s <= 1'd0;
-    ip_rx_depacketizer_source_payload_data <= 8'd0;
-    ip_rx_depacketizer_source_payload_last_be <= 1'd0;
-    ip_rx_depacketizer_source_valid <= 1'd0;
-    ip_rx_depacketizer_sr_shift <= 1'd0;
-    liteethip_liteethiprx_fsm0_next_state <= 2'd0;
-    liteethip_liteethiprx_fsm1_next_state <= 1'd0;
-    liteethip_liteethiprx_fsm0_next_state <= liteethip_liteethiprx_fsm0_state;
-    case (liteethip_liteethiprx_fsm0_state)
+    ip_rx_depacketizer_count_liteethip_next_value0 = 5'd0;
+    ip_rx_depacketizer_count_liteethip_next_value_ce0 = 1'd0;
+    ip_rx_depacketizer_data_copy_first_liteethip_next_value2 = 1'd0;
+    ip_rx_depacketizer_data_copy_first_liteethip_next_value_ce2 = 1'd0;
+    ip_rx_depacketizer_fsm_from_idle_liteethip_next_value1 = 1'd0;
+    ip_rx_depacketizer_fsm_from_idle_liteethip_next_value_ce1 = 1'd0;
+    ip_rx_depacketizer_sink_ready = 1'd0;
+    ip_rx_depacketizer_source_be = 1'd1;
+    ip_rx_depacketizer_source_first = 1'd0;
+    ip_rx_depacketizer_source_last = 1'd0;
+    ip_rx_depacketizer_source_payload_data = 8'd0;
+    ip_rx_depacketizer_source_valid = 1'd0;
+    ip_rx_depacketizer_sr_shift = 1'd0;
+    liteethip_liteethiprx_liteethipv4depacketizer_next_state = 2'd0;
+    case (liteethip_liteethiprx_liteethipv4depacketizer_state)
         1'd1: begin
-            ip_rx_depacketizer_sink_ready <= 1'd1;
             if (ip_rx_depacketizer_sink_valid) begin
-                ip_rx_depacketizer_count_liteethip_fsm0_next_value2 <= (ip_rx_depacketizer_count + 1'd1);
-                ip_rx_depacketizer_count_liteethip_fsm0_next_value_ce2 <= 1'd1;
-                ip_rx_depacketizer_sr_shift <= 1'd1;
+                ip_rx_depacketizer_count_liteethip_next_value0 = (ip_rx_depacketizer_count + 1'd1);
                 if ((ip_rx_depacketizer_count == 5'd19)) begin
-                    liteethip_liteethiprx_fsm0_next_state <= 2'd2;
-                    ip_rx_depacketizer_count_liteethip_fsm0_next_value2 <= (ip_rx_depacketizer_count + 1'd1);
-                    ip_rx_depacketizer_count_liteethip_fsm0_next_value_ce2 <= 1'd1;
+                    ip_rx_depacketizer_count_liteethip_next_value0 = (ip_rx_depacketizer_count + 1'd1);
                 end
             end
         end
         2'd2: begin
-            ip_rx_depacketizer_source_valid <= (ip_rx_depacketizer_sink_valid | ip_rx_depacketizer_sink_d_last);
-            ip_rx_depacketizer_source_last_a <= (ip_rx_depacketizer_sink_last | ip_rx_depacketizer_sink_d_last);
-            ip_rx_depacketizer_sink_ready <= ip_rx_depacketizer_source_ready;
-            ip_rx_depacketizer_source_payload_data <= ip_rx_depacketizer_sink_payload_data;
-            if ((ip_rx_depacketizer_source_valid & ip_rx_depacketizer_source_ready)) begin
-                if (ip_rx_depacketizer_source_last) begin
-                    liteethip_liteethiprx_fsm0_next_state <= 1'd0;
-                end
-            end
-            ip_rx_depacketizer_is_ongoing0 <= 1'd1;
-            ip_rx_depacketizer_is_ongoing2 <= 1'd1;
-        end
-        2'd3: begin
-            ip_rx_depacketizer_is_ongoing1 <= 1'd1;
-            ip_rx_depacketizer_is_ongoing3 <= 1'd1;
         end
         default: begin
-            ip_rx_depacketizer_sink_ready <= 1'd1;
-            ip_rx_depacketizer_count_liteethip_fsm0_next_value2 <= 1'd1;
-            ip_rx_depacketizer_count_liteethip_fsm0_next_value_ce2 <= 1'd1;
+            ip_rx_depacketizer_count_liteethip_next_value0 = 1'd1;
+        end
+    endcase
+    case (liteethip_liteethiprx_liteethipv4depacketizer_state)
+        1'd1: begin
             if (ip_rx_depacketizer_sink_valid) begin
-                ip_rx_depacketizer_sr_shift <= 1'd1;
-                ip_rx_depacketizer_fsm_from_idle_liteethip_fsm0_next_value3 <= 1'd1;
-                ip_rx_depacketizer_fsm_from_idle_liteethip_fsm0_next_value_ce3 <= 1'd1;
-                if (1'd0) begin
-                    liteethip_liteethiprx_fsm0_next_state <= 2'd2;
-                end else begin
-                    liteethip_liteethiprx_fsm0_next_state <= 1'd1;
+                ip_rx_depacketizer_count_liteethip_next_value_ce0 = 1'd1;
+                if ((ip_rx_depacketizer_count == 5'd19)) begin
+                    ip_rx_depacketizer_count_liteethip_next_value_ce0 = 1'd1;
                 end
+            end
+        end
+        2'd2: begin
+        end
+        default: begin
+            ip_rx_depacketizer_count_liteethip_next_value_ce0 = 1'd1;
+        end
+    endcase
+    case (liteethip_liteethiprx_liteethipv4depacketizer_state)
+        1'd1: begin
+            ip_rx_depacketizer_sink_ready = 1'd1;
+        end
+        2'd2: begin
+            ip_rx_depacketizer_sink_ready = ip_rx_depacketizer_source_ready;
+        end
+        default: begin
+            ip_rx_depacketizer_sink_ready = 1'd1;
+        end
+    endcase
+    case (liteethip_liteethiprx_liteethipv4depacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            ip_rx_depacketizer_source_be = ip_rx_depacketizer_sink_be;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethip_liteethiprx_liteethipv4depacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            ip_rx_depacketizer_source_first = ip_rx_depacketizer_data_copy_first;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethip_liteethiprx_liteethipv4depacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            ip_rx_depacketizer_source_last = ip_rx_depacketizer_sink_last;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethip_liteethiprx_liteethipv4depacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            ip_rx_depacketizer_source_payload_data = ip_rx_depacketizer_sink_payload_data;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethip_liteethiprx_liteethipv4depacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            ip_rx_depacketizer_source_valid = ip_rx_depacketizer_sink_valid;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethip_liteethiprx_liteethipv4depacketizer_state)
+        1'd1: begin
+            if (ip_rx_depacketizer_sink_valid) begin
+                if ((ip_rx_depacketizer_count == 5'd19)) begin
+                    ip_rx_depacketizer_data_copy_first_liteethip_next_value2 = 1'd1;
+                end
+            end
+        end
+        2'd2: begin
+            if ((ip_rx_depacketizer_source_valid & ip_rx_depacketizer_source_ready)) begin
+                ip_rx_depacketizer_data_copy_first_liteethip_next_value2 = 1'd0;
+            end
+        end
+        default: begin
+            if (ip_rx_depacketizer_sink_valid) begin
+                ip_rx_depacketizer_data_copy_first_liteethip_next_value2 = 1'd1;
             end
         end
     endcase
-    liteethip_liteethiprx_fsm1_next_state <= liteethip_liteethiprx_fsm1_state;
-    case (liteethip_liteethiprx_fsm1_state)
+    case (liteethip_liteethiprx_liteethipv4depacketizer_state)
         1'd1: begin
-            ip_rx_depacketizer_source_last_b <= 1'd1;
-            ip_rx_depacketizer_source_last_s <= 1'd1;
-            ip_rx_depacketizer_source_payload_last_be <= ip_rx_depacketizer_delayed_last_be;
-            ip_rx_depacketizer_sink_ready <= 1'd0;
-            if ((ip_rx_depacketizer_source_ready & ip_rx_depacketizer_source_valid)) begin
-                liteethip_liteethiprx_fsm1_next_state <= 1'd0;
+            if (ip_rx_depacketizer_sink_valid) begin
+                if ((ip_rx_depacketizer_count == 5'd19)) begin
+                    ip_rx_depacketizer_data_copy_first_liteethip_next_value_ce2 = 1'd1;
+                end
+            end
+        end
+        2'd2: begin
+            if ((ip_rx_depacketizer_source_valid & ip_rx_depacketizer_source_ready)) begin
+                ip_rx_depacketizer_data_copy_first_liteethip_next_value_ce2 = 1'd1;
             end
         end
         default: begin
-            if (((ip_rx_depacketizer_sink_valid & ip_rx_depacketizer_sink_last) & (ip_rx_depacketizer_sink_last_be > ip_rx_depacketizer_new_last_be))) begin
-                ip_rx_depacketizer_source_last_b <= 1'd0;
-                ip_rx_depacketizer_source_last_s <= 1'd1;
-                ip_rx_depacketizer_source_payload_last_be <= 1'd0;
-                if (((ip_rx_depacketizer_source_ready & ip_rx_depacketizer_source_valid) | ((~ip_rx_depacketizer_was_in_copy) & ip_rx_depacketizer_is_in_copy))) begin
-                    ip_rx_depacketizer_delayed_last_be_liteethip_fsm1_next_value1 <= ip_rx_depacketizer_new_last_be;
-                    ip_rx_depacketizer_delayed_last_be_liteethip_fsm1_next_value_ce1 <= 1'd1;
-                    liteethip_liteethiprx_fsm1_next_state <= 1'd1;
+            if (ip_rx_depacketizer_sink_valid) begin
+                ip_rx_depacketizer_data_copy_first_liteethip_next_value_ce2 = 1'd1;
+            end
+        end
+    endcase
+    case (liteethip_liteethiprx_liteethipv4depacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            if ((ip_rx_depacketizer_source_valid & ip_rx_depacketizer_source_ready)) begin
+                ip_rx_depacketizer_fsm_from_idle_liteethip_next_value1 = 1'd0;
+            end
+        end
+        default: begin
+            if (ip_rx_depacketizer_sink_valid) begin
+                ip_rx_depacketizer_fsm_from_idle_liteethip_next_value1 = 1'd1;
+            end
+        end
+    endcase
+    case (liteethip_liteethiprx_liteethipv4depacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            if ((ip_rx_depacketizer_source_valid & ip_rx_depacketizer_source_ready)) begin
+                ip_rx_depacketizer_fsm_from_idle_liteethip_next_value_ce1 = 1'd1;
+            end
+        end
+        default: begin
+            if (ip_rx_depacketizer_sink_valid) begin
+                ip_rx_depacketizer_fsm_from_idle_liteethip_next_value_ce1 = 1'd1;
+            end
+        end
+    endcase
+    case (liteethip_liteethiprx_liteethipv4depacketizer_state)
+        1'd1: begin
+            if (ip_rx_depacketizer_sink_valid) begin
+                ip_rx_depacketizer_sr_shift = 1'd1;
+            end
+        end
+        2'd2: begin
+        end
+        default: begin
+            if (ip_rx_depacketizer_sink_valid) begin
+                ip_rx_depacketizer_sr_shift = 1'd1;
+            end
+        end
+    endcase
+    liteethip_liteethiprx_liteethipv4depacketizer_next_state = liteethip_liteethiprx_liteethipv4depacketizer_state;
+    case (liteethip_liteethiprx_liteethipv4depacketizer_state)
+        1'd1: begin
+            if (ip_rx_depacketizer_sink_valid) begin
+                if ((ip_rx_depacketizer_count == 5'd19)) begin
+                    liteethip_liteethiprx_liteethipv4depacketizer_next_state = 2'd2;
                 end
-            end else begin
                 if (ip_rx_depacketizer_sink_last) begin
-                    ip_rx_depacketizer_source_last_b <= 1'd1;
-                    ip_rx_depacketizer_source_last_s <= 1'd1;
-                    ip_rx_depacketizer_source_payload_last_be <= ip_rx_depacketizer_new_last_be;
+                    liteethip_liteethiprx_liteethipv4depacketizer_next_state = 1'd0;
                 end
             end
-            if ((ip_rx_depacketizer_is_ongoing2 | (ip_rx_depacketizer_is_ongoing3 & (~ip_rx_depacketizer_fsm_from_idle)))) begin
-                ip_rx_depacketizer_sink_ready <= ip_rx_depacketizer_source_ready;
-            end else begin
-                ip_rx_depacketizer_sink_ready <= 1'd1;
+        end
+        2'd2: begin
+            if ((ip_rx_depacketizer_source_valid & ip_rx_depacketizer_source_ready)) begin
+                if (ip_rx_depacketizer_source_last) begin
+                    liteethip_liteethiprx_liteethipv4depacketizer_next_state = 1'd0;
+                end
+            end
+        end
+        default: begin
+            if (ip_rx_depacketizer_sink_valid) begin
+                if (1'd0) begin
+                    liteethip_liteethiprx_liteethipv4depacketizer_next_state = 2'd2;
+                end else begin
+                    liteethip_liteethiprx_liteethipv4depacketizer_next_state = 1'd1;
+                end
+                if (($signed({1'd0, ip_rx_depacketizer_sink_last}) & $signed(1'd1))) begin
+                    liteethip_liteethiprx_liteethipv4depacketizer_next_state = 1'd0;
+                end
             end
         end
     endcase
@@ -5120,379 +6075,379 @@ assign ip_rx_liteethipv4checksum_value = (~{ip_rx_liteethipv4checksum_r_next9[7:
 assign ip_rx_liteethipv4checksum_counter_ce = (~ip_rx_liteethipv4checksum_done);
 assign ip_rx_liteethipv4checksum_done = (ip_rx_liteethipv4checksum_counter == 4'd11);
 always @(*) begin
-    ip_rx_depacketizer_source_ready <= 1'd0;
-    ip_rx_source_source_valid <= 1'd0;
-    liteethip_liteethiprx_next_state <= 2'd0;
-    liteethip_liteethiprx_next_state <= liteethip_liteethiprx_state;
-    case (liteethip_liteethiprx_state)
-        1'd1: begin
-            ip_rx_source_source_valid <= ip_rx_depacketizer_source_valid;
-            ip_rx_depacketizer_source_ready <= ip_rx_source_source_ready;
+    ip_rx_is_ongoing0 = 1'd0;
+    ip_rx_is_ongoing1 = 1'd0;
+    liteethip_liteethiprx_fsm_next_state = 2'd0;
+    liteethip_liteethiprx_fsm_next_state = liteethip_liteethiprx_fsm_state;
+    case (liteethip_liteethiprx_fsm_state)
+        1'd0: begin
+            ip_rx_is_ongoing0 = 1'd1;
             if ((ip_rx_source_source_valid & ip_rx_source_source_ready)) begin
                 if (ip_rx_source_source_last) begin
-                    liteethip_liteethiprx_next_state <= 1'd0;
+                    liteethip_liteethiprx_fsm_next_state = 1'd1;
                 end
             end
         end
         2'd2: begin
-            ip_rx_depacketizer_source_ready <= 1'd1;
+            ip_rx_is_ongoing1 = 1'd1;
             if (((ip_rx_depacketizer_source_valid & ip_rx_depacketizer_source_last) & ip_rx_depacketizer_source_ready)) begin
-                liteethip_liteethiprx_next_state <= 1'd0;
+                liteethip_liteethiprx_fsm_next_state = 1'd1;
             end
         end
         default: begin
             if ((ip_rx_depacketizer_source_valid & ip_rx_liteethipv4checksum_done)) begin
-                liteethip_liteethiprx_next_state <= 2'd2;
-                if ((((((ip_rx_depacketizer_source_param_target_ip == 32'd3232235792) | 1'd1) & (ip_rx_depacketizer_source_param_version == 3'd4)) & (ip_rx_depacketizer_source_param_ihl == 3'd5)) & (ip_rx_liteethipv4checksum_value == 1'd0))) begin
-                    liteethip_liteethiprx_next_state <= 1'd1;
+                liteethip_liteethiprx_fsm_next_state = 2'd2;
+                if (ip_rx_accepted) begin
+                    liteethip_liteethiprx_fsm_next_state = 1'd0;
                 end
             end
         end
     endcase
 end
 always @(*) begin
-    liteethip_sel0 <= 2'd0;
+    liteethip_sel0 = 2'd0;
     if ((ip_crossbar_sink_param_protocol == 1'd1)) begin
-        liteethip_sel0 <= 1'd1;
+        liteethip_sel0 = 1'd1;
     end
     if ((ip_crossbar_sink_param_protocol == 5'd17)) begin
-        liteethip_sel0 <= 2'd2;
+        liteethip_sel0 = 2'd2;
     end
 end
 always @(*) begin
-    liteethip_request <= 2'd0;
-    liteethip_request[0] <= liteethip_status0_ongoing0;
-    liteethip_request[1] <= liteethip_status1_ongoing0;
+    liteethip_request = 2'd0;
+    liteethip_request[0] = liteethip_status0_ongoing0;
+    liteethip_request[1] = liteethip_status1_ongoing0;
 end
 always @(*) begin
-    icmp_ip_port_sink_ready <= 1'd0;
-    ip_crossbar_source_first <= 1'd0;
-    ip_crossbar_source_last <= 1'd0;
-    ip_crossbar_source_param_ip_address <= 32'd0;
-    ip_crossbar_source_param_length <= 16'd0;
-    ip_crossbar_source_param_protocol <= 8'd0;
-    ip_crossbar_source_payload_data <= 8'd0;
-    ip_crossbar_source_payload_error <= 1'd0;
-    ip_crossbar_source_payload_last_be <= 1'd0;
-    ip_crossbar_source_valid <= 1'd0;
-    ip_port_sink_ready <= 1'd0;
+    icmp_sink_ready = 1'd0;
+    ip_crossbar_source_first = 1'd0;
+    ip_crossbar_source_last = 1'd0;
+    ip_crossbar_source_param_ip_address = 32'd0;
+    ip_crossbar_source_param_length = 16'd0;
+    ip_crossbar_source_param_protocol = 8'd0;
+    ip_crossbar_source_payload_be = 1'd0;
+    ip_crossbar_source_payload_data = 8'd0;
+    ip_crossbar_source_payload_error = 1'd0;
+    ip_crossbar_source_valid = 1'd0;
+    ip_port_sink_ready = 1'd0;
     case (liteethip_grant)
         1'd0: begin
-            ip_crossbar_source_valid <= icmp_ip_port_sink_valid;
-            icmp_ip_port_sink_ready <= ip_crossbar_source_ready;
-            ip_crossbar_source_first <= icmp_ip_port_sink_first;
-            ip_crossbar_source_last <= icmp_ip_port_sink_last;
-            ip_crossbar_source_payload_data <= icmp_ip_port_sink_payload_data;
-            ip_crossbar_source_payload_last_be <= icmp_ip_port_sink_payload_last_be;
-            ip_crossbar_source_payload_error <= icmp_ip_port_sink_payload_error;
-            ip_crossbar_source_param_length <= icmp_ip_port_sink_param_length;
-            ip_crossbar_source_param_protocol <= icmp_ip_port_sink_param_protocol;
-            ip_crossbar_source_param_ip_address <= icmp_ip_port_sink_param_ip_address;
+            ip_crossbar_source_valid = icmp_sink_valid;
+            icmp_sink_ready = ip_crossbar_source_ready;
+            ip_crossbar_source_first = icmp_sink_first;
+            ip_crossbar_source_last = icmp_sink_last;
+            ip_crossbar_source_payload_data = icmp_sink_payload_data;
+            ip_crossbar_source_payload_be = icmp_sink_payload_be;
+            ip_crossbar_source_payload_error = icmp_sink_payload_error;
+            ip_crossbar_source_param_length = icmp_sink_param_length;
+            ip_crossbar_source_param_protocol = icmp_sink_param_protocol;
+            ip_crossbar_source_param_ip_address = icmp_sink_param_ip_address;
         end
         1'd1: begin
-            ip_crossbar_source_valid <= ip_port_sink_valid;
-            ip_port_sink_ready <= ip_crossbar_source_ready;
-            ip_crossbar_source_first <= ip_port_sink_first;
-            ip_crossbar_source_last <= ip_port_sink_last;
-            ip_crossbar_source_payload_data <= ip_port_sink_payload_data;
-            ip_crossbar_source_payload_last_be <= ip_port_sink_payload_last_be;
-            ip_crossbar_source_payload_error <= ip_port_sink_payload_error;
-            ip_crossbar_source_param_length <= ip_port_sink_param_length;
-            ip_crossbar_source_param_protocol <= ip_port_sink_param_protocol;
-            ip_crossbar_source_param_ip_address <= ip_port_sink_param_ip_address;
+            ip_crossbar_source_valid = ip_port_sink_valid;
+            ip_port_sink_ready = ip_crossbar_source_ready;
+            ip_crossbar_source_first = ip_port_sink_first;
+            ip_crossbar_source_last = ip_port_sink_last;
+            ip_crossbar_source_payload_data = ip_port_sink_payload_data;
+            ip_crossbar_source_payload_be = ip_port_sink_payload_be;
+            ip_crossbar_source_payload_error = ip_port_sink_payload_error;
+            ip_crossbar_source_param_length = ip_port_sink_param_length;
+            ip_crossbar_source_param_protocol = ip_port_sink_param_protocol;
+            ip_crossbar_source_param_ip_address = ip_port_sink_param_ip_address;
         end
     endcase
 end
-assign liteethip_status0_last = ((icmp_ip_port_sink_valid & icmp_ip_port_sink_last) & icmp_ip_port_sink_ready);
-assign liteethip_status0_ongoing0 = ((icmp_ip_port_sink_valid | liteethip_status0_ongoing1) & (~liteethip_status0_last));
+assign liteethip_status0_last = ((icmp_sink_valid & icmp_sink_last) & icmp_sink_ready);
+assign liteethip_status0_ongoing0 = ((icmp_sink_valid | liteethip_status0_ongoing1) & (~liteethip_status0_last));
 assign liteethip_status1_last = ((ip_port_sink_valid & ip_port_sink_last) & ip_port_sink_ready);
 assign liteethip_status1_ongoing0 = ((ip_port_sink_valid | liteethip_status1_ongoing1) & (~liteethip_status1_last));
 always @(*) begin
-    liteethip_sel1 <= 2'd0;
-    if (liteethip_first) begin
-        liteethip_sel1 <= liteethip_sel0;
+    liteethip_sel1 = 2'd0;
+    if ((~liteethip_sel_locked)) begin
+        liteethip_sel1 = liteethip_sel0;
     end else begin
-        liteethip_sel1 <= liteethip_sel_ongoing;
+        liteethip_sel1 = liteethip_sel_ongoing;
     end
 end
 always @(*) begin
-    icmp_ip_port_source_first <= 1'd0;
-    icmp_ip_port_source_last <= 1'd0;
-    icmp_ip_port_source_param_ip_address <= 32'd0;
-    icmp_ip_port_source_param_length <= 16'd0;
-    icmp_ip_port_source_param_protocol <= 8'd0;
-    icmp_ip_port_source_payload_data <= 8'd0;
-    icmp_ip_port_source_payload_error <= 1'd0;
-    icmp_ip_port_source_payload_last_be <= 1'd0;
-    icmp_ip_port_source_valid <= 1'd0;
-    ip_crossbar_sink_ready <= 1'd0;
-    ip_port_source_first <= 1'd0;
-    ip_port_source_last <= 1'd0;
-    ip_port_source_param_ip_address <= 32'd0;
-    ip_port_source_param_length <= 16'd0;
-    ip_port_source_param_protocol <= 8'd0;
-    ip_port_source_payload_data <= 8'd0;
-    ip_port_source_payload_error <= 1'd0;
-    ip_port_source_payload_last_be <= 1'd0;
-    ip_port_source_valid <= 1'd0;
+    icmp_source_first = 1'd0;
+    icmp_source_last = 1'd0;
+    icmp_source_param_ip_address = 32'd0;
+    icmp_source_param_length = 16'd0;
+    icmp_source_param_protocol = 8'd0;
+    icmp_source_payload_be = 1'd0;
+    icmp_source_payload_data = 8'd0;
+    icmp_source_payload_error = 1'd0;
+    icmp_source_valid = 1'd0;
+    ip_crossbar_sink_ready = 1'd0;
+    ip_port_source_first = 1'd0;
+    ip_port_source_last = 1'd0;
+    ip_port_source_param_ip_address = 32'd0;
+    ip_port_source_param_length = 16'd0;
+    ip_port_source_param_protocol = 8'd0;
+    ip_port_source_payload_be = 1'd0;
+    ip_port_source_payload_data = 8'd0;
+    ip_port_source_payload_error = 1'd0;
+    ip_port_source_valid = 1'd0;
     case (liteethip_sel1)
         1'd1: begin
-            icmp_ip_port_source_valid <= ip_crossbar_sink_valid;
-            ip_crossbar_sink_ready <= icmp_ip_port_source_ready;
-            icmp_ip_port_source_first <= ip_crossbar_sink_first;
-            icmp_ip_port_source_last <= ip_crossbar_sink_last;
-            icmp_ip_port_source_payload_data <= ip_crossbar_sink_payload_data;
-            icmp_ip_port_source_payload_last_be <= ip_crossbar_sink_payload_last_be;
-            icmp_ip_port_source_payload_error <= ip_crossbar_sink_payload_error;
-            icmp_ip_port_source_param_length <= ip_crossbar_sink_param_length;
-            icmp_ip_port_source_param_protocol <= ip_crossbar_sink_param_protocol;
-            icmp_ip_port_source_param_ip_address <= ip_crossbar_sink_param_ip_address;
+            icmp_source_valid = ip_crossbar_sink_valid;
+            ip_crossbar_sink_ready = icmp_source_ready;
+            icmp_source_first = ip_crossbar_sink_first;
+            icmp_source_last = ip_crossbar_sink_last;
+            icmp_source_payload_data = ip_crossbar_sink_payload_data;
+            icmp_source_payload_be = ip_crossbar_sink_payload_be;
+            icmp_source_payload_error = ip_crossbar_sink_payload_error;
+            icmp_source_param_length = ip_crossbar_sink_param_length;
+            icmp_source_param_protocol = ip_crossbar_sink_param_protocol;
+            icmp_source_param_ip_address = ip_crossbar_sink_param_ip_address;
         end
         2'd2: begin
-            ip_port_source_valid <= ip_crossbar_sink_valid;
-            ip_crossbar_sink_ready <= ip_port_source_ready;
-            ip_port_source_first <= ip_crossbar_sink_first;
-            ip_port_source_last <= ip_crossbar_sink_last;
-            ip_port_source_payload_data <= ip_crossbar_sink_payload_data;
-            ip_port_source_payload_last_be <= ip_crossbar_sink_payload_last_be;
-            ip_port_source_payload_error <= ip_crossbar_sink_payload_error;
-            ip_port_source_param_length <= ip_crossbar_sink_param_length;
-            ip_port_source_param_protocol <= ip_crossbar_sink_param_protocol;
-            ip_port_source_param_ip_address <= ip_crossbar_sink_param_ip_address;
+            ip_port_source_valid = ip_crossbar_sink_valid;
+            ip_crossbar_sink_ready = ip_port_source_ready;
+            ip_port_source_first = ip_crossbar_sink_first;
+            ip_port_source_last = ip_crossbar_sink_last;
+            ip_port_source_payload_data = ip_crossbar_sink_payload_data;
+            ip_port_source_payload_be = ip_crossbar_sink_payload_be;
+            ip_port_source_payload_error = ip_crossbar_sink_payload_error;
+            ip_port_source_param_length = ip_crossbar_sink_param_length;
+            ip_port_source_param_protocol = ip_crossbar_sink_param_protocol;
+            ip_port_source_param_ip_address = ip_crossbar_sink_param_ip_address;
         end
         default: begin
-            ip_crossbar_sink_ready <= 1'd1;
+            ip_crossbar_sink_ready = 1'd1;
         end
     endcase
 end
 assign liteethip_last = ((ip_crossbar_sink_valid & ip_crossbar_sink_last) & ip_crossbar_sink_ready);
 assign liteethip_ongoing0 = ((ip_crossbar_sink_valid | liteethip_ongoing1) & (~liteethip_last));
-assign icmp_echo_sink_valid = icmp_rx_source_source_valid;
-assign icmp_rx_source_source_ready = icmp_echo_sink_ready;
-assign icmp_echo_sink_first = icmp_rx_source_source_first;
-assign icmp_echo_sink_last = icmp_rx_source_source_last;
-assign icmp_echo_sink_payload_data = icmp_rx_source_source_payload_data;
-assign icmp_echo_sink_payload_last_be = icmp_rx_source_source_payload_last_be;
-assign icmp_echo_sink_payload_error = icmp_rx_source_source_payload_error;
-assign icmp_echo_sink_param_checksum = icmp_rx_source_source_param_checksum;
-assign icmp_echo_sink_param_code = icmp_rx_source_source_param_code;
-assign icmp_echo_sink_param_msgtype = icmp_rx_source_source_param_msgtype;
-assign icmp_echo_sink_param_quench = icmp_rx_source_source_param_quench;
-assign icmp_echo_sink_param_ip_address = icmp_rx_source_source_param_ip_address;
-assign icmp_echo_sink_param_length = icmp_rx_source_source_param_length;
-assign icmp_tx_sink_sink_valid = icmp_echo_source_valid;
-assign icmp_echo_source_ready = icmp_tx_sink_sink_ready;
-assign icmp_tx_sink_sink_first = icmp_echo_source_first;
-assign icmp_tx_sink_sink_last = icmp_echo_source_last;
-assign icmp_tx_sink_sink_payload_data = icmp_echo_source_payload_data;
-assign icmp_tx_sink_sink_payload_last_be = icmp_echo_source_payload_last_be;
-assign icmp_tx_sink_sink_payload_error = icmp_echo_source_payload_error;
-assign icmp_tx_sink_sink_param_checksum = icmp_echo_source_param_checksum;
-assign icmp_tx_sink_sink_param_code = icmp_echo_source_param_code;
-assign icmp_tx_sink_sink_param_msgtype = icmp_echo_source_param_msgtype;
-assign icmp_tx_sink_sink_param_quench = icmp_echo_source_param_quench;
-assign icmp_tx_sink_sink_param_ip_address = icmp_echo_source_param_ip_address;
-assign icmp_tx_sink_sink_param_length = icmp_echo_source_param_length;
-assign icmp_ip_port_sink_valid = icmp_tx_source_source_valid;
-assign icmp_tx_source_source_ready = icmp_ip_port_sink_ready;
-assign icmp_ip_port_sink_first = icmp_tx_source_source_first;
-assign icmp_ip_port_sink_last = icmp_tx_source_source_last;
-assign icmp_ip_port_sink_payload_data = icmp_tx_source_source_payload_data;
-assign icmp_ip_port_sink_payload_last_be = icmp_tx_source_source_payload_last_be;
-assign icmp_ip_port_sink_payload_error = icmp_tx_source_source_payload_error;
-assign icmp_ip_port_sink_param_length = icmp_tx_source_source_param_length;
-assign icmp_ip_port_sink_param_protocol = icmp_tx_source_source_param_protocol;
-assign icmp_ip_port_sink_param_ip_address = icmp_tx_source_source_param_ip_address;
-assign icmp_rx_sink_sink_valid = icmp_ip_port_source_valid;
-assign icmp_ip_port_source_ready = icmp_rx_sink_sink_ready;
-assign icmp_rx_sink_sink_first = icmp_ip_port_source_first;
-assign icmp_rx_sink_sink_last = icmp_ip_port_source_last;
-assign icmp_rx_sink_sink_payload_data = icmp_ip_port_source_payload_data;
-assign icmp_rx_sink_sink_payload_last_be = icmp_ip_port_source_payload_last_be;
-assign icmp_rx_sink_sink_payload_error = icmp_ip_port_source_payload_error;
-assign icmp_rx_sink_sink_param_length = icmp_ip_port_source_param_length;
-assign icmp_rx_sink_sink_param_protocol = icmp_ip_port_source_param_protocol;
-assign icmp_rx_sink_sink_param_ip_address = icmp_ip_port_source_param_ip_address;
+assign icmp_echo_sink_sink_valid = icmp_rx_source_source_valid;
+assign icmp_rx_source_source_ready = icmp_echo_sink_sink_ready;
+assign icmp_echo_sink_sink_first = icmp_rx_source_source_first;
+assign icmp_echo_sink_sink_last = icmp_rx_source_source_last;
+assign icmp_echo_sink_sink_payload_data = icmp_rx_source_source_payload_data;
+assign icmp_echo_sink_sink_payload_be = icmp_rx_source_source_payload_be;
+assign icmp_echo_sink_sink_payload_error = icmp_rx_source_source_payload_error;
+assign icmp_echo_sink_sink_param_checksum = icmp_rx_source_source_param_checksum;
+assign icmp_echo_sink_sink_param_code = icmp_rx_source_source_param_code;
+assign icmp_echo_sink_sink_param_msgtype = icmp_rx_source_source_param_msgtype;
+assign icmp_echo_sink_sink_param_quench = icmp_rx_source_source_param_quench;
+assign icmp_echo_sink_sink_param_ip_address = icmp_rx_source_source_param_ip_address;
+assign icmp_echo_sink_sink_param_length = icmp_rx_source_source_param_length;
+assign icmp_tx_sink_sink_valid = icmp_echo_source_source_valid;
+assign icmp_echo_source_source_ready = icmp_tx_sink_sink_ready;
+assign icmp_tx_sink_sink_first = icmp_echo_source_source_first;
+assign icmp_tx_sink_sink_last = icmp_echo_source_source_last;
+assign icmp_tx_sink_sink_payload_data = icmp_echo_source_source_payload_data;
+assign icmp_tx_sink_sink_payload_be = icmp_echo_source_source_payload_be;
+assign icmp_tx_sink_sink_payload_error = icmp_echo_source_source_payload_error;
+assign icmp_tx_sink_sink_param_checksum = icmp_echo_source_source_param_checksum;
+assign icmp_tx_sink_sink_param_code = icmp_echo_source_source_param_code;
+assign icmp_tx_sink_sink_param_msgtype = icmp_echo_source_source_param_msgtype;
+assign icmp_tx_sink_sink_param_quench = icmp_echo_source_source_param_quench;
+assign icmp_tx_sink_sink_param_ip_address = icmp_echo_source_source_param_ip_address;
+assign icmp_tx_sink_sink_param_length = icmp_echo_source_source_param_length;
+assign icmp_sink_valid = icmp_tx_source_source_valid;
+assign icmp_tx_source_source_ready = icmp_sink_ready;
+assign icmp_sink_first = icmp_tx_source_source_first;
+assign icmp_sink_last = icmp_tx_source_source_last;
+assign icmp_sink_payload_data = icmp_tx_source_source_payload_data;
+assign icmp_sink_payload_be = icmp_tx_source_source_payload_be;
+assign icmp_sink_payload_error = icmp_tx_source_source_payload_error;
+assign icmp_sink_param_length = icmp_tx_source_source_param_length;
+assign icmp_sink_param_protocol = icmp_tx_source_source_param_protocol;
+assign icmp_sink_param_ip_address = icmp_tx_source_source_param_ip_address;
+assign icmp_rx_sink_sink_valid = icmp_source_valid;
+assign icmp_source_ready = icmp_rx_sink_sink_ready;
+assign icmp_rx_sink_sink_first = icmp_source_first;
+assign icmp_rx_sink_sink_last = icmp_source_last;
+assign icmp_rx_sink_sink_payload_data = icmp_source_payload_data;
+assign icmp_rx_sink_sink_payload_be = icmp_source_payload_be;
+assign icmp_rx_sink_sink_payload_error = icmp_source_payload_error;
+assign icmp_rx_sink_sink_param_length = icmp_source_param_length;
+assign icmp_rx_sink_sink_param_protocol = icmp_source_param_protocol;
+assign icmp_rx_sink_sink_param_ip_address = icmp_source_param_ip_address;
 assign icmp_tx_packetizer_sink_valid = icmp_tx_sink_sink_valid;
 assign icmp_tx_sink_sink_ready = icmp_tx_packetizer_sink_ready;
 assign icmp_tx_packetizer_sink_last = icmp_tx_sink_sink_last;
 assign icmp_tx_packetizer_sink_payload_data = icmp_tx_sink_sink_payload_data;
-assign icmp_tx_packetizer_sink_payload_last_be = icmp_tx_sink_sink_payload_last_be;
+assign icmp_tx_packetizer_sink_payload_be = icmp_tx_sink_sink_payload_be;
 assign icmp_tx_packetizer_sink_param_checksum = icmp_tx_sink_sink_param_checksum;
 assign icmp_tx_packetizer_sink_param_code = icmp_tx_sink_sink_param_code;
 assign icmp_tx_packetizer_sink_param_msgtype = icmp_tx_sink_sink_param_msgtype;
 assign icmp_tx_packetizer_sink_param_quench = icmp_tx_sink_sink_param_quench;
+assign icmp_tx_source_source_valid = icmp_tx_packetizer_source_valid;
+assign icmp_tx_packetizer_source_ready = icmp_tx_source_source_ready;
 assign icmp_tx_source_source_first = icmp_tx_packetizer_source_first;
 assign icmp_tx_source_source_last = icmp_tx_packetizer_source_last;
 assign icmp_tx_source_source_payload_data = icmp_tx_packetizer_source_payload_data;
-assign icmp_tx_source_source_payload_last_be = icmp_tx_packetizer_source_payload_last_be;
+assign icmp_tx_source_source_payload_be = icmp_tx_packetizer_source_payload_be;
 assign icmp_tx_source_source_payload_error = icmp_tx_packetizer_source_payload_error;
+assign icmp_tx_source_source_param_length = (icmp_tx_active ? icmp_tx_length : (icmp_tx_sink_sink_param_length + 4'd8));
+assign icmp_tx_source_source_param_protocol = 1'd1;
+assign icmp_tx_source_source_param_ip_address = (icmp_tx_active ? icmp_tx_ip_address : icmp_tx_sink_sink_param_ip_address);
 always @(*) begin
-    icmp_tx_source_source_param_length <= 16'd0;
-    icmp_tx_source_source_param_length <= icmp_tx_packetizer_source_param_length;
-    icmp_tx_source_source_param_length <= (icmp_tx_sink_sink_param_length + 4'd8);
+    icmp_tx_packetizer_header = 64'd0;
+    icmp_tx_packetizer_header[31:16] = {icmp_tx_packetizer_sink_param_checksum[7:0], icmp_tx_packetizer_sink_param_checksum[15:8]};
+    icmp_tx_packetizer_header[15:8] = {icmp_tx_packetizer_sink_param_code};
+    icmp_tx_packetizer_header[7:0] = {icmp_tx_packetizer_sink_param_msgtype};
+    icmp_tx_packetizer_header[63:32] = {icmp_tx_packetizer_sink_param_quench[7:0], icmp_tx_packetizer_sink_param_quench[15:8], icmp_tx_packetizer_sink_param_quench[23:16], icmp_tx_packetizer_sink_param_quench[31:24]};
 end
+assign icmp_tx_packetizer_source_payload_be = icmp_tx_packetizer_source_be;
 always @(*) begin
-    icmp_tx_source_source_param_protocol <= 8'd0;
-    icmp_tx_source_source_param_protocol <= icmp_tx_packetizer_source_param_protocol;
-    icmp_tx_source_source_param_protocol <= 1'd1;
-end
-always @(*) begin
-    icmp_tx_source_source_param_ip_address <= 32'd0;
-    icmp_tx_source_source_param_ip_address <= icmp_tx_packetizer_source_param_ip_address;
-    icmp_tx_source_source_param_ip_address <= icmp_tx_sink_sink_param_ip_address;
-end
-always @(*) begin
-    icmp_tx_packetizer_header <= 64'd0;
-    icmp_tx_packetizer_header[31:16] <= {icmp_tx_packetizer_sink_param_checksum[7:0], icmp_tx_packetizer_sink_param_checksum[15:8]};
-    icmp_tx_packetizer_header[15:8] <= {icmp_tx_packetizer_sink_param_code[7:0]};
-    icmp_tx_packetizer_header[7:0] <= {icmp_tx_packetizer_sink_param_msgtype[7:0]};
-    icmp_tx_packetizer_header[63:32] <= {icmp_tx_packetizer_sink_param_quench[7:0], icmp_tx_packetizer_sink_param_quench[15:8], icmp_tx_packetizer_sink_param_quench[23:16], icmp_tx_packetizer_sink_param_quench[31:24]};
-end
-assign icmp_tx_packetizer_sink_last_be = icmp_tx_packetizer_sink_last;
-assign icmp_tx_packetizer_new_last_be = {icmp_tx_packetizer_sink_last_be};
-assign icmp_tx_packetizer_in_data_copy = (icmp_tx_packetizer_is_ongoing0 | icmp_tx_packetizer_is_ongoing1);
-always @(*) begin
-    icmp_tx_packetizer_source_last <= 1'd0;
-    if (icmp_tx_packetizer_source_last_s) begin
-        icmp_tx_packetizer_source_last <= icmp_tx_packetizer_source_last_b;
-    end else begin
-        icmp_tx_packetizer_source_last <= icmp_tx_packetizer_source_last_a;
+    icmp_tx_packetizer_source_payload_error = 1'd0;
+    if (icmp_tx_packetizer_is_ongoing) begin
+        icmp_tx_packetizer_source_payload_error = icmp_tx_packetizer_sink_payload_error;
     end
 end
-assign icmp_tx_packetizer_source_payload_error = icmp_tx_packetizer_sink_payload_error;
 always @(*) begin
-    icmp_tx_packetizer_count_fsm0_next_value0 <= 3'd0;
-    icmp_tx_packetizer_count_fsm0_next_value_ce0 <= 1'd0;
-    icmp_tx_packetizer_delayed_last_be_fsm1_next_value0 <= 1'd0;
-    icmp_tx_packetizer_delayed_last_be_fsm1_next_value_ce0 <= 1'd0;
-    icmp_tx_packetizer_fsm_from_idle_fsm0_next_value1 <= 1'd0;
-    icmp_tx_packetizer_fsm_from_idle_fsm0_next_value_ce1 <= 1'd0;
-    icmp_tx_packetizer_is_ongoing0 <= 1'd0;
-    icmp_tx_packetizer_is_ongoing1 <= 1'd0;
-    icmp_tx_packetizer_is_ongoing2 <= 1'd0;
-    icmp_tx_packetizer_sink_ready <= 1'd0;
-    icmp_tx_packetizer_source_last_a <= 1'd0;
-    icmp_tx_packetizer_source_last_b <= 1'd0;
-    icmp_tx_packetizer_source_last_s <= 1'd0;
-    icmp_tx_packetizer_source_payload_data <= 8'd0;
-    icmp_tx_packetizer_source_payload_last_be <= 1'd0;
-    icmp_tx_packetizer_source_valid <= 1'd0;
-    icmp_tx_packetizer_sr_load <= 1'd0;
-    icmp_tx_packetizer_sr_shift <= 1'd0;
-    liteethicmptx_fsm0_next_state <= 2'd0;
-    liteethicmptx_fsm1_next_state <= 1'd0;
-    liteethicmptx_fsm0_next_state <= liteethicmptx_fsm0_state;
-    case (liteethicmptx_fsm0_state)
-        1'd1: begin
-            icmp_tx_packetizer_source_valid <= 1'd1;
-            icmp_tx_packetizer_source_last_a <= 1'd0;
-            icmp_tx_packetizer_source_payload_data <= icmp_tx_packetizer_sr[63:8];
-            if ((icmp_tx_packetizer_source_valid & icmp_tx_packetizer_source_ready)) begin
-                icmp_tx_packetizer_sr_shift <= 1'd1;
-                if ((icmp_tx_packetizer_count == 3'd7)) begin
-                    icmp_tx_packetizer_sr_shift <= 1'd0;
-                    liteethicmptx_fsm0_next_state <= 2'd2;
-                    icmp_tx_packetizer_count_fsm0_next_value0 <= (icmp_tx_packetizer_count + 1'd1);
-                    icmp_tx_packetizer_count_fsm0_next_value_ce0 <= 1'd1;
-                end else begin
-                    icmp_tx_packetizer_count_fsm0_next_value0 <= (icmp_tx_packetizer_count + 1'd1);
-                    icmp_tx_packetizer_count_fsm0_next_value_ce0 <= 1'd1;
-                end
-            end
-        end
-        2'd2: begin
-            icmp_tx_packetizer_source_valid <= icmp_tx_packetizer_sink_valid;
-            icmp_tx_packetizer_source_last_a <= icmp_tx_packetizer_sink_last;
-            icmp_tx_packetizer_source_payload_data <= icmp_tx_packetizer_sink_payload_data;
-            if ((icmp_tx_packetizer_source_valid & icmp_tx_packetizer_source_ready)) begin
-                icmp_tx_packetizer_sink_ready <= 1'd1;
-                if (icmp_tx_packetizer_source_last) begin
-                    liteethicmptx_fsm0_next_state <= 1'd0;
-                end
-            end
-            icmp_tx_packetizer_is_ongoing0 <= 1'd1;
-        end
-        2'd3: begin
-            icmp_tx_packetizer_is_ongoing1 <= 1'd1;
+    icmp_tx_packetizer_count_liteethicmp_next_value = 3'd0;
+    icmp_tx_packetizer_count_liteethicmp_next_value_ce = 1'd0;
+    icmp_tx_packetizer_is_ongoing = 1'd0;
+    icmp_tx_packetizer_sink_ready = 1'd0;
+    icmp_tx_packetizer_source_be = 1'd1;
+    icmp_tx_packetizer_source_first = 1'd0;
+    icmp_tx_packetizer_source_last = 1'd0;
+    icmp_tx_packetizer_source_payload_data = 8'd0;
+    icmp_tx_packetizer_source_valid = 1'd0;
+    liteethicmp_next_state = 1'd0;
+    case (liteethicmp_state)
+        1'd0: begin
         end
         default: begin
-            icmp_tx_packetizer_sink_ready <= 1'd1;
-            icmp_tx_packetizer_count_fsm0_next_value0 <= 1'd1;
-            icmp_tx_packetizer_count_fsm0_next_value_ce0 <= 1'd1;
-            if (icmp_tx_packetizer_sink_valid) begin
-                icmp_tx_packetizer_sink_ready <= 1'd0;
-                icmp_tx_packetizer_source_valid <= 1'd1;
-                icmp_tx_packetizer_source_last_a <= 1'd0;
-                icmp_tx_packetizer_source_payload_data <= icmp_tx_packetizer_header[7:0];
-                if ((icmp_tx_packetizer_source_valid & icmp_tx_packetizer_source_ready)) begin
-                    icmp_tx_packetizer_sr_load <= 1'd1;
-                    icmp_tx_packetizer_fsm_from_idle_fsm0_next_value1 <= 1'd1;
-                    icmp_tx_packetizer_fsm_from_idle_fsm0_next_value_ce1 <= 1'd1;
-                    if (1'd0) begin
-                        liteethicmptx_fsm0_next_state <= 2'd2;
+            if ((icmp_tx_packetizer_sink_valid & 1'd1)) begin
+                if (icmp_tx_packetizer_source_ready) begin
+                    if ((icmp_tx_packetizer_count == 3'd7)) begin
+                        icmp_tx_packetizer_count_liteethicmp_next_value = 1'd0;
                     end else begin
-                        liteethicmptx_fsm0_next_state <= 1'd1;
+                        icmp_tx_packetizer_count_liteethicmp_next_value = (icmp_tx_packetizer_count + 1'd1);
                     end
                 end
             end
-            icmp_tx_packetizer_is_ongoing2 <= 1'd1;
         end
     endcase
-    liteethicmptx_fsm1_next_state <= liteethicmptx_fsm1_state;
-    case (liteethicmptx_fsm1_state)
-        1'd1: begin
-            icmp_tx_packetizer_source_last_b <= 1'd1;
-            icmp_tx_packetizer_source_last_s <= 1'd1;
-            icmp_tx_packetizer_source_payload_last_be <= icmp_tx_packetizer_delayed_last_be;
-            icmp_tx_packetizer_sink_ready <= 1'd0;
-            if (icmp_tx_packetizer_source_ready) begin
-                liteethicmptx_fsm1_next_state <= 1'd0;
-            end
+    case (liteethicmp_state)
+        1'd0: begin
         end
         default: begin
-            if (((icmp_tx_packetizer_in_data_copy & icmp_tx_packetizer_sink_last) & (icmp_tx_packetizer_sink_last_be > icmp_tx_packetizer_new_last_be))) begin
-                icmp_tx_packetizer_source_last_b <= 1'd0;
-                icmp_tx_packetizer_source_last_s <= 1'd1;
-                icmp_tx_packetizer_source_payload_last_be <= 1'd0;
-                if ((icmp_tx_packetizer_source_ready & icmp_tx_packetizer_source_valid)) begin
-                    icmp_tx_packetizer_delayed_last_be_fsm1_next_value0 <= icmp_tx_packetizer_new_last_be;
-                    icmp_tx_packetizer_delayed_last_be_fsm1_next_value_ce0 <= 1'd1;
-                    liteethicmptx_fsm1_next_state <= 1'd1;
-                end
-            end else begin
-                if (icmp_tx_packetizer_in_data_copy) begin
-                    icmp_tx_packetizer_source_last_b <= icmp_tx_packetizer_sink_last;
-                    icmp_tx_packetizer_source_last_s <= 1'd1;
-                    icmp_tx_packetizer_source_payload_last_be <= icmp_tx_packetizer_new_last_be;
-                end
-            end
-            if (icmp_tx_packetizer_in_data_copy) begin
-                icmp_tx_packetizer_sink_ready <= icmp_tx_packetizer_source_ready;
-            end else begin
-                if (icmp_tx_packetizer_is_ongoing2) begin
-                    icmp_tx_packetizer_sink_ready <= (~icmp_tx_packetizer_sink_valid);
+            if ((icmp_tx_packetizer_sink_valid & 1'd1)) begin
+                if (icmp_tx_packetizer_source_ready) begin
+                    if ((icmp_tx_packetizer_count == 3'd7)) begin
+                        icmp_tx_packetizer_count_liteethicmp_next_value_ce = 1'd1;
+                    end else begin
+                        icmp_tx_packetizer_count_liteethicmp_next_value_ce = 1'd1;
+                    end
                 end
             end
         end
     endcase
-end
-always @(*) begin
-    icmp_tx_packetizer_source_ready <= 1'd0;
-    icmp_tx_source_source_valid <= 1'd0;
-    liteethicmptx_next_state <= 1'd0;
-    liteethicmptx_next_state <= liteethicmptx_state;
-    case (liteethicmptx_state)
-        1'd1: begin
-            icmp_tx_source_source_valid <= icmp_tx_packetizer_source_valid;
-            icmp_tx_packetizer_source_ready <= icmp_tx_source_source_ready;
-            if (((icmp_tx_source_source_valid & icmp_tx_source_source_last) & icmp_tx_source_source_ready)) begin
-                liteethicmptx_next_state <= 1'd0;
+    case (liteethicmp_state)
+        1'd0: begin
+            icmp_tx_packetizer_is_ongoing = 1'd1;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethicmp_state)
+        1'd0: begin
+            icmp_tx_packetizer_sink_ready = icmp_tx_packetizer_source_ready;
+        end
+        default: begin
+            icmp_tx_packetizer_sink_ready = (icmp_tx_packetizer_count == 1'd0);
+            if ((icmp_tx_packetizer_sink_valid & 1'd1)) begin
+                icmp_tx_packetizer_sink_ready = (((icmp_tx_packetizer_count == 3'd7) & (icmp_tx_packetizer_sink_last & (icmp_tx_packetizer_sink_payload_be == 1'd0))) & icmp_tx_packetizer_source_ready);
+            end
+        end
+    endcase
+    case (liteethicmp_state)
+        1'd0: begin
+            icmp_tx_packetizer_source_be = icmp_tx_packetizer_sink_payload_be;
+        end
+        default: begin
+            if ((icmp_tx_packetizer_count == 3'd7)) begin
+                icmp_tx_packetizer_source_be = 1'd1;
+            end
+        end
+    endcase
+    case (liteethicmp_state)
+        1'd0: begin
+        end
+        default: begin
+            if ((icmp_tx_packetizer_sink_valid & 1'd1)) begin
+                icmp_tx_packetizer_source_first = (icmp_tx_packetizer_count == 1'd0);
+            end
+        end
+    endcase
+    case (liteethicmp_state)
+        1'd0: begin
+            icmp_tx_packetizer_source_last = icmp_tx_packetizer_sink_last;
+        end
+        default: begin
+            if ((icmp_tx_packetizer_sink_valid & 1'd1)) begin
+                icmp_tx_packetizer_source_last = ((icmp_tx_packetizer_count == 3'd7) & (icmp_tx_packetizer_sink_last & (icmp_tx_packetizer_sink_payload_be == 1'd0)));
+            end
+        end
+    endcase
+    case (liteethicmp_state)
+        1'd0: begin
+            icmp_tx_packetizer_source_payload_data = icmp_tx_packetizer_sink_payload_data;
+        end
+        default: begin
+            case (icmp_tx_packetizer_count)
+                1'd0: begin
+                    icmp_tx_packetizer_source_payload_data = icmp_tx_packetizer_header[7:0];
+                end
+                1'd1: begin
+                    icmp_tx_packetizer_source_payload_data = icmp_tx_packetizer_header[15:8];
+                end
+                2'd2: begin
+                    icmp_tx_packetizer_source_payload_data = icmp_tx_packetizer_header[23:16];
+                end
+                2'd3: begin
+                    icmp_tx_packetizer_source_payload_data = icmp_tx_packetizer_header[31:24];
+                end
+                3'd4: begin
+                    icmp_tx_packetizer_source_payload_data = icmp_tx_packetizer_header[39:32];
+                end
+                3'd5: begin
+                    icmp_tx_packetizer_source_payload_data = icmp_tx_packetizer_header[47:40];
+                end
+                3'd6: begin
+                    icmp_tx_packetizer_source_payload_data = icmp_tx_packetizer_header[55:48];
+                end
+                3'd7: begin
+                    icmp_tx_packetizer_source_payload_data = icmp_tx_packetizer_header[63:56];
+                end
+            endcase
+        end
+    endcase
+    case (liteethicmp_state)
+        1'd0: begin
+            icmp_tx_packetizer_source_valid = icmp_tx_packetizer_sink_valid;
+        end
+        default: begin
+            if ((icmp_tx_packetizer_sink_valid & 1'd1)) begin
+                icmp_tx_packetizer_source_valid = 1'd1;
+            end
+        end
+    endcase
+    liteethicmp_next_state = liteethicmp_state;
+    case (liteethicmp_state)
+        1'd0: begin
+            if (((icmp_tx_packetizer_source_valid & icmp_tx_packetizer_source_ready) & icmp_tx_packetizer_source_last)) begin
+                liteethicmp_next_state = 1'd1;
             end
         end
         default: begin
-            if (icmp_tx_packetizer_source_valid) begin
-                liteethicmptx_next_state <= 1'd1;
+            if ((icmp_tx_packetizer_sink_valid & 1'd1)) begin
+                if (icmp_tx_packetizer_source_ready) begin
+                    if ((icmp_tx_packetizer_count == 3'd7)) begin
+                        if ((~icmp_tx_packetizer_source_last)) begin
+                            liteethicmp_next_state = 1'd0;
+                        end
+                    end else begin
+                    end
+                end
             end
         end
     endcase
@@ -5502,336 +6457,457 @@ assign icmp_rx_sink_sink_ready = icmp_rx_depacketizer_sink_ready;
 assign icmp_rx_depacketizer_sink_first = icmp_rx_sink_sink_first;
 assign icmp_rx_depacketizer_sink_last = icmp_rx_sink_sink_last;
 assign icmp_rx_depacketizer_sink_payload_data = icmp_rx_sink_sink_payload_data;
-assign icmp_rx_depacketizer_sink_payload_last_be = icmp_rx_sink_sink_payload_last_be;
+assign icmp_rx_depacketizer_sink_payload_be = icmp_rx_sink_sink_payload_be;
 assign icmp_rx_depacketizer_sink_payload_error = icmp_rx_sink_sink_payload_error;
 assign icmp_rx_depacketizer_sink_param_length = icmp_rx_sink_sink_param_length;
 assign icmp_rx_depacketizer_sink_param_protocol = icmp_rx_sink_sink_param_protocol;
 assign icmp_rx_depacketizer_sink_param_ip_address = icmp_rx_sink_sink_param_ip_address;
-assign icmp_rx_source_source_last = icmp_rx_depacketizer_source_last;
+assign icmp_rx_source_source_valid = (icmp_rx_depacketizer_source_valid & icmp_rx_is_ongoing0);
+assign icmp_rx_depacketizer_source_ready = (icmp_rx_is_ongoing1 | (icmp_rx_is_ongoing2 & icmp_rx_source_source_ready));
 assign icmp_rx_source_source_payload_data = icmp_rx_depacketizer_source_payload_data;
-assign icmp_rx_source_source_payload_last_be = icmp_rx_depacketizer_source_payload_last_be;
-assign icmp_rx_source_source_payload_error = icmp_rx_depacketizer_source_payload_error;
 assign icmp_rx_source_source_param_checksum = icmp_rx_depacketizer_source_param_checksum;
 assign icmp_rx_source_source_param_code = icmp_rx_depacketizer_source_param_code;
 assign icmp_rx_source_source_param_msgtype = icmp_rx_depacketizer_source_param_msgtype;
 assign icmp_rx_source_source_param_quench = icmp_rx_depacketizer_source_param_quench;
-assign icmp_rx_source_source_param_ip_address = icmp_rx_sink_sink_param_ip_address;
-assign icmp_rx_source_source_param_length = (icmp_rx_sink_sink_param_length - 4'd8);
+assign icmp_rx_source_source_param_ip_address = icmp_rx_ip_address;
+assign icmp_rx_source_source_param_length = (icmp_rx_length - 4'd8);
 assign icmp_rx_depacketizer_header = icmp_rx_depacketizer_sr;
-assign icmp_rx_depacketizer_source_param_checksum = {rhs_slice_proxy61[7:0], rhs_slice_proxy60[15:8]};
-assign icmp_rx_depacketizer_source_param_code = {rhs_slice_proxy62[7:0]};
-assign icmp_rx_depacketizer_source_param_msgtype = {rhs_slice_proxy63[7:0]};
-assign icmp_rx_depacketizer_source_param_quench = {rhs_slice_proxy67[7:0], rhs_slice_proxy66[15:8], rhs_slice_proxy65[23:16], rhs_slice_proxy64[31:24]};
+assign icmp_rx_depacketizer_source_param_checksum = {icmp_rx_depacketizer_header[23:16], icmp_rx_depacketizer_header[31:24]};
+assign icmp_rx_depacketizer_source_param_code = {icmp_rx_depacketizer_header[15:8]};
+assign icmp_rx_depacketizer_source_param_msgtype = {icmp_rx_depacketizer_header[7:0]};
+assign icmp_rx_depacketizer_source_param_quench = {icmp_rx_depacketizer_header[39:32], icmp_rx_depacketizer_header[47:40], icmp_rx_depacketizer_header[55:48], icmp_rx_depacketizer_header[63:56]};
+assign icmp_rx_depacketizer_sink_be = icmp_rx_depacketizer_sink_payload_be;
+assign icmp_rx_depacketizer_source_payload_be = icmp_rx_depacketizer_source_be;
 assign icmp_rx_depacketizer_source_payload_error = icmp_rx_depacketizer_sink_payload_error;
-assign icmp_rx_depacketizer_sink_last_be = icmp_rx_depacketizer_sink_last;
-assign icmp_rx_depacketizer_new_last_be = {icmp_rx_depacketizer_sink_last_be};
-assign icmp_rx_depacketizer_is_in_copy = (icmp_rx_depacketizer_is_ongoing0 | icmp_rx_depacketizer_is_ongoing1);
 always @(*) begin
-    icmp_rx_depacketizer_source_last <= 1'd0;
-    if (icmp_rx_depacketizer_source_last_s) begin
-        icmp_rx_depacketizer_source_last <= icmp_rx_depacketizer_source_last_b;
-    end else begin
-        icmp_rx_depacketizer_source_last <= icmp_rx_depacketizer_source_last_a;
-    end
-end
-always @(*) begin
-    icmp_rx_depacketizer_count_fsm0_next_value2 <= 3'd0;
-    icmp_rx_depacketizer_count_fsm0_next_value_ce2 <= 1'd0;
-    icmp_rx_depacketizer_delayed_last_be_fsm1_next_value1 <= 1'd0;
-    icmp_rx_depacketizer_delayed_last_be_fsm1_next_value_ce1 <= 1'd0;
-    icmp_rx_depacketizer_fsm_from_idle_fsm0_next_value3 <= 1'd0;
-    icmp_rx_depacketizer_fsm_from_idle_fsm0_next_value_ce3 <= 1'd0;
-    icmp_rx_depacketizer_is_ongoing0 <= 1'd0;
-    icmp_rx_depacketizer_is_ongoing1 <= 1'd0;
-    icmp_rx_depacketizer_is_ongoing2 <= 1'd0;
-    icmp_rx_depacketizer_is_ongoing3 <= 1'd0;
-    icmp_rx_depacketizer_sink_ready <= 1'd0;
-    icmp_rx_depacketizer_source_last_a <= 1'd0;
-    icmp_rx_depacketizer_source_last_b <= 1'd0;
-    icmp_rx_depacketizer_source_last_s <= 1'd0;
-    icmp_rx_depacketizer_source_payload_data <= 8'd0;
-    icmp_rx_depacketizer_source_payload_last_be <= 1'd0;
-    icmp_rx_depacketizer_source_valid <= 1'd0;
-    icmp_rx_depacketizer_sr_shift <= 1'd0;
-    liteethicmprx_fsm0_next_state <= 2'd0;
-    liteethicmprx_fsm1_next_state <= 1'd0;
-    liteethicmprx_fsm0_next_state <= liteethicmprx_fsm0_state;
-    case (liteethicmprx_fsm0_state)
+    icmp_rx_depacketizer_count_liteethicmp_liteethicmpdepacketizer_next_value0 = 3'd0;
+    icmp_rx_depacketizer_count_liteethicmp_liteethicmpdepacketizer_next_value_ce0 = 1'd0;
+    icmp_rx_depacketizer_data_copy_first_liteethicmp_liteethicmpdepacketizer_next_value2 = 1'd0;
+    icmp_rx_depacketizer_data_copy_first_liteethicmp_liteethicmpdepacketizer_next_value_ce2 = 1'd0;
+    icmp_rx_depacketizer_fsm_from_idle_liteethicmp_liteethicmpdepacketizer_next_value1 = 1'd0;
+    icmp_rx_depacketizer_fsm_from_idle_liteethicmp_liteethicmpdepacketizer_next_value_ce1 = 1'd0;
+    icmp_rx_depacketizer_sink_ready = 1'd0;
+    icmp_rx_depacketizer_source_be = 1'd1;
+    icmp_rx_depacketizer_source_first = 1'd0;
+    icmp_rx_depacketizer_source_last = 1'd0;
+    icmp_rx_depacketizer_source_payload_data = 8'd0;
+    icmp_rx_depacketizer_source_valid = 1'd0;
+    icmp_rx_depacketizer_sr_shift = 1'd0;
+    liteethicmp_liteethicmpdepacketizer_next_state = 2'd0;
+    case (liteethicmp_liteethicmpdepacketizer_state)
         1'd1: begin
-            icmp_rx_depacketizer_sink_ready <= 1'd1;
             if (icmp_rx_depacketizer_sink_valid) begin
-                icmp_rx_depacketizer_count_fsm0_next_value2 <= (icmp_rx_depacketizer_count + 1'd1);
-                icmp_rx_depacketizer_count_fsm0_next_value_ce2 <= 1'd1;
-                icmp_rx_depacketizer_sr_shift <= 1'd1;
+                icmp_rx_depacketizer_count_liteethicmp_liteethicmpdepacketizer_next_value0 = (icmp_rx_depacketizer_count + 1'd1);
                 if ((icmp_rx_depacketizer_count == 3'd7)) begin
-                    liteethicmprx_fsm0_next_state <= 2'd2;
-                    icmp_rx_depacketizer_count_fsm0_next_value2 <= (icmp_rx_depacketizer_count + 1'd1);
-                    icmp_rx_depacketizer_count_fsm0_next_value_ce2 <= 1'd1;
+                    icmp_rx_depacketizer_count_liteethicmp_liteethicmpdepacketizer_next_value0 = (icmp_rx_depacketizer_count + 1'd1);
                 end
             end
         end
         2'd2: begin
-            icmp_rx_depacketizer_source_valid <= (icmp_rx_depacketizer_sink_valid | icmp_rx_depacketizer_sink_d_last);
-            icmp_rx_depacketizer_source_last_a <= (icmp_rx_depacketizer_sink_last | icmp_rx_depacketizer_sink_d_last);
-            icmp_rx_depacketizer_sink_ready <= icmp_rx_depacketizer_source_ready;
-            icmp_rx_depacketizer_source_payload_data <= icmp_rx_depacketizer_sink_payload_data;
+        end
+        default: begin
+            icmp_rx_depacketizer_count_liteethicmp_liteethicmpdepacketizer_next_value0 = 1'd1;
+        end
+    endcase
+    case (liteethicmp_liteethicmpdepacketizer_state)
+        1'd1: begin
+            if (icmp_rx_depacketizer_sink_valid) begin
+                icmp_rx_depacketizer_count_liteethicmp_liteethicmpdepacketizer_next_value_ce0 = 1'd1;
+                if ((icmp_rx_depacketizer_count == 3'd7)) begin
+                    icmp_rx_depacketizer_count_liteethicmp_liteethicmpdepacketizer_next_value_ce0 = 1'd1;
+                end
+            end
+        end
+        2'd2: begin
+        end
+        default: begin
+            icmp_rx_depacketizer_count_liteethicmp_liteethicmpdepacketizer_next_value_ce0 = 1'd1;
+        end
+    endcase
+    case (liteethicmp_liteethicmpdepacketizer_state)
+        1'd1: begin
+            icmp_rx_depacketizer_sink_ready = 1'd1;
+        end
+        2'd2: begin
+            icmp_rx_depacketizer_sink_ready = icmp_rx_depacketizer_source_ready;
+        end
+        default: begin
+            icmp_rx_depacketizer_sink_ready = 1'd1;
+        end
+    endcase
+    case (liteethicmp_liteethicmpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            icmp_rx_depacketizer_source_be = icmp_rx_depacketizer_sink_be;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethicmp_liteethicmpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            icmp_rx_depacketizer_source_first = icmp_rx_depacketizer_data_copy_first;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethicmp_liteethicmpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            icmp_rx_depacketizer_source_last = icmp_rx_depacketizer_sink_last;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethicmp_liteethicmpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            icmp_rx_depacketizer_source_payload_data = icmp_rx_depacketizer_sink_payload_data;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethicmp_liteethicmpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            icmp_rx_depacketizer_source_valid = icmp_rx_depacketizer_sink_valid;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethicmp_liteethicmpdepacketizer_state)
+        1'd1: begin
+            if (icmp_rx_depacketizer_sink_valid) begin
+                if ((icmp_rx_depacketizer_count == 3'd7)) begin
+                    icmp_rx_depacketizer_data_copy_first_liteethicmp_liteethicmpdepacketizer_next_value2 = 1'd1;
+                end
+            end
+        end
+        2'd2: begin
+            if ((icmp_rx_depacketizer_source_valid & icmp_rx_depacketizer_source_ready)) begin
+                icmp_rx_depacketizer_data_copy_first_liteethicmp_liteethicmpdepacketizer_next_value2 = 1'd0;
+            end
+        end
+        default: begin
+            if (icmp_rx_depacketizer_sink_valid) begin
+                icmp_rx_depacketizer_data_copy_first_liteethicmp_liteethicmpdepacketizer_next_value2 = 1'd1;
+            end
+        end
+    endcase
+    case (liteethicmp_liteethicmpdepacketizer_state)
+        1'd1: begin
+            if (icmp_rx_depacketizer_sink_valid) begin
+                if ((icmp_rx_depacketizer_count == 3'd7)) begin
+                    icmp_rx_depacketizer_data_copy_first_liteethicmp_liteethicmpdepacketizer_next_value_ce2 = 1'd1;
+                end
+            end
+        end
+        2'd2: begin
+            if ((icmp_rx_depacketizer_source_valid & icmp_rx_depacketizer_source_ready)) begin
+                icmp_rx_depacketizer_data_copy_first_liteethicmp_liteethicmpdepacketizer_next_value_ce2 = 1'd1;
+            end
+        end
+        default: begin
+            if (icmp_rx_depacketizer_sink_valid) begin
+                icmp_rx_depacketizer_data_copy_first_liteethicmp_liteethicmpdepacketizer_next_value_ce2 = 1'd1;
+            end
+        end
+    endcase
+    case (liteethicmp_liteethicmpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            if ((icmp_rx_depacketizer_source_valid & icmp_rx_depacketizer_source_ready)) begin
+                icmp_rx_depacketizer_fsm_from_idle_liteethicmp_liteethicmpdepacketizer_next_value1 = 1'd0;
+            end
+        end
+        default: begin
+            if (icmp_rx_depacketizer_sink_valid) begin
+                icmp_rx_depacketizer_fsm_from_idle_liteethicmp_liteethicmpdepacketizer_next_value1 = 1'd1;
+            end
+        end
+    endcase
+    case (liteethicmp_liteethicmpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            if ((icmp_rx_depacketizer_source_valid & icmp_rx_depacketizer_source_ready)) begin
+                icmp_rx_depacketizer_fsm_from_idle_liteethicmp_liteethicmpdepacketizer_next_value_ce1 = 1'd1;
+            end
+        end
+        default: begin
+            if (icmp_rx_depacketizer_sink_valid) begin
+                icmp_rx_depacketizer_fsm_from_idle_liteethicmp_liteethicmpdepacketizer_next_value_ce1 = 1'd1;
+            end
+        end
+    endcase
+    case (liteethicmp_liteethicmpdepacketizer_state)
+        1'd1: begin
+            if (icmp_rx_depacketizer_sink_valid) begin
+                icmp_rx_depacketizer_sr_shift = 1'd1;
+            end
+        end
+        2'd2: begin
+        end
+        default: begin
+            if (icmp_rx_depacketizer_sink_valid) begin
+                icmp_rx_depacketizer_sr_shift = 1'd1;
+            end
+        end
+    endcase
+    liteethicmp_liteethicmpdepacketizer_next_state = liteethicmp_liteethicmpdepacketizer_state;
+    case (liteethicmp_liteethicmpdepacketizer_state)
+        1'd1: begin
+            if (icmp_rx_depacketizer_sink_valid) begin
+                if ((icmp_rx_depacketizer_count == 3'd7)) begin
+                    liteethicmp_liteethicmpdepacketizer_next_state = 2'd2;
+                end
+                if (icmp_rx_depacketizer_sink_last) begin
+                    liteethicmp_liteethicmpdepacketizer_next_state = 1'd0;
+                end
+            end
+        end
+        2'd2: begin
             if ((icmp_rx_depacketizer_source_valid & icmp_rx_depacketizer_source_ready)) begin
                 if (icmp_rx_depacketizer_source_last) begin
-                    liteethicmprx_fsm0_next_state <= 1'd0;
+                    liteethicmp_liteethicmpdepacketizer_next_state = 1'd0;
                 end
             end
-            icmp_rx_depacketizer_is_ongoing0 <= 1'd1;
-            icmp_rx_depacketizer_is_ongoing2 <= 1'd1;
-        end
-        2'd3: begin
-            icmp_rx_depacketizer_is_ongoing1 <= 1'd1;
-            icmp_rx_depacketizer_is_ongoing3 <= 1'd1;
         end
         default: begin
-            icmp_rx_depacketizer_sink_ready <= 1'd1;
-            icmp_rx_depacketizer_count_fsm0_next_value2 <= 1'd1;
-            icmp_rx_depacketizer_count_fsm0_next_value_ce2 <= 1'd1;
             if (icmp_rx_depacketizer_sink_valid) begin
-                icmp_rx_depacketizer_sr_shift <= 1'd1;
-                icmp_rx_depacketizer_fsm_from_idle_fsm0_next_value3 <= 1'd1;
-                icmp_rx_depacketizer_fsm_from_idle_fsm0_next_value_ce3 <= 1'd1;
                 if (1'd0) begin
-                    liteethicmprx_fsm0_next_state <= 2'd2;
+                    liteethicmp_liteethicmpdepacketizer_next_state = 2'd2;
                 end else begin
-                    liteethicmprx_fsm0_next_state <= 1'd1;
+                    liteethicmp_liteethicmpdepacketizer_next_state = 1'd1;
                 end
-            end
-        end
-    endcase
-    liteethicmprx_fsm1_next_state <= liteethicmprx_fsm1_state;
-    case (liteethicmprx_fsm1_state)
-        1'd1: begin
-            icmp_rx_depacketizer_source_last_b <= 1'd1;
-            icmp_rx_depacketizer_source_last_s <= 1'd1;
-            icmp_rx_depacketizer_source_payload_last_be <= icmp_rx_depacketizer_delayed_last_be;
-            icmp_rx_depacketizer_sink_ready <= 1'd0;
-            if ((icmp_rx_depacketizer_source_ready & icmp_rx_depacketizer_source_valid)) begin
-                liteethicmprx_fsm1_next_state <= 1'd0;
-            end
-        end
-        default: begin
-            if (((icmp_rx_depacketizer_sink_valid & icmp_rx_depacketizer_sink_last) & (icmp_rx_depacketizer_sink_last_be > icmp_rx_depacketizer_new_last_be))) begin
-                icmp_rx_depacketizer_source_last_b <= 1'd0;
-                icmp_rx_depacketizer_source_last_s <= 1'd1;
-                icmp_rx_depacketizer_source_payload_last_be <= 1'd0;
-                if (((icmp_rx_depacketizer_source_ready & icmp_rx_depacketizer_source_valid) | ((~icmp_rx_depacketizer_was_in_copy) & icmp_rx_depacketizer_is_in_copy))) begin
-                    icmp_rx_depacketizer_delayed_last_be_fsm1_next_value1 <= icmp_rx_depacketizer_new_last_be;
-                    icmp_rx_depacketizer_delayed_last_be_fsm1_next_value_ce1 <= 1'd1;
-                    liteethicmprx_fsm1_next_state <= 1'd1;
+                if (($signed({1'd0, icmp_rx_depacketizer_sink_last}) & $signed(1'd1))) begin
+                    liteethicmp_liteethicmpdepacketizer_next_state = 1'd0;
                 end
-            end else begin
-                if (icmp_rx_depacketizer_sink_last) begin
-                    icmp_rx_depacketizer_source_last_b <= 1'd1;
-                    icmp_rx_depacketizer_source_last_s <= 1'd1;
-                    icmp_rx_depacketizer_source_payload_last_be <= icmp_rx_depacketizer_new_last_be;
-                end
-            end
-            if ((icmp_rx_depacketizer_is_ongoing2 | (icmp_rx_depacketizer_is_ongoing3 & (~icmp_rx_depacketizer_fsm_from_idle)))) begin
-                icmp_rx_depacketizer_sink_ready <= icmp_rx_depacketizer_source_ready;
-            end else begin
-                icmp_rx_depacketizer_sink_ready <= 1'd1;
             end
         end
     endcase
 end
 always @(*) begin
-    icmp_rx_depacketizer_source_ready <= 1'd0;
-    icmp_rx_source_source_valid <= 1'd0;
-    liteethicmprx_next_state <= 2'd0;
-    liteethicmprx_next_state <= liteethicmprx_state;
-    case (liteethicmprx_state)
-        1'd1: begin
-            icmp_rx_source_source_valid <= icmp_rx_depacketizer_source_valid;
-            icmp_rx_depacketizer_source_ready <= icmp_rx_source_source_ready;
+    icmp_rx_count_liteethicmp_fsm_next_value = 17'd0;
+    icmp_rx_count_liteethicmp_fsm_next_value_ce = 1'd0;
+    icmp_rx_is_ongoing0 = 1'd0;
+    icmp_rx_is_ongoing1 = 1'd0;
+    icmp_rx_is_ongoing2 = 1'd0;
+    icmp_rx_source_source_last = 1'd0;
+    icmp_rx_source_source_payload_be = 1'd0;
+    icmp_rx_source_source_payload_error = 1'd0;
+    liteethicmp_fsm_next_state = 2'd0;
+    case (liteethicmp_fsm_state)
+        1'd0: begin
             if ((icmp_rx_source_source_valid & icmp_rx_source_source_ready)) begin
-                if (icmp_rx_source_source_last) begin
-                    liteethicmprx_next_state <= 1'd0;
+                icmp_rx_count_liteethicmp_fsm_next_value = (icmp_rx_count + 1'd1);
+            end
+        end
+        1'd1: begin
+        end
+        default: begin
+            icmp_rx_count_liteethicmp_fsm_next_value = 1'd1;
+        end
+    endcase
+    case (liteethicmp_fsm_state)
+        1'd0: begin
+            if ((icmp_rx_source_source_valid & icmp_rx_source_source_ready)) begin
+                icmp_rx_count_liteethicmp_fsm_next_value_ce = 1'd1;
+            end
+        end
+        1'd1: begin
+        end
+        default: begin
+            icmp_rx_count_liteethicmp_fsm_next_value_ce = 1'd1;
+        end
+    endcase
+    case (liteethicmp_fsm_state)
+        1'd0: begin
+            icmp_rx_is_ongoing0 = 1'd1;
+        end
+        1'd1: begin
+        end
+        default: begin
+        end
+    endcase
+    case (liteethicmp_fsm_state)
+        1'd0: begin
+        end
+        1'd1: begin
+            icmp_rx_is_ongoing1 = 1'd1;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethicmp_fsm_state)
+        1'd0: begin
+            icmp_rx_is_ongoing2 = 1'd1;
+        end
+        1'd1: begin
+        end
+        default: begin
+        end
+    endcase
+    icmp_rx_source_source_last = icmp_rx_depacketizer_source_last;
+    case (liteethicmp_fsm_state)
+        1'd0: begin
+            icmp_rx_source_source_last = (icmp_rx_depacketizer_source_last | (icmp_rx_count >= icmp_rx_source_source_param_length));
+        end
+        1'd1: begin
+        end
+        default: begin
+        end
+    endcase
+    icmp_rx_source_source_payload_be = icmp_rx_depacketizer_source_payload_be;
+    case (liteethicmp_fsm_state)
+        1'd0: begin
+            if ((icmp_rx_count >= icmp_rx_source_source_param_length)) begin
+                icmp_rx_source_source_payload_be = (icmp_rx_depacketizer_source_payload_be & {((((icmp_rx_source_source_param_length & 1'd0) == 1'd0) ? 1'd1 : (icmp_rx_source_source_param_length & 1'd0)) > 1'd0)});
+            end
+        end
+        1'd1: begin
+        end
+        default: begin
+        end
+    endcase
+    icmp_rx_source_source_payload_error = icmp_rx_depacketizer_source_payload_error;
+    case (liteethicmp_fsm_state)
+        1'd0: begin
+            if ((icmp_rx_depacketizer_source_last & (((icmp_rx_count - 1'd1) + (1'd0 + icmp_rx_depacketizer_source_payload_be)) < icmp_rx_source_source_param_length))) begin
+                icmp_rx_source_source_payload_error = icmp_rx_source_source_payload_be;
+            end
+        end
+        1'd1: begin
+        end
+        default: begin
+        end
+    endcase
+    liteethicmp_fsm_next_state = liteethicmp_fsm_state;
+    case (liteethicmp_fsm_state)
+        1'd0: begin
+            if ((icmp_rx_source_source_valid & icmp_rx_source_source_ready)) begin
+                if (icmp_rx_depacketizer_source_last) begin
+                    liteethicmp_fsm_next_state = 2'd2;
+                end else begin
+                    if (icmp_rx_source_source_last) begin
+                        liteethicmp_fsm_next_state = 1'd1;
+                    end
                 end
             end
         end
-        2'd2: begin
-            icmp_rx_depacketizer_source_ready <= 1'd1;
+        1'd1: begin
             if (((icmp_rx_depacketizer_source_valid & icmp_rx_depacketizer_source_last) & icmp_rx_depacketizer_source_ready)) begin
-                liteethicmprx_next_state <= 1'd0;
+                liteethicmp_fsm_next_state = 2'd2;
             end
         end
         default: begin
             if (icmp_rx_depacketizer_source_valid) begin
-                liteethicmprx_next_state <= 2'd2;
-                if ((icmp_rx_sink_sink_param_protocol == 1'd1)) begin
-                    if ((icmp_rx_depacketizer_source_param_msgtype == 4'd8)) begin
-                        liteethicmprx_next_state <= 1'd1;
+                liteethicmp_fsm_next_state = 1'd1;
+                if (((icmp_rx_protocol == 1'd1) & (icmp_rx_length > 4'd8))) begin
+                    if (((icmp_rx_depacketizer_source_param_msgtype == 4'd8) & (icmp_rx_depacketizer_source_param_code == 1'd0))) begin
+                        liteethicmp_fsm_next_state = 1'd0;
                     end
                 end
             end
         end
     endcase
 end
+assign icmp_echo_buffer_sink_first = icmp_echo_sink_sink_first;
+assign icmp_echo_buffer_sink_last = icmp_echo_sink_sink_last;
+assign icmp_echo_buffer_sink_payload_data = icmp_echo_sink_sink_payload_data;
+assign icmp_echo_buffer_sink_payload_be = icmp_echo_sink_sink_payload_be;
+assign icmp_echo_buffer_sink_payload_error = icmp_echo_sink_sink_payload_error;
+assign icmp_echo_buffer_sink_param_checksum = icmp_echo_sink_sink_param_checksum;
+assign icmp_echo_buffer_sink_param_code = icmp_echo_sink_sink_param_code;
+assign icmp_echo_buffer_sink_param_msgtype = icmp_echo_sink_sink_param_msgtype;
+assign icmp_echo_buffer_sink_param_quench = icmp_echo_sink_sink_param_quench;
+assign icmp_echo_buffer_sink_param_ip_address = icmp_echo_sink_sink_param_ip_address;
+assign icmp_echo_buffer_sink_param_length = icmp_echo_sink_sink_param_length;
+assign icmp_echo_buffer_sink_valid = (icmp_echo_sink_sink_valid & ((~icmp_echo_busy) | icmp_echo_receiving));
+assign icmp_echo_sink_sink_ready = ((~icmp_echo_busy) | icmp_echo_receiving);
+assign icmp_echo_size = (icmp_echo_count + (1'd0 + icmp_echo_sink_sink_payload_be));
+assign icmp_echo_buffer_discard = (((((icmp_echo_sink_sink_param_length == 1'd0) | (icmp_echo_sink_sink_param_length > 8'd128)) | (icmp_echo_size > 8'd128)) | ((icmp_echo_sink_sink_payload_error & icmp_echo_sink_sink_payload_be) != 1'd0)) | (icmp_echo_sink_sink_last & (icmp_echo_size != icmp_echo_sink_sink_param_length)));
+assign icmp_echo_source_source_valid = icmp_echo_buffer_source_valid;
+assign icmp_echo_buffer_source_ready = icmp_echo_source_source_ready;
+assign icmp_echo_source_source_first = icmp_echo_buffer_source_first;
+assign icmp_echo_source_source_last = icmp_echo_buffer_source_last;
+assign icmp_echo_source_source_payload_data = icmp_echo_buffer_source_payload_data;
+assign icmp_echo_source_source_payload_be = icmp_echo_buffer_source_payload_be;
+assign icmp_echo_source_source_payload_error = icmp_echo_buffer_source_payload_error;
+assign icmp_echo_source_source_param_code = icmp_echo_buffer_source_param_code;
+assign icmp_echo_source_source_param_quench = icmp_echo_buffer_source_param_quench;
+assign icmp_echo_source_source_param_ip_address = icmp_echo_buffer_source_param_ip_address;
+assign icmp_echo_source_source_param_length = icmp_echo_buffer_source_param_length;
 always @(*) begin
-    icmp_echo_sink_ready <= 1'd0;
-    icmp_echo_sink_sink_first <= 1'd0;
-    icmp_echo_sink_sink_last <= 1'd0;
-    icmp_echo_sink_sink_param_checksum <= 16'd0;
-    icmp_echo_sink_sink_param_code <= 8'd0;
-    icmp_echo_sink_sink_param_ip_address <= 32'd0;
-    icmp_echo_sink_sink_param_length <= 16'd0;
-    icmp_echo_sink_sink_param_msgtype <= 8'd0;
-    icmp_echo_sink_sink_param_quench <= 32'd0;
-    icmp_echo_sink_sink_payload_data <= 8'd0;
-    icmp_echo_sink_sink_payload_error <= 1'd0;
-    icmp_echo_sink_sink_payload_last_be <= 1'd0;
-    icmp_echo_sink_sink_valid <= 1'd0;
-    if ((icmp_echo_sink_param_length <= 8'd128)) begin
-        icmp_echo_sink_sink_valid <= icmp_echo_sink_valid;
-        icmp_echo_sink_ready <= icmp_echo_sink_sink_ready;
-        icmp_echo_sink_sink_first <= icmp_echo_sink_first;
-        icmp_echo_sink_sink_last <= icmp_echo_sink_last;
-        icmp_echo_sink_sink_payload_data <= icmp_echo_sink_payload_data;
-        icmp_echo_sink_sink_payload_last_be <= icmp_echo_sink_payload_last_be;
-        icmp_echo_sink_sink_payload_error <= icmp_echo_sink_payload_error;
-        icmp_echo_sink_sink_param_checksum <= icmp_echo_sink_param_checksum;
-        icmp_echo_sink_sink_param_code <= icmp_echo_sink_param_code;
-        icmp_echo_sink_sink_param_msgtype <= icmp_echo_sink_param_msgtype;
-        icmp_echo_sink_sink_param_quench <= icmp_echo_sink_param_quench;
-        icmp_echo_sink_sink_param_ip_address <= icmp_echo_sink_param_ip_address;
-        icmp_echo_sink_sink_param_length <= icmp_echo_sink_param_length;
-    end else begin
-        icmp_echo_sink_ready <= 1'd1;
-    end
+    icmp_echo_source_source_param_msgtype = 8'd0;
+    icmp_echo_source_source_param_msgtype = icmp_echo_buffer_source_param_msgtype;
+    icmp_echo_source_source_param_msgtype = 1'd0;
 end
-assign icmp_echo_source_valid = icmp_echo_source_source_valid;
-assign icmp_echo_source_source_ready = icmp_echo_source_ready;
-assign icmp_echo_source_first = icmp_echo_source_source_first;
-assign icmp_echo_source_last = icmp_echo_source_source_last;
-assign icmp_echo_source_payload_data = icmp_echo_source_source_payload_data;
-assign icmp_echo_source_payload_last_be = icmp_echo_source_source_payload_last_be;
-assign icmp_echo_source_payload_error = icmp_echo_source_source_payload_error;
-assign icmp_echo_source_param_code = icmp_echo_source_source_param_code;
-assign icmp_echo_source_param_quench = icmp_echo_source_source_param_quench;
-assign icmp_echo_source_param_ip_address = icmp_echo_source_source_param_ip_address;
-assign icmp_echo_source_param_length = icmp_echo_source_source_param_length;
-always @(*) begin
-    icmp_echo_source_param_msgtype <= 8'd0;
-    icmp_echo_source_param_msgtype <= icmp_echo_source_source_param_msgtype;
-    icmp_echo_source_param_msgtype <= 1'd0;
-end
-assign icmp_echo_source_param_checksum = ((icmp_echo_source_source_param_checksum + 12'd2048) + (icmp_echo_source_source_param_checksum >= 16'd63488));
-assign icmp_echo_param_fifo_sink_param_checksum = icmp_echo_sink_sink_param_checksum;
-assign icmp_echo_param_fifo_sink_param_code = icmp_echo_sink_sink_param_code;
-assign icmp_echo_param_fifo_sink_param_msgtype = icmp_echo_sink_sink_param_msgtype;
-assign icmp_echo_param_fifo_sink_param_quench = icmp_echo_sink_sink_param_quench;
-assign icmp_echo_param_fifo_sink_param_ip_address = icmp_echo_sink_sink_param_ip_address;
-assign icmp_echo_param_fifo_sink_param_length = icmp_echo_sink_sink_param_length;
-assign icmp_echo_payload_fifo_sink_last = icmp_echo_sink_sink_last;
-assign icmp_echo_payload_fifo_sink_payload_data = icmp_echo_sink_sink_payload_data;
-assign icmp_echo_payload_fifo_sink_payload_last_be = icmp_echo_sink_sink_payload_last_be;
-assign icmp_echo_payload_fifo_sink_payload_error = icmp_echo_sink_sink_payload_error;
-assign icmp_echo_param_fifo_sink_valid = (icmp_echo_sink_sink_valid & icmp_echo_sink_sink_last);
-assign icmp_echo_payload_fifo_sink_valid = (icmp_echo_sink_sink_valid & icmp_echo_param_fifo_sink_ready);
-assign icmp_echo_sink_sink_ready = (icmp_echo_param_fifo_sink_ready & icmp_echo_payload_fifo_sink_ready);
-assign icmp_echo_source_source_valid = icmp_echo_param_fifo_source_valid;
-assign icmp_echo_source_source_param_checksum = icmp_echo_param_fifo_source_param_checksum;
-assign icmp_echo_source_source_param_code = icmp_echo_param_fifo_source_param_code;
-assign icmp_echo_source_source_param_msgtype = icmp_echo_param_fifo_source_param_msgtype;
-assign icmp_echo_source_source_param_quench = icmp_echo_param_fifo_source_param_quench;
-assign icmp_echo_source_source_param_ip_address = icmp_echo_param_fifo_source_param_ip_address;
-assign icmp_echo_source_source_param_length = icmp_echo_param_fifo_source_param_length;
-always @(*) begin
-    icmp_echo_source_source_first <= 1'd0;
-    icmp_echo_source_source_first <= icmp_echo_param_fifo_source_first;
-    icmp_echo_source_source_first <= icmp_echo_payload_fifo_source_first;
-end
-assign icmp_echo_source_source_last = icmp_echo_payload_fifo_source_last;
-assign icmp_echo_source_source_payload_data = icmp_echo_payload_fifo_source_payload_data;
-assign icmp_echo_source_source_payload_last_be = icmp_echo_payload_fifo_source_payload_last_be;
-assign icmp_echo_source_source_payload_error = icmp_echo_payload_fifo_source_payload_error;
-assign icmp_echo_param_fifo_source_ready = ((icmp_echo_source_source_valid & icmp_echo_source_source_last) & icmp_echo_source_source_ready);
-assign icmp_echo_payload_fifo_source_ready = (icmp_echo_source_source_valid & icmp_echo_source_source_ready);
-assign icmp_echo_payload_fifo_syncfifo_din = {icmp_echo_payload_fifo_fifo_in_last, icmp_echo_payload_fifo_fifo_in_first, icmp_echo_payload_fifo_fifo_in_payload_error, icmp_echo_payload_fifo_fifo_in_payload_last_be, icmp_echo_payload_fifo_fifo_in_payload_data};
-assign {icmp_echo_payload_fifo_fifo_out_last, icmp_echo_payload_fifo_fifo_out_first, icmp_echo_payload_fifo_fifo_out_payload_error, icmp_echo_payload_fifo_fifo_out_payload_last_be, icmp_echo_payload_fifo_fifo_out_payload_data} = icmp_echo_payload_fifo_syncfifo_dout;
-assign icmp_echo_payload_fifo_sink_ready = icmp_echo_payload_fifo_syncfifo_writable;
-assign icmp_echo_payload_fifo_syncfifo_we = icmp_echo_payload_fifo_sink_valid;
-assign icmp_echo_payload_fifo_fifo_in_first = icmp_echo_payload_fifo_sink_first;
-assign icmp_echo_payload_fifo_fifo_in_last = icmp_echo_payload_fifo_sink_last;
-assign icmp_echo_payload_fifo_fifo_in_payload_data = icmp_echo_payload_fifo_sink_payload_data;
-assign icmp_echo_payload_fifo_fifo_in_payload_last_be = icmp_echo_payload_fifo_sink_payload_last_be;
-assign icmp_echo_payload_fifo_fifo_in_payload_error = icmp_echo_payload_fifo_sink_payload_error;
-assign icmp_echo_payload_fifo_source_valid = icmp_echo_payload_fifo_readable;
-assign icmp_echo_payload_fifo_source_first = icmp_echo_payload_fifo_fifo_out_first;
-assign icmp_echo_payload_fifo_source_last = icmp_echo_payload_fifo_fifo_out_last;
-assign icmp_echo_payload_fifo_source_payload_data = icmp_echo_payload_fifo_fifo_out_payload_data;
-assign icmp_echo_payload_fifo_source_payload_last_be = icmp_echo_payload_fifo_fifo_out_payload_last_be;
-assign icmp_echo_payload_fifo_source_payload_error = icmp_echo_payload_fifo_fifo_out_payload_error;
-assign icmp_echo_payload_fifo_re = icmp_echo_payload_fifo_source_ready;
-assign icmp_echo_payload_fifo_syncfifo_re = (icmp_echo_payload_fifo_syncfifo_readable & ((~icmp_echo_payload_fifo_readable) | icmp_echo_payload_fifo_re));
-assign icmp_echo_payload_fifo_level1 = (icmp_echo_payload_fifo_level0 + icmp_echo_payload_fifo_readable);
-always @(*) begin
-    icmp_echo_payload_fifo_wrport_adr <= 7'd0;
-    if (icmp_echo_payload_fifo_replace) begin
-        icmp_echo_payload_fifo_wrport_adr <= (icmp_echo_payload_fifo_produce - 1'd1);
-    end else begin
-        icmp_echo_payload_fifo_wrport_adr <= icmp_echo_payload_fifo_produce;
-    end
-end
-assign icmp_echo_payload_fifo_wrport_dat_w = icmp_echo_payload_fifo_syncfifo_din;
-assign icmp_echo_payload_fifo_wrport_we = (icmp_echo_payload_fifo_syncfifo_we & (icmp_echo_payload_fifo_syncfifo_writable | icmp_echo_payload_fifo_replace));
-assign icmp_echo_payload_fifo_do_read = (icmp_echo_payload_fifo_syncfifo_readable & icmp_echo_payload_fifo_syncfifo_re);
-assign icmp_echo_payload_fifo_rdport_adr = icmp_echo_payload_fifo_consume;
-assign icmp_echo_payload_fifo_syncfifo_dout = icmp_echo_payload_fifo_rdport_dat_r;
-assign icmp_echo_payload_fifo_rdport_re = icmp_echo_payload_fifo_do_read;
-assign icmp_echo_payload_fifo_syncfifo_writable = (icmp_echo_payload_fifo_level0 != 8'd128);
-assign icmp_echo_payload_fifo_syncfifo_readable = (icmp_echo_payload_fifo_level0 != 1'd0);
-assign icmp_echo_param_fifo_syncfifo_din = {icmp_echo_param_fifo_fifo_in_last, icmp_echo_param_fifo_fifo_in_first, icmp_echo_param_fifo_fifo_in_param_length, icmp_echo_param_fifo_fifo_in_param_ip_address, icmp_echo_param_fifo_fifo_in_param_quench, icmp_echo_param_fifo_fifo_in_param_msgtype, icmp_echo_param_fifo_fifo_in_param_code, icmp_echo_param_fifo_fifo_in_param_checksum};
-assign {icmp_echo_param_fifo_fifo_out_last, icmp_echo_param_fifo_fifo_out_first, icmp_echo_param_fifo_fifo_out_param_length, icmp_echo_param_fifo_fifo_out_param_ip_address, icmp_echo_param_fifo_fifo_out_param_quench, icmp_echo_param_fifo_fifo_out_param_msgtype, icmp_echo_param_fifo_fifo_out_param_code, icmp_echo_param_fifo_fifo_out_param_checksum} = icmp_echo_param_fifo_syncfifo_dout;
-assign icmp_echo_param_fifo_sink_ready = icmp_echo_param_fifo_syncfifo_writable;
-assign icmp_echo_param_fifo_syncfifo_we = icmp_echo_param_fifo_sink_valid;
-assign icmp_echo_param_fifo_fifo_in_first = icmp_echo_param_fifo_sink_first;
-assign icmp_echo_param_fifo_fifo_in_last = icmp_echo_param_fifo_sink_last;
-assign icmp_echo_param_fifo_fifo_in_param_checksum = icmp_echo_param_fifo_sink_param_checksum;
-assign icmp_echo_param_fifo_fifo_in_param_code = icmp_echo_param_fifo_sink_param_code;
-assign icmp_echo_param_fifo_fifo_in_param_msgtype = icmp_echo_param_fifo_sink_param_msgtype;
-assign icmp_echo_param_fifo_fifo_in_param_quench = icmp_echo_param_fifo_sink_param_quench;
-assign icmp_echo_param_fifo_fifo_in_param_ip_address = icmp_echo_param_fifo_sink_param_ip_address;
-assign icmp_echo_param_fifo_fifo_in_param_length = icmp_echo_param_fifo_sink_param_length;
-assign icmp_echo_param_fifo_source_valid = icmp_echo_param_fifo_readable;
-assign icmp_echo_param_fifo_source_first = icmp_echo_param_fifo_fifo_out_first;
-assign icmp_echo_param_fifo_source_last = icmp_echo_param_fifo_fifo_out_last;
-assign icmp_echo_param_fifo_source_param_checksum = icmp_echo_param_fifo_fifo_out_param_checksum;
-assign icmp_echo_param_fifo_source_param_code = icmp_echo_param_fifo_fifo_out_param_code;
-assign icmp_echo_param_fifo_source_param_msgtype = icmp_echo_param_fifo_fifo_out_param_msgtype;
-assign icmp_echo_param_fifo_source_param_quench = icmp_echo_param_fifo_fifo_out_param_quench;
-assign icmp_echo_param_fifo_source_param_ip_address = icmp_echo_param_fifo_fifo_out_param_ip_address;
-assign icmp_echo_param_fifo_source_param_length = icmp_echo_param_fifo_fifo_out_param_length;
-assign icmp_echo_param_fifo_re = icmp_echo_param_fifo_source_ready;
-assign icmp_echo_param_fifo_syncfifo_re = (icmp_echo_param_fifo_syncfifo_readable & ((~icmp_echo_param_fifo_readable) | icmp_echo_param_fifo_re));
-assign icmp_echo_param_fifo_level1 = (icmp_echo_param_fifo_level0 + icmp_echo_param_fifo_readable);
-always @(*) begin
-    icmp_echo_param_fifo_wrport_adr <= 1'd0;
-    if (icmp_echo_param_fifo_replace) begin
-        icmp_echo_param_fifo_wrport_adr <= (icmp_echo_param_fifo_produce - 1'd1);
-    end else begin
-        icmp_echo_param_fifo_wrport_adr <= icmp_echo_param_fifo_produce;
-    end
-end
-assign icmp_echo_param_fifo_wrport_dat_w = icmp_echo_param_fifo_syncfifo_din;
-assign icmp_echo_param_fifo_wrport_we = (icmp_echo_param_fifo_syncfifo_we & (icmp_echo_param_fifo_syncfifo_writable | icmp_echo_param_fifo_replace));
-assign icmp_echo_param_fifo_do_read = (icmp_echo_param_fifo_syncfifo_readable & icmp_echo_param_fifo_syncfifo_re);
-assign icmp_echo_param_fifo_rdport_adr = icmp_echo_param_fifo_consume;
-assign icmp_echo_param_fifo_syncfifo_dout = icmp_echo_param_fifo_rdport_dat_r;
-assign icmp_echo_param_fifo_rdport_re = icmp_echo_param_fifo_do_read;
-assign icmp_echo_param_fifo_syncfifo_writable = (icmp_echo_param_fifo_level0 != 2'd2);
-assign icmp_echo_param_fifo_syncfifo_readable = (icmp_echo_param_fifo_level0 != 1'd0);
+assign icmp_echo_source_source_param_checksum = ((icmp_echo_buffer_source_param_checksum + 12'h800) + (icmp_echo_buffer_source_param_checksum >= 16'hf800));
+assign icmp_echo_buffer_used = (icmp_echo_buffer_wr_ptr - (icmp_echo_buffer_rd_ptr - icmp_echo_buffer_out_valid));
+assign icmp_echo_buffer_full = (icmp_echo_buffer_used == 8'd128);
+assign icmp_echo_buffer_sink_ready = 1'd1;
+assign icmp_echo_buffer_wr_port_adr = icmp_echo_buffer_wr_ptr[6:0];
+assign icmp_echo_buffer_wr_port_dat_w = {icmp_echo_buffer_sink_last, icmp_echo_buffer_sink_first, {icmp_echo_buffer_sink_payload_error, icmp_echo_buffer_sink_payload_be, icmp_echo_buffer_sink_payload_data}};
+assign icmp_echo_buffer_wr_port_we = ((icmp_echo_buffer_sink_valid & (~icmp_echo_buffer_overflow)) & (~icmp_echo_buffer_full));
+assign icmp_echo_buffer_commit = ((((((icmp_echo_buffer_sink_valid & icmp_echo_buffer_sink_last) & (~icmp_echo_buffer_overflow)) & (~icmp_echo_buffer_full)) & (~icmp_echo_buffer_invalid)) & (~icmp_echo_buffer_discard)) & icmp_echo_buffer_sink_sink_ready);
+assign icmp_echo_buffer_sink_sink_param_checksum = icmp_echo_buffer_sink_param_checksum;
+assign icmp_echo_buffer_sink_sink_param_code = icmp_echo_buffer_sink_param_code;
+assign icmp_echo_buffer_sink_sink_param_msgtype = icmp_echo_buffer_sink_param_msgtype;
+assign icmp_echo_buffer_sink_sink_param_quench = icmp_echo_buffer_sink_param_quench;
+assign icmp_echo_buffer_sink_sink_param_ip_address = icmp_echo_buffer_sink_param_ip_address;
+assign icmp_echo_buffer_sink_sink_param_length = icmp_echo_buffer_sink_param_length;
+assign icmp_echo_buffer_sink_sink_valid = icmp_echo_buffer_commit;
+assign icmp_echo_buffer_sink_sink_last = 1'd1;
+assign icmp_echo_buffer_drop = ((icmp_echo_buffer_sink_valid & icmp_echo_buffer_sink_last) & (~icmp_echo_buffer_commit));
+assign icmp_echo_buffer_fetch = ((icmp_echo_buffer_rd_ptr != icmp_echo_buffer_commit_ptr) & ((~icmp_echo_buffer_out_valid) | (icmp_echo_buffer_source_valid & icmp_echo_buffer_source_ready)));
+assign icmp_echo_buffer_rd_port_adr = icmp_echo_buffer_rd_ptr[6:0];
+assign icmp_echo_buffer_rd_port_re = icmp_echo_buffer_fetch;
+assign icmp_echo_buffer_source_param_checksum = icmp_echo_buffer_source_source_param_checksum;
+assign icmp_echo_buffer_source_param_code = icmp_echo_buffer_source_source_param_code;
+assign icmp_echo_buffer_source_param_msgtype = icmp_echo_buffer_source_source_param_msgtype;
+assign icmp_echo_buffer_source_param_quench = icmp_echo_buffer_source_source_param_quench;
+assign icmp_echo_buffer_source_param_ip_address = icmp_echo_buffer_source_source_param_ip_address;
+assign icmp_echo_buffer_source_param_length = icmp_echo_buffer_source_source_param_length;
+assign {icmp_echo_buffer_source_payload_error, icmp_echo_buffer_source_payload_be, icmp_echo_buffer_source_payload_data} = icmp_echo_buffer_rd_port_dat_r[9:0];
+assign icmp_echo_buffer_source_first = icmp_echo_buffer_rd_port_dat_r[10];
+assign icmp_echo_buffer_source_last = icmp_echo_buffer_rd_port_dat_r[11];
+assign icmp_echo_buffer_source_valid = (icmp_echo_buffer_out_valid & icmp_echo_buffer_source_source_valid);
+assign icmp_echo_buffer_source_source_ready = ((icmp_echo_buffer_source_valid & icmp_echo_buffer_source_last) & icmp_echo_buffer_source_ready);
+assign icmp_echo_buffer_level = icmp_echo_buffer_source_source_valid;
+assign icmp_echo_buffer_pipe_valid_sink_ready = ((~icmp_echo_buffer_pipe_valid_source_valid) | icmp_echo_buffer_pipe_valid_source_ready);
+assign icmp_echo_buffer_pipe_valid_sink_valid = icmp_echo_buffer_sink_sink_valid;
+assign icmp_echo_buffer_sink_sink_ready = icmp_echo_buffer_pipe_valid_sink_ready;
+assign icmp_echo_buffer_pipe_valid_sink_first = icmp_echo_buffer_sink_sink_first;
+assign icmp_echo_buffer_pipe_valid_sink_last = icmp_echo_buffer_sink_sink_last;
+assign icmp_echo_buffer_pipe_valid_sink_param_checksum = icmp_echo_buffer_sink_sink_param_checksum;
+assign icmp_echo_buffer_pipe_valid_sink_param_code = icmp_echo_buffer_sink_sink_param_code;
+assign icmp_echo_buffer_pipe_valid_sink_param_msgtype = icmp_echo_buffer_sink_sink_param_msgtype;
+assign icmp_echo_buffer_pipe_valid_sink_param_quench = icmp_echo_buffer_sink_sink_param_quench;
+assign icmp_echo_buffer_pipe_valid_sink_param_ip_address = icmp_echo_buffer_sink_sink_param_ip_address;
+assign icmp_echo_buffer_pipe_valid_sink_param_length = icmp_echo_buffer_sink_sink_param_length;
+assign icmp_echo_buffer_source_source_valid = icmp_echo_buffer_pipe_valid_source_valid;
+assign icmp_echo_buffer_pipe_valid_source_ready = icmp_echo_buffer_source_source_ready;
+assign icmp_echo_buffer_source_source_first = icmp_echo_buffer_pipe_valid_source_first;
+assign icmp_echo_buffer_source_source_last = icmp_echo_buffer_pipe_valid_source_last;
+assign icmp_echo_buffer_source_source_param_checksum = icmp_echo_buffer_pipe_valid_source_param_checksum;
+assign icmp_echo_buffer_source_source_param_code = icmp_echo_buffer_pipe_valid_source_param_code;
+assign icmp_echo_buffer_source_source_param_msgtype = icmp_echo_buffer_pipe_valid_source_param_msgtype;
+assign icmp_echo_buffer_source_source_param_quench = icmp_echo_buffer_pipe_valid_source_param_quench;
+assign icmp_echo_buffer_source_source_param_ip_address = icmp_echo_buffer_pipe_valid_source_param_ip_address;
+assign icmp_echo_buffer_source_source_param_length = icmp_echo_buffer_pipe_valid_source_param_length;
 assign ip_port_sink_valid = tx_source_source_valid;
 assign tx_source_source_ready = ip_port_sink_ready;
 assign ip_port_sink_first = tx_source_source_first;
 assign ip_port_sink_last = tx_source_source_last;
 assign ip_port_sink_payload_data = tx_source_source_payload_data;
-assign ip_port_sink_payload_last_be = tx_source_source_payload_last_be;
+assign ip_port_sink_payload_be = tx_source_source_payload_be;
 assign ip_port_sink_payload_error = tx_source_source_payload_error;
 assign ip_port_sink_param_length = tx_source_source_param_length;
 assign ip_port_sink_param_protocol = tx_source_source_param_protocol;
@@ -5841,7 +6917,7 @@ assign ip_port_source_ready = rx_sink_sink_ready;
 assign rx_sink_sink_first = ip_port_source_first;
 assign rx_sink_sink_last = ip_port_source_last;
 assign rx_sink_sink_payload_data = ip_port_source_payload_data;
-assign rx_sink_sink_payload_last_be = ip_port_source_payload_last_be;
+assign rx_sink_sink_payload_be = ip_port_source_payload_be;
 assign rx_sink_sink_payload_error = ip_port_source_payload_error;
 assign rx_sink_sink_param_length = ip_port_source_param_length;
 assign rx_sink_sink_param_protocol = ip_port_source_param_protocol;
@@ -5851,7 +6927,7 @@ assign crossbar_source_ready = tx_sink_sink_ready;
 assign tx_sink_sink_first = crossbar_source_first;
 assign tx_sink_sink_last = crossbar_source_last;
 assign tx_sink_sink_payload_data = crossbar_source_payload_data;
-assign tx_sink_sink_payload_last_be = crossbar_source_payload_last_be;
+assign tx_sink_sink_payload_be = crossbar_source_payload_be;
 assign tx_sink_sink_payload_error = crossbar_source_payload_error;
 assign tx_sink_sink_param_src_port = crossbar_source_param_src_port;
 assign tx_sink_sink_param_dst_port = crossbar_source_param_dst_port;
@@ -5862,7 +6938,7 @@ assign rx_source_source_ready = crossbar_sink_ready;
 assign crossbar_sink_first = rx_source_source_first;
 assign crossbar_sink_last = rx_source_source_last;
 assign crossbar_sink_payload_data = rx_source_source_payload_data;
-assign crossbar_sink_payload_last_be = rx_source_source_payload_last_be;
+assign crossbar_sink_payload_be = rx_source_source_payload_be;
 assign crossbar_sink_payload_error = rx_source_source_payload_error;
 assign crossbar_sink_param_src_port = rx_source_source_param_src_port;
 assign crossbar_sink_param_dst_port = rx_source_source_param_dst_port;
@@ -5872,183 +6948,183 @@ assign tx_packetizer_sink_valid = tx_sink_sink_valid;
 assign tx_sink_sink_ready = tx_packetizer_sink_ready;
 assign tx_packetizer_sink_last = tx_sink_sink_last;
 assign tx_packetizer_sink_payload_data = tx_sink_sink_payload_data;
-assign tx_packetizer_sink_payload_last_be = tx_sink_sink_payload_last_be;
+assign tx_packetizer_sink_payload_be = tx_sink_sink_payload_be;
 assign tx_packetizer_sink_param_src_port = tx_sink_sink_param_src_port;
 assign tx_packetizer_sink_param_dst_port = tx_sink_sink_param_dst_port;
 assign tx_packetizer_sink_param_length = (tx_sink_sink_param_length + 4'd8);
 assign tx_packetizer_sink_param_checksum = 1'd0;
+assign tx_source_source_valid = tx_packetizer_source_valid;
+assign tx_packetizer_source_ready = tx_source_source_ready;
+assign tx_source_source_first = tx_packetizer_source_first;
+assign tx_source_source_last = tx_packetizer_source_last;
+assign tx_source_source_payload_data = tx_packetizer_source_payload_data;
+assign tx_source_source_payload_be = tx_packetizer_source_payload_be;
+assign tx_source_source_payload_error = tx_packetizer_source_payload_error;
+assign tx_source_source_param_length = (tx_active ? tx_length : tx_packetizer_sink_param_length);
+assign tx_source_source_param_protocol = 5'd17;
+assign tx_source_source_param_ip_address = (tx_active ? tx_ip_address : tx_sink_sink_param_ip_address);
 always @(*) begin
-    tx_packetizer_header <= 64'd0;
-    tx_packetizer_header[63:48] <= {tx_packetizer_sink_param_checksum[7:0], tx_packetizer_sink_param_checksum[15:8]};
-    tx_packetizer_header[31:16] <= {tx_packetizer_sink_param_dst_port[7:0], tx_packetizer_sink_param_dst_port[15:8]};
-    tx_packetizer_header[47:32] <= {tx_packetizer_sink_param_length[7:0], tx_packetizer_sink_param_length[15:8]};
-    tx_packetizer_header[15:0] <= {tx_packetizer_sink_param_src_port[7:0], tx_packetizer_sink_param_src_port[15:8]};
+    tx_packetizer_header = 64'd0;
+    tx_packetizer_header[63:48] = {tx_packetizer_sink_param_checksum[7:0], tx_packetizer_sink_param_checksum[15:8]};
+    tx_packetizer_header[31:16] = {tx_packetizer_sink_param_dst_port[7:0], tx_packetizer_sink_param_dst_port[15:8]};
+    tx_packetizer_header[47:32] = {tx_packetizer_sink_param_length[7:0], tx_packetizer_sink_param_length[15:8]};
+    tx_packetizer_header[15:0] = {tx_packetizer_sink_param_src_port[7:0], tx_packetizer_sink_param_src_port[15:8]};
 end
-assign tx_packetizer_sink_last_be = tx_packetizer_sink_last;
-assign tx_packetizer_new_last_be = {tx_packetizer_sink_last_be};
-assign tx_packetizer_in_data_copy = (tx_packetizer_is_ongoing0 | tx_packetizer_is_ongoing1);
+assign tx_packetizer_source_payload_be = tx_packetizer_source_be;
 always @(*) begin
-    tx_packetizer_source_last <= 1'd0;
-    if (tx_packetizer_source_last_s) begin
-        tx_packetizer_source_last <= tx_packetizer_source_last_b;
-    end else begin
-        tx_packetizer_source_last <= tx_packetizer_source_last_a;
+    tx_packetizer_source_payload_error = 1'd0;
+    if (tx_packetizer_is_ongoing) begin
+        tx_packetizer_source_payload_error = tx_packetizer_sink_payload_error;
     end
 end
-assign tx_packetizer_source_payload_error = tx_packetizer_sink_payload_error;
 always @(*) begin
-    liteethudp_liteethudptx_fsm0_next_state <= 2'd0;
-    liteethudp_liteethudptx_fsm1_next_state <= 1'd0;
-    tx_packetizer_count_liteethudp_fsm0_next_value0 <= 3'd0;
-    tx_packetizer_count_liteethudp_fsm0_next_value_ce0 <= 1'd0;
-    tx_packetizer_delayed_last_be_liteethudp_fsm1_next_value0 <= 1'd0;
-    tx_packetizer_delayed_last_be_liteethudp_fsm1_next_value_ce0 <= 1'd0;
-    tx_packetizer_fsm_from_idle_liteethudp_fsm0_next_value1 <= 1'd0;
-    tx_packetizer_fsm_from_idle_liteethudp_fsm0_next_value_ce1 <= 1'd0;
-    tx_packetizer_is_ongoing0 <= 1'd0;
-    tx_packetizer_is_ongoing1 <= 1'd0;
-    tx_packetizer_is_ongoing2 <= 1'd0;
-    tx_packetizer_sink_ready <= 1'd0;
-    tx_packetizer_source_last_a <= 1'd0;
-    tx_packetizer_source_last_b <= 1'd0;
-    tx_packetizer_source_last_s <= 1'd0;
-    tx_packetizer_source_payload_data <= 8'd0;
-    tx_packetizer_source_payload_last_be <= 1'd0;
-    tx_packetizer_source_valid <= 1'd0;
-    tx_packetizer_sr_load <= 1'd0;
-    tx_packetizer_sr_shift <= 1'd0;
-    liteethudp_liteethudptx_fsm0_next_state <= liteethudp_liteethudptx_fsm0_state;
-    case (liteethudp_liteethudptx_fsm0_state)
-        1'd1: begin
-            tx_packetizer_source_valid <= 1'd1;
-            tx_packetizer_source_last_a <= 1'd0;
-            tx_packetizer_source_payload_data <= tx_packetizer_sr[63:8];
-            if ((tx_packetizer_source_valid & tx_packetizer_source_ready)) begin
-                tx_packetizer_sr_shift <= 1'd1;
-                if ((tx_packetizer_count == 3'd7)) begin
-                    tx_packetizer_sr_shift <= 1'd0;
-                    liteethudp_liteethudptx_fsm0_next_state <= 2'd2;
-                    tx_packetizer_count_liteethudp_fsm0_next_value0 <= (tx_packetizer_count + 1'd1);
-                    tx_packetizer_count_liteethudp_fsm0_next_value_ce0 <= 1'd1;
-                end else begin
-                    tx_packetizer_count_liteethudp_fsm0_next_value0 <= (tx_packetizer_count + 1'd1);
-                    tx_packetizer_count_liteethudp_fsm0_next_value_ce0 <= 1'd1;
-                end
-            end
-        end
-        2'd2: begin
-            tx_packetizer_source_valid <= tx_packetizer_sink_valid;
-            tx_packetizer_source_last_a <= tx_packetizer_sink_last;
-            tx_packetizer_source_payload_data <= tx_packetizer_sink_payload_data;
-            if ((tx_packetizer_source_valid & tx_packetizer_source_ready)) begin
-                tx_packetizer_sink_ready <= 1'd1;
-                if (tx_packetizer_source_last) begin
-                    liteethudp_liteethudptx_fsm0_next_state <= 1'd0;
-                end
-            end
-            tx_packetizer_is_ongoing0 <= 1'd1;
-        end
-        2'd3: begin
-            tx_packetizer_is_ongoing1 <= 1'd1;
+    liteethudp_next_state = 1'd0;
+    tx_packetizer_count_liteethudp_next_value = 3'd0;
+    tx_packetizer_count_liteethudp_next_value_ce = 1'd0;
+    tx_packetizer_is_ongoing = 1'd0;
+    tx_packetizer_sink_ready = 1'd0;
+    tx_packetizer_source_be = 1'd1;
+    tx_packetizer_source_first = 1'd0;
+    tx_packetizer_source_last = 1'd0;
+    tx_packetizer_source_payload_data = 8'd0;
+    tx_packetizer_source_valid = 1'd0;
+    case (liteethudp_state)
+        1'd0: begin
         end
         default: begin
-            tx_packetizer_sink_ready <= 1'd1;
-            tx_packetizer_count_liteethudp_fsm0_next_value0 <= 1'd1;
-            tx_packetizer_count_liteethudp_fsm0_next_value_ce0 <= 1'd1;
-            if (tx_packetizer_sink_valid) begin
-                tx_packetizer_sink_ready <= 1'd0;
-                tx_packetizer_source_valid <= 1'd1;
-                tx_packetizer_source_last_a <= 1'd0;
-                tx_packetizer_source_payload_data <= tx_packetizer_header[7:0];
-                if ((tx_packetizer_source_valid & tx_packetizer_source_ready)) begin
-                    tx_packetizer_sr_load <= 1'd1;
-                    tx_packetizer_fsm_from_idle_liteethudp_fsm0_next_value1 <= 1'd1;
-                    tx_packetizer_fsm_from_idle_liteethudp_fsm0_next_value_ce1 <= 1'd1;
-                    if (1'd0) begin
-                        liteethudp_liteethudptx_fsm0_next_state <= 2'd2;
+            if ((tx_packetizer_sink_valid & 1'd1)) begin
+                if (tx_packetizer_source_ready) begin
+                    if ((tx_packetizer_count == 3'd7)) begin
+                        tx_packetizer_count_liteethudp_next_value = 1'd0;
                     end else begin
-                        liteethudp_liteethudptx_fsm0_next_state <= 1'd1;
+                        tx_packetizer_count_liteethudp_next_value = (tx_packetizer_count + 1'd1);
                     end
                 end
             end
-            tx_packetizer_is_ongoing2 <= 1'd1;
         end
     endcase
-    liteethudp_liteethudptx_fsm1_next_state <= liteethudp_liteethudptx_fsm1_state;
-    case (liteethudp_liteethudptx_fsm1_state)
-        1'd1: begin
-            tx_packetizer_source_last_b <= 1'd1;
-            tx_packetizer_source_last_s <= 1'd1;
-            tx_packetizer_source_payload_last_be <= tx_packetizer_delayed_last_be;
-            tx_packetizer_sink_ready <= 1'd0;
-            if (tx_packetizer_source_ready) begin
-                liteethudp_liteethudptx_fsm1_next_state <= 1'd0;
-            end
+    case (liteethudp_state)
+        1'd0: begin
         end
         default: begin
-            if (((tx_packetizer_in_data_copy & tx_packetizer_sink_last) & (tx_packetizer_sink_last_be > tx_packetizer_new_last_be))) begin
-                tx_packetizer_source_last_b <= 1'd0;
-                tx_packetizer_source_last_s <= 1'd1;
-                tx_packetizer_source_payload_last_be <= 1'd0;
-                if ((tx_packetizer_source_ready & tx_packetizer_source_valid)) begin
-                    tx_packetizer_delayed_last_be_liteethudp_fsm1_next_value0 <= tx_packetizer_new_last_be;
-                    tx_packetizer_delayed_last_be_liteethudp_fsm1_next_value_ce0 <= 1'd1;
-                    liteethudp_liteethudptx_fsm1_next_state <= 1'd1;
-                end
-            end else begin
-                if (tx_packetizer_in_data_copy) begin
-                    tx_packetizer_source_last_b <= tx_packetizer_sink_last;
-                    tx_packetizer_source_last_s <= 1'd1;
-                    tx_packetizer_source_payload_last_be <= tx_packetizer_new_last_be;
-                end
-            end
-            if (tx_packetizer_in_data_copy) begin
-                tx_packetizer_sink_ready <= tx_packetizer_source_ready;
-            end else begin
-                if (tx_packetizer_is_ongoing2) begin
-                    tx_packetizer_sink_ready <= (~tx_packetizer_sink_valid);
+            if ((tx_packetizer_sink_valid & 1'd1)) begin
+                if (tx_packetizer_source_ready) begin
+                    if ((tx_packetizer_count == 3'd7)) begin
+                        tx_packetizer_count_liteethudp_next_value_ce = 1'd1;
+                    end else begin
+                        tx_packetizer_count_liteethudp_next_value_ce = 1'd1;
+                    end
                 end
             end
         end
     endcase
-end
-always @(*) begin
-    liteethudp_liteethudptx_next_state <= 1'd0;
-    tx_packetizer_source_ready <= 1'd0;
-    tx_source_source_first <= 1'd0;
-    tx_source_source_last <= 1'd0;
-    tx_source_source_param_ip_address <= 32'd0;
-    tx_source_source_param_length <= 16'd0;
-    tx_source_source_param_protocol <= 8'd0;
-    tx_source_source_payload_data <= 8'd0;
-    tx_source_source_payload_error <= 1'd0;
-    tx_source_source_payload_last_be <= 1'd0;
-    tx_source_source_valid <= 1'd0;
-    liteethudp_liteethudptx_next_state <= liteethudp_liteethudptx_state;
-    case (liteethudp_liteethudptx_state)
-        1'd1: begin
-            tx_source_source_valid <= tx_packetizer_source_valid;
-            tx_packetizer_source_ready <= tx_source_source_ready;
-            tx_source_source_first <= tx_packetizer_source_first;
-            tx_source_source_last <= tx_packetizer_source_last;
-            tx_source_source_payload_data <= tx_packetizer_source_payload_data;
-            tx_source_source_payload_last_be <= tx_packetizer_source_payload_last_be;
-            tx_source_source_payload_error <= tx_packetizer_source_payload_error;
-            tx_source_source_param_length <= tx_packetizer_source_param_length;
-            tx_source_source_param_protocol <= tx_packetizer_source_param_protocol;
-            tx_source_source_param_ip_address <= tx_packetizer_source_param_ip_address;
-            tx_source_source_param_length <= tx_packetizer_sink_param_length;
-            tx_source_source_param_protocol <= 5'd17;
-            tx_source_source_param_ip_address <= tx_sink_sink_param_ip_address;
-            if ((tx_source_source_valid & tx_source_source_ready)) begin
-                if (tx_source_source_last) begin
-                    liteethudp_liteethudptx_next_state <= 1'd0;
+    case (liteethudp_state)
+        1'd0: begin
+            tx_packetizer_is_ongoing = 1'd1;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethudp_state)
+        1'd0: begin
+            tx_packetizer_sink_ready = tx_packetizer_source_ready;
+        end
+        default: begin
+            tx_packetizer_sink_ready = (tx_packetizer_count == 1'd0);
+            if ((tx_packetizer_sink_valid & 1'd1)) begin
+                tx_packetizer_sink_ready = (((tx_packetizer_count == 3'd7) & (tx_packetizer_sink_last & (tx_packetizer_sink_payload_be == 1'd0))) & tx_packetizer_source_ready);
+            end
+        end
+    endcase
+    case (liteethudp_state)
+        1'd0: begin
+            tx_packetizer_source_be = tx_packetizer_sink_payload_be;
+        end
+        default: begin
+            if ((tx_packetizer_count == 3'd7)) begin
+                tx_packetizer_source_be = 1'd1;
+            end
+        end
+    endcase
+    case (liteethudp_state)
+        1'd0: begin
+        end
+        default: begin
+            if ((tx_packetizer_sink_valid & 1'd1)) begin
+                tx_packetizer_source_first = (tx_packetizer_count == 1'd0);
+            end
+        end
+    endcase
+    case (liteethudp_state)
+        1'd0: begin
+            tx_packetizer_source_last = tx_packetizer_sink_last;
+        end
+        default: begin
+            if ((tx_packetizer_sink_valid & 1'd1)) begin
+                tx_packetizer_source_last = ((tx_packetizer_count == 3'd7) & (tx_packetizer_sink_last & (tx_packetizer_sink_payload_be == 1'd0)));
+            end
+        end
+    endcase
+    case (liteethudp_state)
+        1'd0: begin
+            tx_packetizer_source_payload_data = tx_packetizer_sink_payload_data;
+        end
+        default: begin
+            case (tx_packetizer_count)
+                1'd0: begin
+                    tx_packetizer_source_payload_data = tx_packetizer_header[7:0];
                 end
+                1'd1: begin
+                    tx_packetizer_source_payload_data = tx_packetizer_header[15:8];
+                end
+                2'd2: begin
+                    tx_packetizer_source_payload_data = tx_packetizer_header[23:16];
+                end
+                2'd3: begin
+                    tx_packetizer_source_payload_data = tx_packetizer_header[31:24];
+                end
+                3'd4: begin
+                    tx_packetizer_source_payload_data = tx_packetizer_header[39:32];
+                end
+                3'd5: begin
+                    tx_packetizer_source_payload_data = tx_packetizer_header[47:40];
+                end
+                3'd6: begin
+                    tx_packetizer_source_payload_data = tx_packetizer_header[55:48];
+                end
+                3'd7: begin
+                    tx_packetizer_source_payload_data = tx_packetizer_header[63:56];
+                end
+            endcase
+        end
+    endcase
+    case (liteethudp_state)
+        1'd0: begin
+            tx_packetizer_source_valid = tx_packetizer_sink_valid;
+        end
+        default: begin
+            if ((tx_packetizer_sink_valid & 1'd1)) begin
+                tx_packetizer_source_valid = 1'd1;
+            end
+        end
+    endcase
+    liteethudp_next_state = liteethudp_state;
+    case (liteethudp_state)
+        1'd0: begin
+            if (((tx_packetizer_source_valid & tx_packetizer_source_ready) & tx_packetizer_source_last)) begin
+                liteethudp_next_state = 1'd1;
             end
         end
         default: begin
-            if (tx_packetizer_source_valid) begin
-                liteethudp_liteethudptx_next_state <= 1'd1;
+            if ((tx_packetizer_sink_valid & 1'd1)) begin
+                if (tx_packetizer_source_ready) begin
+                    if ((tx_packetizer_count == 3'd7)) begin
+                        if ((~tx_packetizer_source_last)) begin
+                            liteethudp_next_state = 1'd0;
+                        end
+                    end else begin
+                    end
+                end
             end
         end
     endcase
@@ -6058,210 +7134,294 @@ assign rx_sink_sink_ready = rx_depacketizer_sink_ready;
 assign rx_depacketizer_sink_first = rx_sink_sink_first;
 assign rx_depacketizer_sink_last = rx_sink_sink_last;
 assign rx_depacketizer_sink_payload_data = rx_sink_sink_payload_data;
-assign rx_depacketizer_sink_payload_last_be = rx_sink_sink_payload_last_be;
+assign rx_depacketizer_sink_payload_be = rx_sink_sink_payload_be;
 assign rx_depacketizer_sink_payload_error = rx_sink_sink_payload_error;
 assign rx_depacketizer_sink_param_length = rx_sink_sink_param_length;
 assign rx_depacketizer_sink_param_protocol = rx_sink_sink_param_protocol;
 assign rx_depacketizer_sink_param_ip_address = rx_sink_sink_param_ip_address;
 assign rx_source_source_payload_data = rx_depacketizer_source_payload_data;
-assign rx_source_source_payload_error = rx_depacketizer_source_payload_error;
 assign rx_source_source_param_dst_port = rx_depacketizer_source_param_dst_port;
 assign rx_source_source_param_src_port = rx_depacketizer_source_param_src_port;
-assign rx_source_source_param_ip_address = rx_sink_sink_param_ip_address;
+assign rx_source_source_param_ip_address = rx_ip_address;
 assign rx_source_source_param_length = (rx_depacketizer_source_param_length - 4'd8);
-assign rx_depacketizer_header = rx_depacketizer_sr;
-assign rx_depacketizer_source_param_checksum = {rhs_slice_proxy69[7:0], rhs_slice_proxy68[15:8]};
-assign rx_depacketizer_source_param_dst_port = {rhs_slice_proxy71[7:0], rhs_slice_proxy70[15:8]};
-assign rx_depacketizer_source_param_length = {rhs_slice_proxy73[7:0], rhs_slice_proxy72[15:8]};
-assign rx_depacketizer_source_param_src_port = {rhs_slice_proxy75[7:0], rhs_slice_proxy74[15:8]};
-assign rx_depacketizer_source_payload_error = rx_depacketizer_sink_payload_error;
-assign rx_depacketizer_sink_last_be = rx_depacketizer_sink_last;
-assign rx_depacketizer_new_last_be = {rx_depacketizer_sink_last_be};
-assign rx_depacketizer_is_in_copy = (rx_depacketizer_is_ongoing0 | rx_depacketizer_is_ongoing1);
+assign rx_accepted = (((rx_protocol == 5'd17) & (rx_depacketizer_source_param_length > 4'd8)) & (rx_depacketizer_source_param_length <= rx_length));
+assign rx_receiving = rx_is_ongoing0;
+assign rx_end_count = rx_count;
+assign rx_source_source_valid = (rx_depacketizer_source_valid & rx_receiving);
+assign rx_depacketizer_source_ready = (rx_is_ongoing1 | (rx_receiving & rx_source_source_ready));
+assign rx_source_source_last = (rx_depacketizer_source_last | (rx_end_count >= rx_source_source_param_length));
 always @(*) begin
-    rx_depacketizer_source_last <= 1'd0;
-    if (rx_depacketizer_source_last_s) begin
-        rx_depacketizer_source_last <= rx_depacketizer_source_last_b;
-    end else begin
-        rx_depacketizer_source_last <= rx_depacketizer_source_last_a;
+    rx_source_source_payload_be = 1'd0;
+    rx_source_source_payload_be = rx_depacketizer_source_payload_be;
+    if ((rx_end_count >= rx_source_source_param_length)) begin
+        rx_source_source_payload_be = (rx_depacketizer_source_payload_be & {((((rx_source_source_param_length & 1'd0) == 1'd0) ? 1'd1 : (rx_source_source_param_length & 1'd0)) > 1'd0)});
     end
 end
 always @(*) begin
-    liteethudp_liteethudprx_fsm0_next_state <= 2'd0;
-    liteethudp_liteethudprx_fsm1_next_state <= 1'd0;
-    rx_depacketizer_count_liteethudp_fsm0_next_value2 <= 3'd0;
-    rx_depacketizer_count_liteethudp_fsm0_next_value_ce2 <= 1'd0;
-    rx_depacketizer_delayed_last_be_liteethudp_fsm1_next_value1 <= 1'd0;
-    rx_depacketizer_delayed_last_be_liteethudp_fsm1_next_value_ce1 <= 1'd0;
-    rx_depacketizer_fsm_from_idle_liteethudp_fsm0_next_value3 <= 1'd0;
-    rx_depacketizer_fsm_from_idle_liteethudp_fsm0_next_value_ce3 <= 1'd0;
-    rx_depacketizer_is_ongoing0 <= 1'd0;
-    rx_depacketizer_is_ongoing1 <= 1'd0;
-    rx_depacketizer_is_ongoing2 <= 1'd0;
-    rx_depacketizer_is_ongoing3 <= 1'd0;
-    rx_depacketizer_sink_ready <= 1'd0;
-    rx_depacketizer_source_last_a <= 1'd0;
-    rx_depacketizer_source_last_b <= 1'd0;
-    rx_depacketizer_source_last_s <= 1'd0;
-    rx_depacketizer_source_payload_data <= 8'd0;
-    rx_depacketizer_source_payload_last_be <= 1'd0;
-    rx_depacketizer_source_valid <= 1'd0;
-    rx_depacketizer_sr_shift <= 1'd0;
-    liteethudp_liteethudprx_fsm0_next_state <= liteethudp_liteethudprx_fsm0_state;
-    case (liteethudp_liteethudprx_fsm0_state)
+    rx_source_source_payload_error = 1'd0;
+    rx_source_source_payload_error = rx_depacketizer_source_payload_error;
+    if ((rx_depacketizer_source_last & (((rx_end_count - 1'd1) + (1'd0 + rx_depacketizer_source_payload_be)) < rx_source_source_param_length))) begin
+        rx_source_source_payload_error = rx_source_source_payload_be;
+    end
+end
+assign rx_depacketizer_header = rx_depacketizer_sr;
+assign rx_depacketizer_source_param_checksum = {rx_depacketizer_header[55:48], rx_depacketizer_header[63:56]};
+assign rx_depacketizer_source_param_dst_port = {rx_depacketizer_header[23:16], rx_depacketizer_header[31:24]};
+assign rx_depacketizer_source_param_length = {rx_depacketizer_header[39:32], rx_depacketizer_header[47:40]};
+assign rx_depacketizer_source_param_src_port = {rx_depacketizer_header[7:0], rx_depacketizer_header[15:8]};
+assign rx_depacketizer_sink_be = rx_depacketizer_sink_payload_be;
+assign rx_depacketizer_source_payload_be = rx_depacketizer_source_be;
+assign rx_depacketizer_source_payload_error = rx_depacketizer_sink_payload_error;
+always @(*) begin
+    liteethudp_liteethudpdepacketizer_next_state = 2'd0;
+    rx_depacketizer_count_liteethudp_liteethudpdepacketizer_next_value0 = 3'd0;
+    rx_depacketizer_count_liteethudp_liteethudpdepacketizer_next_value_ce0 = 1'd0;
+    rx_depacketizer_data_copy_first_liteethudp_liteethudpdepacketizer_next_value2 = 1'd0;
+    rx_depacketizer_data_copy_first_liteethudp_liteethudpdepacketizer_next_value_ce2 = 1'd0;
+    rx_depacketizer_fsm_from_idle_liteethudp_liteethudpdepacketizer_next_value1 = 1'd0;
+    rx_depacketizer_fsm_from_idle_liteethudp_liteethudpdepacketizer_next_value_ce1 = 1'd0;
+    rx_depacketizer_sink_ready = 1'd0;
+    rx_depacketizer_source_be = 1'd1;
+    rx_depacketizer_source_first = 1'd0;
+    rx_depacketizer_source_last = 1'd0;
+    rx_depacketizer_source_payload_data = 8'd0;
+    rx_depacketizer_source_valid = 1'd0;
+    rx_depacketizer_sr_shift = 1'd0;
+    case (liteethudp_liteethudpdepacketizer_state)
         1'd1: begin
-            rx_depacketizer_sink_ready <= 1'd1;
             if (rx_depacketizer_sink_valid) begin
-                rx_depacketizer_count_liteethudp_fsm0_next_value2 <= (rx_depacketizer_count + 1'd1);
-                rx_depacketizer_count_liteethudp_fsm0_next_value_ce2 <= 1'd1;
-                rx_depacketizer_sr_shift <= 1'd1;
+                rx_depacketizer_count_liteethudp_liteethudpdepacketizer_next_value0 = (rx_depacketizer_count + 1'd1);
                 if ((rx_depacketizer_count == 3'd7)) begin
-                    liteethudp_liteethudprx_fsm0_next_state <= 2'd2;
-                    rx_depacketizer_count_liteethudp_fsm0_next_value2 <= (rx_depacketizer_count + 1'd1);
-                    rx_depacketizer_count_liteethudp_fsm0_next_value_ce2 <= 1'd1;
+                    rx_depacketizer_count_liteethudp_liteethudpdepacketizer_next_value0 = (rx_depacketizer_count + 1'd1);
                 end
             end
         end
         2'd2: begin
-            rx_depacketizer_source_valid <= (rx_depacketizer_sink_valid | rx_depacketizer_sink_d_last);
-            rx_depacketizer_source_last_a <= (rx_depacketizer_sink_last | rx_depacketizer_sink_d_last);
-            rx_depacketizer_sink_ready <= rx_depacketizer_source_ready;
-            rx_depacketizer_source_payload_data <= rx_depacketizer_sink_payload_data;
-            if ((rx_depacketizer_source_valid & rx_depacketizer_source_ready)) begin
-                if (rx_depacketizer_source_last) begin
-                    liteethudp_liteethudprx_fsm0_next_state <= 1'd0;
-                end
-            end
-            rx_depacketizer_is_ongoing0 <= 1'd1;
-            rx_depacketizer_is_ongoing2 <= 1'd1;
-        end
-        2'd3: begin
-            rx_depacketizer_is_ongoing1 <= 1'd1;
-            rx_depacketizer_is_ongoing3 <= 1'd1;
         end
         default: begin
-            rx_depacketizer_sink_ready <= 1'd1;
-            rx_depacketizer_count_liteethudp_fsm0_next_value2 <= 1'd1;
-            rx_depacketizer_count_liteethudp_fsm0_next_value_ce2 <= 1'd1;
+            rx_depacketizer_count_liteethudp_liteethudpdepacketizer_next_value0 = 1'd1;
+        end
+    endcase
+    case (liteethudp_liteethudpdepacketizer_state)
+        1'd1: begin
             if (rx_depacketizer_sink_valid) begin
-                rx_depacketizer_sr_shift <= 1'd1;
-                rx_depacketizer_fsm_from_idle_liteethudp_fsm0_next_value3 <= 1'd1;
-                rx_depacketizer_fsm_from_idle_liteethudp_fsm0_next_value_ce3 <= 1'd1;
+                rx_depacketizer_count_liteethudp_liteethudpdepacketizer_next_value_ce0 = 1'd1;
+                if ((rx_depacketizer_count == 3'd7)) begin
+                    rx_depacketizer_count_liteethudp_liteethudpdepacketizer_next_value_ce0 = 1'd1;
+                end
+            end
+        end
+        2'd2: begin
+        end
+        default: begin
+            rx_depacketizer_count_liteethudp_liteethudpdepacketizer_next_value_ce0 = 1'd1;
+        end
+    endcase
+    case (liteethudp_liteethudpdepacketizer_state)
+        1'd1: begin
+            rx_depacketizer_sink_ready = 1'd1;
+        end
+        2'd2: begin
+            rx_depacketizer_sink_ready = rx_depacketizer_source_ready;
+        end
+        default: begin
+            rx_depacketizer_sink_ready = 1'd1;
+        end
+    endcase
+    case (liteethudp_liteethudpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            rx_depacketizer_source_be = rx_depacketizer_sink_be;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethudp_liteethudpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            rx_depacketizer_source_first = rx_depacketizer_data_copy_first;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethudp_liteethudpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            rx_depacketizer_source_last = rx_depacketizer_sink_last;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethudp_liteethudpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            rx_depacketizer_source_payload_data = rx_depacketizer_sink_payload_data;
+        end
+        default: begin
+        end
+    endcase
+    case (liteethudp_liteethudpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            rx_depacketizer_source_valid = rx_depacketizer_sink_valid;
+        end
+        default: begin
+        end
+    endcase
+    liteethudp_liteethudpdepacketizer_next_state = liteethudp_liteethudpdepacketizer_state;
+    case (liteethudp_liteethudpdepacketizer_state)
+        1'd1: begin
+            if (rx_depacketizer_sink_valid) begin
+                if ((rx_depacketizer_count == 3'd7)) begin
+                    liteethudp_liteethudpdepacketizer_next_state = 2'd2;
+                end
+                if (rx_depacketizer_sink_last) begin
+                    liteethudp_liteethudpdepacketizer_next_state = 1'd0;
+                end
+            end
+        end
+        2'd2: begin
+            if ((rx_depacketizer_source_valid & rx_depacketizer_source_ready)) begin
+                if (rx_depacketizer_source_last) begin
+                    liteethudp_liteethudpdepacketizer_next_state = 1'd0;
+                end
+            end
+        end
+        default: begin
+            if (rx_depacketizer_sink_valid) begin
                 if (1'd0) begin
-                    liteethudp_liteethudprx_fsm0_next_state <= 2'd2;
+                    liteethudp_liteethudpdepacketizer_next_state = 2'd2;
                 end else begin
-                    liteethudp_liteethudprx_fsm0_next_state <= 1'd1;
+                    liteethudp_liteethudpdepacketizer_next_state = 1'd1;
+                end
+                if (($signed({1'd0, rx_depacketizer_sink_last}) & $signed(1'd1))) begin
+                    liteethudp_liteethudpdepacketizer_next_state = 1'd0;
                 end
             end
         end
     endcase
-    liteethudp_liteethudprx_fsm1_next_state <= liteethudp_liteethudprx_fsm1_state;
-    case (liteethudp_liteethudprx_fsm1_state)
+    case (liteethudp_liteethudpdepacketizer_state)
         1'd1: begin
-            rx_depacketizer_source_last_b <= 1'd1;
-            rx_depacketizer_source_last_s <= 1'd1;
-            rx_depacketizer_source_payload_last_be <= rx_depacketizer_delayed_last_be;
-            rx_depacketizer_sink_ready <= 1'd0;
-            if ((rx_depacketizer_source_ready & rx_depacketizer_source_valid)) begin
-                liteethudp_liteethudprx_fsm1_next_state <= 1'd0;
+            if (rx_depacketizer_sink_valid) begin
+                if ((rx_depacketizer_count == 3'd7)) begin
+                    rx_depacketizer_data_copy_first_liteethudp_liteethudpdepacketizer_next_value2 = 1'd1;
+                end
+            end
+        end
+        2'd2: begin
+            if ((rx_depacketizer_source_valid & rx_depacketizer_source_ready)) begin
+                rx_depacketizer_data_copy_first_liteethudp_liteethudpdepacketizer_next_value2 = 1'd0;
             end
         end
         default: begin
-            if (((rx_depacketizer_sink_valid & rx_depacketizer_sink_last) & (rx_depacketizer_sink_last_be > rx_depacketizer_new_last_be))) begin
-                rx_depacketizer_source_last_b <= 1'd0;
-                rx_depacketizer_source_last_s <= 1'd1;
-                rx_depacketizer_source_payload_last_be <= 1'd0;
-                if (((rx_depacketizer_source_ready & rx_depacketizer_source_valid) | ((~rx_depacketizer_was_in_copy) & rx_depacketizer_is_in_copy))) begin
-                    rx_depacketizer_delayed_last_be_liteethudp_fsm1_next_value1 <= rx_depacketizer_new_last_be;
-                    rx_depacketizer_delayed_last_be_liteethudp_fsm1_next_value_ce1 <= 1'd1;
-                    liteethudp_liteethudprx_fsm1_next_state <= 1'd1;
-                end
-            end else begin
-                if (rx_depacketizer_sink_last) begin
-                    rx_depacketizer_source_last_b <= 1'd1;
-                    rx_depacketizer_source_last_s <= 1'd1;
-                    rx_depacketizer_source_payload_last_be <= rx_depacketizer_new_last_be;
+            if (rx_depacketizer_sink_valid) begin
+                rx_depacketizer_data_copy_first_liteethudp_liteethudpdepacketizer_next_value2 = 1'd1;
+            end
+        end
+    endcase
+    case (liteethudp_liteethudpdepacketizer_state)
+        1'd1: begin
+            if (rx_depacketizer_sink_valid) begin
+                if ((rx_depacketizer_count == 3'd7)) begin
+                    rx_depacketizer_data_copy_first_liteethudp_liteethudpdepacketizer_next_value_ce2 = 1'd1;
                 end
             end
-            if ((rx_depacketizer_is_ongoing2 | (rx_depacketizer_is_ongoing3 & (~rx_depacketizer_fsm_from_idle)))) begin
-                rx_depacketizer_sink_ready <= rx_depacketizer_source_ready;
-            end else begin
-                rx_depacketizer_sink_ready <= 1'd1;
+        end
+        2'd2: begin
+            if ((rx_depacketizer_source_valid & rx_depacketizer_source_ready)) begin
+                rx_depacketizer_data_copy_first_liteethudp_liteethudpdepacketizer_next_value_ce2 = 1'd1;
+            end
+        end
+        default: begin
+            if (rx_depacketizer_sink_valid) begin
+                rx_depacketizer_data_copy_first_liteethudp_liteethudpdepacketizer_next_value_ce2 = 1'd1;
+            end
+        end
+    endcase
+    case (liteethudp_liteethudpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            if ((rx_depacketizer_source_valid & rx_depacketizer_source_ready)) begin
+                rx_depacketizer_fsm_from_idle_liteethudp_liteethudpdepacketizer_next_value1 = 1'd0;
+            end
+        end
+        default: begin
+            if (rx_depacketizer_sink_valid) begin
+                rx_depacketizer_fsm_from_idle_liteethudp_liteethudpdepacketizer_next_value1 = 1'd1;
+            end
+        end
+    endcase
+    case (liteethudp_liteethudpdepacketizer_state)
+        1'd1: begin
+        end
+        2'd2: begin
+            if ((rx_depacketizer_source_valid & rx_depacketizer_source_ready)) begin
+                rx_depacketizer_fsm_from_idle_liteethudp_liteethudpdepacketizer_next_value_ce1 = 1'd1;
+            end
+        end
+        default: begin
+            if (rx_depacketizer_sink_valid) begin
+                rx_depacketizer_fsm_from_idle_liteethudp_liteethudpdepacketizer_next_value_ce1 = 1'd1;
+            end
+        end
+    endcase
+    case (liteethudp_liteethudpdepacketizer_state)
+        1'd1: begin
+            if (rx_depacketizer_sink_valid) begin
+                rx_depacketizer_sr_shift = 1'd1;
+            end
+        end
+        2'd2: begin
+        end
+        default: begin
+            if (rx_depacketizer_sink_valid) begin
+                rx_depacketizer_sr_shift = 1'd1;
             end
         end
     endcase
 end
 always @(*) begin
-    liteethudp_liteethudprx_next_state <= 2'd0;
-    rx_count_liteethudp_next_value <= 16'd0;
-    rx_count_liteethudp_next_value_ce <= 1'd0;
-    rx_depacketizer_source_ready <= 1'd0;
-    rx_source_source_last <= 1'd0;
-    rx_source_source_payload_last_be <= 1'd0;
-    rx_source_source_valid <= 1'd0;
-    liteethudp_liteethudprx_next_state <= liteethudp_liteethudprx_state;
-    case (liteethudp_liteethudprx_state)
-        1'd1: begin
-            rx_source_source_valid <= rx_depacketizer_source_valid;
-            rx_depacketizer_source_ready <= rx_source_source_ready;
-            rx_source_source_last <= (rx_depacketizer_source_last | (rx_count >= rx_source_source_param_length));
-            if (rx_depacketizer_source_payload_last_be) begin
-                rx_source_source_payload_last_be <= rx_depacketizer_source_payload_last_be;
-            end else begin
-                if (rx_source_source_last) begin
-                    case ((rx_source_source_param_length & 1'd0))
-                        1'd1: begin
-                            rx_source_source_payload_last_be <= 1'd1;
-                        end
-                        2'd2: begin
-                            rx_source_source_payload_last_be <= 2'd2;
-                        end
-                        2'd3: begin
-                            rx_source_source_payload_last_be <= 3'd4;
-                        end
-                        3'd4: begin
-                            rx_source_source_payload_last_be <= 4'd8;
-                        end
-                        3'd5: begin
-                            rx_source_source_payload_last_be <= 5'd16;
-                        end
-                        3'd6: begin
-                            rx_source_source_payload_last_be <= 6'd32;
-                        end
-                        3'd7: begin
-                            rx_source_source_payload_last_be <= 7'd64;
-                        end
-                        default: begin
-                            rx_source_source_payload_last_be <= 1'd1;
-                        end
-                    endcase
-                end
-            end
+    liteethudp_fsm_next_state = 2'd0;
+    rx_count_liteethudp_fsm_next_value = 17'd0;
+    rx_count_liteethudp_fsm_next_value_ce = 1'd0;
+    rx_is_ongoing0 = 1'd0;
+    rx_is_ongoing1 = 1'd0;
+    liteethudp_fsm_next_state = liteethudp_fsm_state;
+    case (liteethudp_fsm_state)
+        1'd0: begin
+            rx_is_ongoing0 = 1'd1;
             if ((rx_source_source_valid & rx_source_source_ready)) begin
-                rx_count_liteethudp_next_value <= (rx_count + 1'd1);
-                rx_count_liteethudp_next_value_ce <= 1'd1;
+                rx_count_liteethudp_fsm_next_value = (rx_end_count + 1'd1);
+                rx_count_liteethudp_fsm_next_value_ce = 1'd1;
+                liteethudp_fsm_next_state = 1'd0;
                 if (rx_depacketizer_source_last) begin
-                    liteethudp_liteethudprx_next_state <= 1'd0;
+                    liteethudp_fsm_next_state = 2'd2;
                 end else begin
                     if (rx_source_source_last) begin
-                        liteethudp_liteethudprx_next_state <= 2'd2;
+                        liteethudp_fsm_next_state = 1'd1;
                     end
                 end
             end
         end
-        2'd2: begin
-            rx_depacketizer_source_ready <= 1'd1;
+        1'd1: begin
+            rx_is_ongoing1 = 1'd1;
             if (((rx_depacketizer_source_valid & rx_depacketizer_source_last) & rx_depacketizer_source_ready)) begin
-                liteethudp_liteethudprx_next_state <= 1'd0;
+                liteethudp_fsm_next_state = 2'd2;
             end
         end
         default: begin
-            rx_count_liteethudp_next_value <= 1'd1;
-            rx_count_liteethudp_next_value_ce <= 1'd1;
+            rx_count_liteethudp_fsm_next_value = 1'd1;
+            rx_count_liteethudp_fsm_next_value_ce = 1'd1;
             if (rx_depacketizer_source_valid) begin
-                liteethudp_liteethudprx_next_state <= 2'd2;
-                if ((rx_sink_sink_param_protocol == 5'd17)) begin
-                    liteethudp_liteethudprx_next_state <= 1'd1;
+                liteethudp_fsm_next_state = 1'd1;
+                if (rx_accepted) begin
+                    liteethudp_fsm_next_state = 1'd0;
                 end
             end
         end
@@ -6272,62 +7432,62 @@ assign liteethudpstreamer0_user_port_sink_ready = liteethudpstreamer0_tx_cdc_sin
 assign liteethudpstreamer0_tx_cdc_sink_first = liteethudpstreamer0_user_port_sink_first;
 assign liteethudpstreamer0_tx_cdc_sink_last = liteethudpstreamer0_user_port_sink_last;
 assign liteethudpstreamer0_tx_cdc_sink_payload_data = liteethudpstreamer0_user_port_sink_payload_data;
-assign liteethudpstreamer0_tx_cdc_sink_payload_last_be = liteethudpstreamer0_user_port_sink_payload_last_be;
+assign liteethudpstreamer0_tx_cdc_sink_payload_be = liteethudpstreamer0_user_port_sink_payload_be;
 assign liteethudpstreamer0_tx_cdc_sink_payload_error = liteethudpstreamer0_user_port_sink_payload_error;
 assign liteethudpstreamer0_tx_cdc_sink_param_src_port = liteethudpstreamer0_user_port_sink_param_src_port;
 assign liteethudpstreamer0_tx_cdc_sink_param_dst_port = liteethudpstreamer0_user_port_sink_param_dst_port;
 assign liteethudpstreamer0_tx_cdc_sink_param_ip_address = liteethudpstreamer0_user_port_sink_param_ip_address;
 assign liteethudpstreamer0_tx_cdc_sink_param_length = liteethudpstreamer0_user_port_sink_param_length;
-assign liteethudpstreamer0_tx_converter_sink_valid = liteethudpstreamer0_tx_cdc_source_valid;
-assign liteethudpstreamer0_tx_cdc_source_ready = liteethudpstreamer0_tx_converter_sink_ready;
-assign liteethudpstreamer0_tx_converter_sink_first = liteethudpstreamer0_tx_cdc_source_first;
-assign liteethudpstreamer0_tx_converter_sink_last = liteethudpstreamer0_tx_cdc_source_last;
-assign liteethudpstreamer0_tx_converter_sink_payload_data = liteethudpstreamer0_tx_cdc_source_payload_data;
-assign liteethudpstreamer0_tx_converter_sink_payload_last_be = liteethudpstreamer0_tx_cdc_source_payload_last_be;
-assign liteethudpstreamer0_tx_converter_sink_payload_error = liteethudpstreamer0_tx_cdc_source_payload_error;
-assign liteethudpstreamer0_tx_converter_sink_param_src_port = liteethudpstreamer0_tx_cdc_source_param_src_port;
-assign liteethudpstreamer0_tx_converter_sink_param_dst_port = liteethudpstreamer0_tx_cdc_source_param_dst_port;
-assign liteethudpstreamer0_tx_converter_sink_param_ip_address = liteethudpstreamer0_tx_cdc_source_param_ip_address;
-assign liteethudpstreamer0_tx_converter_sink_param_length = liteethudpstreamer0_tx_cdc_source_param_length;
-assign liteethudpstreamer0_internal_port_sink_valid = liteethudpstreamer0_tx_converter_source_valid;
-assign liteethudpstreamer0_tx_converter_source_ready = liteethudpstreamer0_internal_port_sink_ready;
-assign liteethudpstreamer0_internal_port_sink_first = liteethudpstreamer0_tx_converter_source_first;
-assign liteethudpstreamer0_internal_port_sink_last = liteethudpstreamer0_tx_converter_source_last;
-assign liteethudpstreamer0_internal_port_sink_payload_data = liteethudpstreamer0_tx_converter_source_payload_data;
-assign liteethudpstreamer0_internal_port_sink_payload_last_be = liteethudpstreamer0_tx_converter_source_payload_last_be;
-assign liteethudpstreamer0_internal_port_sink_payload_error = liteethudpstreamer0_tx_converter_source_payload_error;
-assign liteethudpstreamer0_internal_port_sink_param_src_port = liteethudpstreamer0_tx_converter_source_param_src_port;
-assign liteethudpstreamer0_internal_port_sink_param_dst_port = liteethudpstreamer0_tx_converter_source_param_dst_port;
-assign liteethudpstreamer0_internal_port_sink_param_ip_address = liteethudpstreamer0_tx_converter_source_param_ip_address;
-assign liteethudpstreamer0_internal_port_sink_param_length = liteethudpstreamer0_tx_converter_source_param_length;
-assign liteethudpstreamer0_rx_converter_sink_valid = liteethudpstreamer0_internal_port_source_valid;
-assign liteethudpstreamer0_internal_port_source_ready = liteethudpstreamer0_rx_converter_sink_ready;
-assign liteethudpstreamer0_rx_converter_sink_first = liteethudpstreamer0_internal_port_source_first;
-assign liteethudpstreamer0_rx_converter_sink_last = liteethudpstreamer0_internal_port_source_last;
-assign liteethudpstreamer0_rx_converter_sink_payload_data = liteethudpstreamer0_internal_port_source_payload_data;
-assign liteethudpstreamer0_rx_converter_sink_payload_last_be = liteethudpstreamer0_internal_port_source_payload_last_be;
-assign liteethudpstreamer0_rx_converter_sink_payload_error = liteethudpstreamer0_internal_port_source_payload_error;
-assign liteethudpstreamer0_rx_converter_sink_param_src_port = liteethudpstreamer0_internal_port_source_param_src_port;
-assign liteethudpstreamer0_rx_converter_sink_param_dst_port = liteethudpstreamer0_internal_port_source_param_dst_port;
-assign liteethudpstreamer0_rx_converter_sink_param_ip_address = liteethudpstreamer0_internal_port_source_param_ip_address;
-assign liteethudpstreamer0_rx_converter_sink_param_length = liteethudpstreamer0_internal_port_source_param_length;
-assign liteethudpstreamer0_rx_cdc_sink_valid = liteethudpstreamer0_rx_converter_source_valid;
-assign liteethudpstreamer0_rx_converter_source_ready = liteethudpstreamer0_rx_cdc_sink_ready;
-assign liteethudpstreamer0_rx_cdc_sink_first = liteethudpstreamer0_rx_converter_source_first;
-assign liteethudpstreamer0_rx_cdc_sink_last = liteethudpstreamer0_rx_converter_source_last;
-assign liteethudpstreamer0_rx_cdc_sink_payload_data = liteethudpstreamer0_rx_converter_source_payload_data;
-assign liteethudpstreamer0_rx_cdc_sink_payload_last_be = liteethudpstreamer0_rx_converter_source_payload_last_be;
-assign liteethudpstreamer0_rx_cdc_sink_payload_error = liteethudpstreamer0_rx_converter_source_payload_error;
-assign liteethudpstreamer0_rx_cdc_sink_param_src_port = liteethudpstreamer0_rx_converter_source_param_src_port;
-assign liteethudpstreamer0_rx_cdc_sink_param_dst_port = liteethudpstreamer0_rx_converter_source_param_dst_port;
-assign liteethudpstreamer0_rx_cdc_sink_param_ip_address = liteethudpstreamer0_rx_converter_source_param_ip_address;
-assign liteethudpstreamer0_rx_cdc_sink_param_length = liteethudpstreamer0_rx_converter_source_param_length;
+assign liteethudpstreamer0_tx_converter_sink_sink_valid = liteethudpstreamer0_tx_cdc_source_valid;
+assign liteethudpstreamer0_tx_cdc_source_ready = liteethudpstreamer0_tx_converter_sink_sink_ready;
+assign liteethudpstreamer0_tx_converter_sink_sink_first = liteethudpstreamer0_tx_cdc_source_first;
+assign liteethudpstreamer0_tx_converter_sink_sink_last = liteethudpstreamer0_tx_cdc_source_last;
+assign liteethudpstreamer0_tx_converter_sink_sink_payload_data = liteethudpstreamer0_tx_cdc_source_payload_data;
+assign liteethudpstreamer0_tx_converter_sink_sink_payload_be = liteethudpstreamer0_tx_cdc_source_payload_be;
+assign liteethudpstreamer0_tx_converter_sink_sink_payload_error = liteethudpstreamer0_tx_cdc_source_payload_error;
+assign liteethudpstreamer0_tx_converter_sink_sink_param_src_port = liteethudpstreamer0_tx_cdc_source_param_src_port;
+assign liteethudpstreamer0_tx_converter_sink_sink_param_dst_port = liteethudpstreamer0_tx_cdc_source_param_dst_port;
+assign liteethudpstreamer0_tx_converter_sink_sink_param_ip_address = liteethudpstreamer0_tx_cdc_source_param_ip_address;
+assign liteethudpstreamer0_tx_converter_sink_sink_param_length = liteethudpstreamer0_tx_cdc_source_param_length;
+assign liteethudpstreamer0_internal_port_sink_valid = liteethudpstreamer0_tx_converter_source_source_valid;
+assign liteethudpstreamer0_tx_converter_source_source_ready = liteethudpstreamer0_internal_port_sink_ready;
+assign liteethudpstreamer0_internal_port_sink_first = liteethudpstreamer0_tx_converter_source_source_first;
+assign liteethudpstreamer0_internal_port_sink_last = liteethudpstreamer0_tx_converter_source_source_last;
+assign liteethudpstreamer0_internal_port_sink_payload_data = liteethudpstreamer0_tx_converter_source_source_payload_data;
+assign liteethudpstreamer0_internal_port_sink_payload_be = liteethudpstreamer0_tx_converter_source_source_payload_be;
+assign liteethudpstreamer0_internal_port_sink_payload_error = liteethudpstreamer0_tx_converter_source_source_payload_error;
+assign liteethudpstreamer0_internal_port_sink_param_src_port = liteethudpstreamer0_tx_converter_source_source_param_src_port;
+assign liteethudpstreamer0_internal_port_sink_param_dst_port = liteethudpstreamer0_tx_converter_source_source_param_dst_port;
+assign liteethudpstreamer0_internal_port_sink_param_ip_address = liteethudpstreamer0_tx_converter_source_source_param_ip_address;
+assign liteethudpstreamer0_internal_port_sink_param_length = liteethudpstreamer0_tx_converter_source_source_param_length;
+assign liteethudpstreamer0_rx_converter_sink_sink_valid = liteethudpstreamer0_internal_port_source_valid;
+assign liteethudpstreamer0_internal_port_source_ready = liteethudpstreamer0_rx_converter_sink_sink_ready;
+assign liteethudpstreamer0_rx_converter_sink_sink_first = liteethudpstreamer0_internal_port_source_first;
+assign liteethudpstreamer0_rx_converter_sink_sink_last = liteethudpstreamer0_internal_port_source_last;
+assign liteethudpstreamer0_rx_converter_sink_sink_payload_data = liteethudpstreamer0_internal_port_source_payload_data;
+assign liteethudpstreamer0_rx_converter_sink_sink_payload_be = liteethudpstreamer0_internal_port_source_payload_be;
+assign liteethudpstreamer0_rx_converter_sink_sink_payload_error = liteethudpstreamer0_internal_port_source_payload_error;
+assign liteethudpstreamer0_rx_converter_sink_sink_param_src_port = liteethudpstreamer0_internal_port_source_param_src_port;
+assign liteethudpstreamer0_rx_converter_sink_sink_param_dst_port = liteethudpstreamer0_internal_port_source_param_dst_port;
+assign liteethudpstreamer0_rx_converter_sink_sink_param_ip_address = liteethudpstreamer0_internal_port_source_param_ip_address;
+assign liteethudpstreamer0_rx_converter_sink_sink_param_length = liteethudpstreamer0_internal_port_source_param_length;
+assign liteethudpstreamer0_rx_cdc_sink_valid = liteethudpstreamer0_rx_converter_source_source_valid;
+assign liteethudpstreamer0_rx_converter_source_source_ready = liteethudpstreamer0_rx_cdc_sink_ready;
+assign liteethudpstreamer0_rx_cdc_sink_first = liteethudpstreamer0_rx_converter_source_source_first;
+assign liteethudpstreamer0_rx_cdc_sink_last = liteethudpstreamer0_rx_converter_source_source_last;
+assign liteethudpstreamer0_rx_cdc_sink_payload_data = liteethudpstreamer0_rx_converter_source_source_payload_data;
+assign liteethudpstreamer0_rx_cdc_sink_payload_be = liteethudpstreamer0_rx_converter_source_source_payload_be;
+assign liteethudpstreamer0_rx_cdc_sink_payload_error = liteethudpstreamer0_rx_converter_source_source_payload_error;
+assign liteethudpstreamer0_rx_cdc_sink_param_src_port = liteethudpstreamer0_rx_converter_source_source_param_src_port;
+assign liteethudpstreamer0_rx_cdc_sink_param_dst_port = liteethudpstreamer0_rx_converter_source_source_param_dst_port;
+assign liteethudpstreamer0_rx_cdc_sink_param_ip_address = liteethudpstreamer0_rx_converter_source_source_param_ip_address;
+assign liteethudpstreamer0_rx_cdc_sink_param_length = liteethudpstreamer0_rx_converter_source_source_param_length;
 assign liteethudpstreamer0_user_port_source_valid = liteethudpstreamer0_rx_cdc_source_valid;
 assign liteethudpstreamer0_rx_cdc_source_ready = liteethudpstreamer0_user_port_source_ready;
 assign liteethudpstreamer0_user_port_source_first = liteethudpstreamer0_rx_cdc_source_first;
 assign liteethudpstreamer0_user_port_source_last = liteethudpstreamer0_rx_cdc_source_last;
 assign liteethudpstreamer0_user_port_source_payload_data = liteethudpstreamer0_rx_cdc_source_payload_data;
-assign liteethudpstreamer0_user_port_source_payload_last_be = liteethudpstreamer0_rx_cdc_source_payload_last_be;
+assign liteethudpstreamer0_user_port_source_payload_be = liteethudpstreamer0_rx_cdc_source_payload_be;
 assign liteethudpstreamer0_user_port_source_payload_error = liteethudpstreamer0_rx_cdc_source_payload_error;
 assign liteethudpstreamer0_user_port_source_param_src_port = liteethudpstreamer0_rx_cdc_source_param_src_port;
 assign liteethudpstreamer0_user_port_source_param_dst_port = liteethudpstreamer0_rx_cdc_source_param_dst_port;
@@ -6338,74 +7498,74 @@ assign liteethudpstreamer1_user_port_sink_ready = liteethudpstreamer1_tx_cdc_sin
 assign liteethudpstreamer1_tx_cdc_sink_first = liteethudpstreamer1_user_port_sink_first;
 assign liteethudpstreamer1_tx_cdc_sink_last = liteethudpstreamer1_user_port_sink_last;
 assign liteethudpstreamer1_tx_cdc_sink_payload_data = liteethudpstreamer1_user_port_sink_payload_data;
-assign liteethudpstreamer1_tx_cdc_sink_payload_last_be = liteethudpstreamer1_user_port_sink_payload_last_be;
+assign liteethudpstreamer1_tx_cdc_sink_payload_be = liteethudpstreamer1_user_port_sink_payload_be;
 assign liteethudpstreamer1_tx_cdc_sink_payload_error = liteethudpstreamer1_user_port_sink_payload_error;
 assign liteethudpstreamer1_tx_cdc_sink_param_src_port = liteethudpstreamer1_user_port_sink_param_src_port;
 assign liteethudpstreamer1_tx_cdc_sink_param_dst_port = liteethudpstreamer1_user_port_sink_param_dst_port;
 assign liteethudpstreamer1_tx_cdc_sink_param_ip_address = liteethudpstreamer1_user_port_sink_param_ip_address;
 assign liteethudpstreamer1_tx_cdc_sink_param_length = liteethudpstreamer1_user_port_sink_param_length;
-assign liteethudpstreamer1_tx_converter_sink_valid = liteethudpstreamer1_tx_cdc_source_valid;
-assign liteethudpstreamer1_tx_cdc_source_ready = liteethudpstreamer1_tx_converter_sink_ready;
-assign liteethudpstreamer1_tx_converter_sink_first = liteethudpstreamer1_tx_cdc_source_first;
-assign liteethudpstreamer1_tx_converter_sink_last = liteethudpstreamer1_tx_cdc_source_last;
-assign liteethudpstreamer1_tx_converter_sink_payload_data = liteethudpstreamer1_tx_cdc_source_payload_data;
-assign liteethudpstreamer1_tx_converter_sink_payload_last_be = liteethudpstreamer1_tx_cdc_source_payload_last_be;
-assign liteethudpstreamer1_tx_converter_sink_payload_error = liteethudpstreamer1_tx_cdc_source_payload_error;
-assign liteethudpstreamer1_tx_converter_sink_param_src_port = liteethudpstreamer1_tx_cdc_source_param_src_port;
-assign liteethudpstreamer1_tx_converter_sink_param_dst_port = liteethudpstreamer1_tx_cdc_source_param_dst_port;
-assign liteethudpstreamer1_tx_converter_sink_param_ip_address = liteethudpstreamer1_tx_cdc_source_param_ip_address;
-assign liteethudpstreamer1_tx_converter_sink_param_length = liteethudpstreamer1_tx_cdc_source_param_length;
-assign liteethudpstreamer1_internal_port_sink_valid = liteethudpstreamer1_tx_converter_source_valid;
-assign liteethudpstreamer1_tx_converter_source_ready = liteethudpstreamer1_internal_port_sink_ready;
-assign liteethudpstreamer1_internal_port_sink_first = liteethudpstreamer1_tx_converter_source_first;
-assign liteethudpstreamer1_internal_port_sink_last = liteethudpstreamer1_tx_converter_source_last;
-assign liteethudpstreamer1_internal_port_sink_payload_data = liteethudpstreamer1_tx_converter_source_payload_data;
-assign liteethudpstreamer1_internal_port_sink_payload_last_be = liteethudpstreamer1_tx_converter_source_payload_last_be;
-assign liteethudpstreamer1_internal_port_sink_payload_error = liteethudpstreamer1_tx_converter_source_payload_error;
-assign liteethudpstreamer1_internal_port_sink_param_src_port = liteethudpstreamer1_tx_converter_source_param_src_port;
-assign liteethudpstreamer1_internal_port_sink_param_dst_port = liteethudpstreamer1_tx_converter_source_param_dst_port;
-assign liteethudpstreamer1_internal_port_sink_param_ip_address = liteethudpstreamer1_tx_converter_source_param_ip_address;
-assign liteethudpstreamer1_internal_port_sink_param_length = liteethudpstreamer1_tx_converter_source_param_length;
-assign liteethudpstreamer1_rx_converter_sink_valid = liteethudpstreamer1_internal_port_source_valid;
-assign liteethudpstreamer1_internal_port_source_ready = liteethudpstreamer1_rx_converter_sink_ready;
-assign liteethudpstreamer1_rx_converter_sink_first = liteethudpstreamer1_internal_port_source_first;
-assign liteethudpstreamer1_rx_converter_sink_last = liteethudpstreamer1_internal_port_source_last;
-assign liteethudpstreamer1_rx_converter_sink_payload_data = liteethudpstreamer1_internal_port_source_payload_data;
-assign liteethudpstreamer1_rx_converter_sink_payload_last_be = liteethudpstreamer1_internal_port_source_payload_last_be;
-assign liteethudpstreamer1_rx_converter_sink_payload_error = liteethudpstreamer1_internal_port_source_payload_error;
-assign liteethudpstreamer1_rx_converter_sink_param_src_port = liteethudpstreamer1_internal_port_source_param_src_port;
-assign liteethudpstreamer1_rx_converter_sink_param_dst_port = liteethudpstreamer1_internal_port_source_param_dst_port;
-assign liteethudpstreamer1_rx_converter_sink_param_ip_address = liteethudpstreamer1_internal_port_source_param_ip_address;
-assign liteethudpstreamer1_rx_converter_sink_param_length = liteethudpstreamer1_internal_port_source_param_length;
-assign liteethudpstreamer1_rx_cdc_sink_valid = liteethudpstreamer1_rx_converter_source_valid;
-assign liteethudpstreamer1_rx_converter_source_ready = liteethudpstreamer1_rx_cdc_sink_ready;
-assign liteethudpstreamer1_rx_cdc_sink_first = liteethudpstreamer1_rx_converter_source_first;
-assign liteethudpstreamer1_rx_cdc_sink_last = liteethudpstreamer1_rx_converter_source_last;
-assign liteethudpstreamer1_rx_cdc_sink_payload_data = liteethudpstreamer1_rx_converter_source_payload_data;
-assign liteethudpstreamer1_rx_cdc_sink_payload_last_be = liteethudpstreamer1_rx_converter_source_payload_last_be;
-assign liteethudpstreamer1_rx_cdc_sink_payload_error = liteethudpstreamer1_rx_converter_source_payload_error;
-assign liteethudpstreamer1_rx_cdc_sink_param_src_port = liteethudpstreamer1_rx_converter_source_param_src_port;
-assign liteethudpstreamer1_rx_cdc_sink_param_dst_port = liteethudpstreamer1_rx_converter_source_param_dst_port;
-assign liteethudpstreamer1_rx_cdc_sink_param_ip_address = liteethudpstreamer1_rx_converter_source_param_ip_address;
-assign liteethudpstreamer1_rx_cdc_sink_param_length = liteethudpstreamer1_rx_converter_source_param_length;
+assign liteethudpstreamer1_tx_converter_sink_sink_valid = liteethudpstreamer1_tx_cdc_source_valid;
+assign liteethudpstreamer1_tx_cdc_source_ready = liteethudpstreamer1_tx_converter_sink_sink_ready;
+assign liteethudpstreamer1_tx_converter_sink_sink_first = liteethudpstreamer1_tx_cdc_source_first;
+assign liteethudpstreamer1_tx_converter_sink_sink_last = liteethudpstreamer1_tx_cdc_source_last;
+assign liteethudpstreamer1_tx_converter_sink_sink_payload_data = liteethudpstreamer1_tx_cdc_source_payload_data;
+assign liteethudpstreamer1_tx_converter_sink_sink_payload_be = liteethudpstreamer1_tx_cdc_source_payload_be;
+assign liteethudpstreamer1_tx_converter_sink_sink_payload_error = liteethudpstreamer1_tx_cdc_source_payload_error;
+assign liteethudpstreamer1_tx_converter_sink_sink_param_src_port = liteethudpstreamer1_tx_cdc_source_param_src_port;
+assign liteethudpstreamer1_tx_converter_sink_sink_param_dst_port = liteethudpstreamer1_tx_cdc_source_param_dst_port;
+assign liteethudpstreamer1_tx_converter_sink_sink_param_ip_address = liteethudpstreamer1_tx_cdc_source_param_ip_address;
+assign liteethudpstreamer1_tx_converter_sink_sink_param_length = liteethudpstreamer1_tx_cdc_source_param_length;
+assign liteethudpstreamer1_internal_port_sink_valid = liteethudpstreamer1_tx_converter_source_source_valid;
+assign liteethudpstreamer1_tx_converter_source_source_ready = liteethudpstreamer1_internal_port_sink_ready;
+assign liteethudpstreamer1_internal_port_sink_first = liteethudpstreamer1_tx_converter_source_source_first;
+assign liteethudpstreamer1_internal_port_sink_last = liteethudpstreamer1_tx_converter_source_source_last;
+assign liteethudpstreamer1_internal_port_sink_payload_data = liteethudpstreamer1_tx_converter_source_source_payload_data;
+assign liteethudpstreamer1_internal_port_sink_payload_be = liteethudpstreamer1_tx_converter_source_source_payload_be;
+assign liteethudpstreamer1_internal_port_sink_payload_error = liteethudpstreamer1_tx_converter_source_source_payload_error;
+assign liteethudpstreamer1_internal_port_sink_param_src_port = liteethudpstreamer1_tx_converter_source_source_param_src_port;
+assign liteethudpstreamer1_internal_port_sink_param_dst_port = liteethudpstreamer1_tx_converter_source_source_param_dst_port;
+assign liteethudpstreamer1_internal_port_sink_param_ip_address = liteethudpstreamer1_tx_converter_source_source_param_ip_address;
+assign liteethudpstreamer1_internal_port_sink_param_length = liteethudpstreamer1_tx_converter_source_source_param_length;
+assign liteethudpstreamer1_rx_converter_sink_sink_valid = liteethudpstreamer1_internal_port_source_valid;
+assign liteethudpstreamer1_internal_port_source_ready = liteethudpstreamer1_rx_converter_sink_sink_ready;
+assign liteethudpstreamer1_rx_converter_sink_sink_first = liteethudpstreamer1_internal_port_source_first;
+assign liteethudpstreamer1_rx_converter_sink_sink_last = liteethudpstreamer1_internal_port_source_last;
+assign liteethudpstreamer1_rx_converter_sink_sink_payload_data = liteethudpstreamer1_internal_port_source_payload_data;
+assign liteethudpstreamer1_rx_converter_sink_sink_payload_be = liteethudpstreamer1_internal_port_source_payload_be;
+assign liteethudpstreamer1_rx_converter_sink_sink_payload_error = liteethudpstreamer1_internal_port_source_payload_error;
+assign liteethudpstreamer1_rx_converter_sink_sink_param_src_port = liteethudpstreamer1_internal_port_source_param_src_port;
+assign liteethudpstreamer1_rx_converter_sink_sink_param_dst_port = liteethudpstreamer1_internal_port_source_param_dst_port;
+assign liteethudpstreamer1_rx_converter_sink_sink_param_ip_address = liteethudpstreamer1_internal_port_source_param_ip_address;
+assign liteethudpstreamer1_rx_converter_sink_sink_param_length = liteethudpstreamer1_internal_port_source_param_length;
+assign liteethudpstreamer1_rx_cdc_sink_valid = liteethudpstreamer1_rx_converter_source_source_valid;
+assign liteethudpstreamer1_rx_converter_source_source_ready = liteethudpstreamer1_rx_cdc_sink_ready;
+assign liteethudpstreamer1_rx_cdc_sink_first = liteethudpstreamer1_rx_converter_source_source_first;
+assign liteethudpstreamer1_rx_cdc_sink_last = liteethudpstreamer1_rx_converter_source_source_last;
+assign liteethudpstreamer1_rx_cdc_sink_payload_data = liteethudpstreamer1_rx_converter_source_source_payload_data;
+assign liteethudpstreamer1_rx_cdc_sink_payload_be = liteethudpstreamer1_rx_converter_source_source_payload_be;
+assign liteethudpstreamer1_rx_cdc_sink_payload_error = liteethudpstreamer1_rx_converter_source_source_payload_error;
+assign liteethudpstreamer1_rx_cdc_sink_param_src_port = liteethudpstreamer1_rx_converter_source_source_param_src_port;
+assign liteethudpstreamer1_rx_cdc_sink_param_dst_port = liteethudpstreamer1_rx_converter_source_source_param_dst_port;
+assign liteethudpstreamer1_rx_cdc_sink_param_ip_address = liteethudpstreamer1_rx_converter_source_source_param_ip_address;
+assign liteethudpstreamer1_rx_cdc_sink_param_length = liteethudpstreamer1_rx_converter_source_source_param_length;
 assign liteethudpstreamer1_user_port_source_valid = liteethudpstreamer1_rx_cdc_source_valid;
 assign liteethudpstreamer1_rx_cdc_source_ready = liteethudpstreamer1_user_port_source_ready;
 assign liteethudpstreamer1_user_port_source_first = liteethudpstreamer1_rx_cdc_source_first;
 assign liteethudpstreamer1_user_port_source_last = liteethudpstreamer1_rx_cdc_source_last;
 assign liteethudpstreamer1_user_port_source_payload_data = liteethudpstreamer1_rx_cdc_source_payload_data;
-assign liteethudpstreamer1_user_port_source_payload_last_be = liteethudpstreamer1_rx_cdc_source_payload_last_be;
+assign liteethudpstreamer1_user_port_source_payload_be = liteethudpstreamer1_rx_cdc_source_payload_be;
 assign liteethudpstreamer1_user_port_source_payload_error = liteethudpstreamer1_rx_cdc_source_payload_error;
 assign liteethudpstreamer1_user_port_source_param_src_port = liteethudpstreamer1_rx_cdc_source_param_src_port;
 assign liteethudpstreamer1_user_port_source_param_dst_port = liteethudpstreamer1_rx_cdc_source_param_dst_port;
 assign liteethudpstreamer1_user_port_source_param_ip_address = liteethudpstreamer1_rx_cdc_source_param_ip_address;
 assign liteethudpstreamer1_user_port_source_param_length = liteethudpstreamer1_rx_cdc_source_param_length;
 always @(*) begin
-    liteethudp_sel0 <= 2'd0;
+    liteethudp_sel0 = 2'd0;
     if ((crossbar_sink_param_dst_port == udp0_udp_port)) begin
-        liteethudp_sel0 <= 1'd1;
+        liteethudp_sel0 = 1'd1;
     end
     if ((crossbar_sink_param_dst_port == udp1_udp_port)) begin
-        liteethudp_sel0 <= 2'd2;
+        liteethudp_sel0 = 2'd2;
     end
 end
 assign liteethudpstreamer0_tx_cdc_source_valid = liteethudpstreamer0_tx_cdc_sink_valid;
@@ -6413,56 +7573,46 @@ assign liteethudpstreamer0_tx_cdc_sink_ready = liteethudpstreamer0_tx_cdc_source
 assign liteethudpstreamer0_tx_cdc_source_first = liteethudpstreamer0_tx_cdc_sink_first;
 assign liteethudpstreamer0_tx_cdc_source_last = liteethudpstreamer0_tx_cdc_sink_last;
 assign liteethudpstreamer0_tx_cdc_source_payload_data = liteethudpstreamer0_tx_cdc_sink_payload_data;
-assign liteethudpstreamer0_tx_cdc_source_payload_last_be = liteethudpstreamer0_tx_cdc_sink_payload_last_be;
+assign liteethudpstreamer0_tx_cdc_source_payload_be = liteethudpstreamer0_tx_cdc_sink_payload_be;
 assign liteethudpstreamer0_tx_cdc_source_payload_error = liteethudpstreamer0_tx_cdc_sink_payload_error;
 assign liteethudpstreamer0_tx_cdc_source_param_src_port = liteethudpstreamer0_tx_cdc_sink_param_src_port;
 assign liteethudpstreamer0_tx_cdc_source_param_dst_port = liteethudpstreamer0_tx_cdc_sink_param_dst_port;
 assign liteethudpstreamer0_tx_cdc_source_param_ip_address = liteethudpstreamer0_tx_cdc_sink_param_ip_address;
 assign liteethudpstreamer0_tx_cdc_source_param_length = liteethudpstreamer0_tx_cdc_sink_param_length;
-assign liteethudpstreamer0_tx_converter_converter_sink_valid = liteethudpstreamer0_tx_converter_sink_valid;
-assign liteethudpstreamer0_tx_converter_converter_sink_first = liteethudpstreamer0_tx_converter_sink_first;
-assign liteethudpstreamer0_tx_converter_converter_sink_last = liteethudpstreamer0_tx_converter_sink_last;
-assign liteethudpstreamer0_tx_converter_sink_ready = liteethudpstreamer0_tx_converter_converter_sink_ready;
-assign liteethudpstreamer0_tx_converter_converter_sink_payload_data = {liteethudpstreamer0_tx_converter_sink_payload_error, liteethudpstreamer0_tx_converter_sink_payload_last_be, liteethudpstreamer0_tx_converter_sink_payload_data};
-assign liteethudpstreamer0_tx_converter_source_valid = liteethudpstreamer0_tx_converter_source_source_valid;
-assign liteethudpstreamer0_tx_converter_source_first = liteethudpstreamer0_tx_converter_source_source_first;
-assign liteethudpstreamer0_tx_converter_source_last = liteethudpstreamer0_tx_converter_source_source_last;
-assign liteethudpstreamer0_tx_converter_source_source_ready = liteethudpstreamer0_tx_converter_source_ready;
-assign {liteethudpstreamer0_tx_converter_source_payload_error, liteethudpstreamer0_tx_converter_source_payload_last_be, liteethudpstreamer0_tx_converter_source_payload_data} = liteethudpstreamer0_tx_converter_source_source_payload_data;
-assign liteethudpstreamer0_tx_converter_source_param_src_port = liteethudpstreamer0_tx_converter_sink_param_src_port;
-assign liteethudpstreamer0_tx_converter_source_param_dst_port = liteethudpstreamer0_tx_converter_sink_param_dst_port;
-assign liteethudpstreamer0_tx_converter_source_param_ip_address = liteethudpstreamer0_tx_converter_sink_param_ip_address;
-assign liteethudpstreamer0_tx_converter_source_param_length = liteethudpstreamer0_tx_converter_sink_param_length;
+assign liteethudpstreamer0_tx_converter_converter_sink_valid = liteethudpstreamer0_tx_converter_sink_sink_valid;
+assign liteethudpstreamer0_tx_converter_converter_sink_first = liteethudpstreamer0_tx_converter_sink_sink_first;
+assign liteethudpstreamer0_tx_converter_converter_sink_last = liteethudpstreamer0_tx_converter_sink_sink_last;
+assign liteethudpstreamer0_tx_converter_sink_sink_ready = liteethudpstreamer0_tx_converter_converter_sink_ready;
+assign liteethudpstreamer0_tx_converter_converter_sink_payload_data = {liteethudpstreamer0_tx_converter_sink_sink_payload_error, liteethudpstreamer0_tx_converter_sink_sink_payload_be, liteethudpstreamer0_tx_converter_sink_sink_payload_data};
 assign liteethudpstreamer0_tx_converter_source_source_valid = liteethudpstreamer0_tx_converter_converter_source_valid;
-assign liteethudpstreamer0_tx_converter_converter_source_ready = liteethudpstreamer0_tx_converter_source_source_ready;
 assign liteethudpstreamer0_tx_converter_source_source_first = liteethudpstreamer0_tx_converter_converter_source_first;
 assign liteethudpstreamer0_tx_converter_source_source_last = liteethudpstreamer0_tx_converter_converter_source_last;
-assign liteethudpstreamer0_tx_converter_source_source_payload_data = liteethudpstreamer0_tx_converter_converter_source_payload_data;
+assign liteethudpstreamer0_tx_converter_converter_source_ready = liteethudpstreamer0_tx_converter_source_source_ready;
+assign {liteethudpstreamer0_tx_converter_source_source_payload_error, liteethudpstreamer0_tx_converter_source_source_payload_be, liteethudpstreamer0_tx_converter_source_source_payload_data} = liteethudpstreamer0_tx_converter_converter_source_payload_data;
+assign liteethudpstreamer0_tx_converter_source_source_param_src_port = liteethudpstreamer0_tx_converter_sink_sink_param_src_port;
+assign liteethudpstreamer0_tx_converter_source_source_param_dst_port = liteethudpstreamer0_tx_converter_sink_sink_param_dst_port;
+assign liteethudpstreamer0_tx_converter_source_source_param_ip_address = liteethudpstreamer0_tx_converter_sink_sink_param_ip_address;
+assign liteethudpstreamer0_tx_converter_source_source_param_length = liteethudpstreamer0_tx_converter_sink_sink_param_length;
 assign liteethudpstreamer0_tx_converter_converter_source_valid = liteethudpstreamer0_tx_converter_converter_sink_valid;
 assign liteethudpstreamer0_tx_converter_converter_sink_ready = liteethudpstreamer0_tx_converter_converter_source_ready;
 assign liteethudpstreamer0_tx_converter_converter_source_first = liteethudpstreamer0_tx_converter_converter_sink_first;
 assign liteethudpstreamer0_tx_converter_converter_source_last = liteethudpstreamer0_tx_converter_converter_sink_last;
 assign liteethudpstreamer0_tx_converter_converter_source_payload_data = liteethudpstreamer0_tx_converter_converter_sink_payload_data;
 assign liteethudpstreamer0_tx_converter_converter_source_payload_valid_token_count = 1'd1;
-assign liteethudpstreamer0_rx_converter_converter_sink_valid = liteethudpstreamer0_rx_converter_sink_valid;
-assign liteethudpstreamer0_rx_converter_converter_sink_first = liteethudpstreamer0_rx_converter_sink_first;
-assign liteethudpstreamer0_rx_converter_converter_sink_last = liteethudpstreamer0_rx_converter_sink_last;
-assign liteethudpstreamer0_rx_converter_sink_ready = liteethudpstreamer0_rx_converter_converter_sink_ready;
-assign liteethudpstreamer0_rx_converter_converter_sink_payload_data = {liteethudpstreamer0_rx_converter_sink_payload_error, liteethudpstreamer0_rx_converter_sink_payload_last_be, liteethudpstreamer0_rx_converter_sink_payload_data};
-assign liteethudpstreamer0_rx_converter_source_valid = liteethudpstreamer0_rx_converter_source_source_valid;
-assign liteethudpstreamer0_rx_converter_source_first = liteethudpstreamer0_rx_converter_source_source_first;
-assign liteethudpstreamer0_rx_converter_source_last = liteethudpstreamer0_rx_converter_source_source_last;
-assign liteethudpstreamer0_rx_converter_source_source_ready = liteethudpstreamer0_rx_converter_source_ready;
-assign {liteethudpstreamer0_rx_converter_source_payload_error, liteethudpstreamer0_rx_converter_source_payload_last_be, liteethudpstreamer0_rx_converter_source_payload_data} = liteethudpstreamer0_rx_converter_source_source_payload_data;
-assign liteethudpstreamer0_rx_converter_source_param_src_port = liteethudpstreamer0_rx_converter_sink_param_src_port;
-assign liteethudpstreamer0_rx_converter_source_param_dst_port = liteethudpstreamer0_rx_converter_sink_param_dst_port;
-assign liteethudpstreamer0_rx_converter_source_param_ip_address = liteethudpstreamer0_rx_converter_sink_param_ip_address;
-assign liteethudpstreamer0_rx_converter_source_param_length = liteethudpstreamer0_rx_converter_sink_param_length;
+assign liteethudpstreamer0_rx_converter_converter_sink_valid = liteethudpstreamer0_rx_converter_sink_sink_valid;
+assign liteethudpstreamer0_rx_converter_converter_sink_first = liteethudpstreamer0_rx_converter_sink_sink_first;
+assign liteethudpstreamer0_rx_converter_converter_sink_last = liteethudpstreamer0_rx_converter_sink_sink_last;
+assign liteethudpstreamer0_rx_converter_sink_sink_ready = liteethudpstreamer0_rx_converter_converter_sink_ready;
+assign liteethudpstreamer0_rx_converter_converter_sink_payload_data = {liteethudpstreamer0_rx_converter_sink_sink_payload_error, liteethudpstreamer0_rx_converter_sink_sink_payload_be, liteethudpstreamer0_rx_converter_sink_sink_payload_data};
 assign liteethudpstreamer0_rx_converter_source_source_valid = liteethudpstreamer0_rx_converter_converter_source_valid;
-assign liteethudpstreamer0_rx_converter_converter_source_ready = liteethudpstreamer0_rx_converter_source_source_ready;
 assign liteethudpstreamer0_rx_converter_source_source_first = liteethudpstreamer0_rx_converter_converter_source_first;
 assign liteethudpstreamer0_rx_converter_source_source_last = liteethudpstreamer0_rx_converter_converter_source_last;
-assign liteethudpstreamer0_rx_converter_source_source_payload_data = liteethudpstreamer0_rx_converter_converter_source_payload_data;
+assign liteethudpstreamer0_rx_converter_converter_source_ready = liteethudpstreamer0_rx_converter_source_source_ready;
+assign {liteethudpstreamer0_rx_converter_source_source_payload_error, liteethudpstreamer0_rx_converter_source_source_payload_be, liteethudpstreamer0_rx_converter_source_source_payload_data} = liteethudpstreamer0_rx_converter_converter_source_payload_data;
+assign liteethudpstreamer0_rx_converter_source_source_param_src_port = liteethudpstreamer0_rx_converter_sink_sink_param_src_port;
+assign liteethudpstreamer0_rx_converter_source_source_param_dst_port = liteethudpstreamer0_rx_converter_sink_sink_param_dst_port;
+assign liteethudpstreamer0_rx_converter_source_source_param_ip_address = liteethudpstreamer0_rx_converter_sink_sink_param_ip_address;
+assign liteethudpstreamer0_rx_converter_source_source_param_length = liteethudpstreamer0_rx_converter_sink_sink_param_length;
 assign liteethudpstreamer0_rx_converter_converter_source_valid = liteethudpstreamer0_rx_converter_converter_sink_valid;
 assign liteethudpstreamer0_rx_converter_converter_sink_ready = liteethudpstreamer0_rx_converter_converter_source_ready;
 assign liteethudpstreamer0_rx_converter_converter_source_first = liteethudpstreamer0_rx_converter_converter_sink_first;
@@ -6474,7 +7624,7 @@ assign liteethudpstreamer0_rx_cdc_sink_ready = liteethudpstreamer0_rx_cdc_source
 assign liteethudpstreamer0_rx_cdc_source_first = liteethudpstreamer0_rx_cdc_sink_first;
 assign liteethudpstreamer0_rx_cdc_source_last = liteethudpstreamer0_rx_cdc_sink_last;
 assign liteethudpstreamer0_rx_cdc_source_payload_data = liteethudpstreamer0_rx_cdc_sink_payload_data;
-assign liteethudpstreamer0_rx_cdc_source_payload_last_be = liteethudpstreamer0_rx_cdc_sink_payload_last_be;
+assign liteethudpstreamer0_rx_cdc_source_payload_be = liteethudpstreamer0_rx_cdc_sink_payload_be;
 assign liteethudpstreamer0_rx_cdc_source_payload_error = liteethudpstreamer0_rx_cdc_sink_payload_error;
 assign liteethudpstreamer0_rx_cdc_source_param_src_port = liteethudpstreamer0_rx_cdc_sink_param_src_port;
 assign liteethudpstreamer0_rx_cdc_source_param_dst_port = liteethudpstreamer0_rx_cdc_sink_param_dst_port;
@@ -6485,56 +7635,46 @@ assign liteethudpstreamer1_tx_cdc_sink_ready = liteethudpstreamer1_tx_cdc_source
 assign liteethudpstreamer1_tx_cdc_source_first = liteethudpstreamer1_tx_cdc_sink_first;
 assign liteethudpstreamer1_tx_cdc_source_last = liteethudpstreamer1_tx_cdc_sink_last;
 assign liteethudpstreamer1_tx_cdc_source_payload_data = liteethudpstreamer1_tx_cdc_sink_payload_data;
-assign liteethudpstreamer1_tx_cdc_source_payload_last_be = liteethudpstreamer1_tx_cdc_sink_payload_last_be;
+assign liteethudpstreamer1_tx_cdc_source_payload_be = liteethudpstreamer1_tx_cdc_sink_payload_be;
 assign liteethudpstreamer1_tx_cdc_source_payload_error = liteethudpstreamer1_tx_cdc_sink_payload_error;
 assign liteethudpstreamer1_tx_cdc_source_param_src_port = liteethudpstreamer1_tx_cdc_sink_param_src_port;
 assign liteethudpstreamer1_tx_cdc_source_param_dst_port = liteethudpstreamer1_tx_cdc_sink_param_dst_port;
 assign liteethudpstreamer1_tx_cdc_source_param_ip_address = liteethudpstreamer1_tx_cdc_sink_param_ip_address;
 assign liteethudpstreamer1_tx_cdc_source_param_length = liteethudpstreamer1_tx_cdc_sink_param_length;
-assign liteethudpstreamer1_tx_converter_converter_sink_valid = liteethudpstreamer1_tx_converter_sink_valid;
-assign liteethudpstreamer1_tx_converter_converter_sink_first = liteethudpstreamer1_tx_converter_sink_first;
-assign liteethudpstreamer1_tx_converter_converter_sink_last = liteethudpstreamer1_tx_converter_sink_last;
-assign liteethudpstreamer1_tx_converter_sink_ready = liteethudpstreamer1_tx_converter_converter_sink_ready;
-assign liteethudpstreamer1_tx_converter_converter_sink_payload_data = {liteethudpstreamer1_tx_converter_sink_payload_error, liteethudpstreamer1_tx_converter_sink_payload_last_be, liteethudpstreamer1_tx_converter_sink_payload_data};
-assign liteethudpstreamer1_tx_converter_source_valid = liteethudpstreamer1_tx_converter_source_source_valid;
-assign liteethudpstreamer1_tx_converter_source_first = liteethudpstreamer1_tx_converter_source_source_first;
-assign liteethudpstreamer1_tx_converter_source_last = liteethudpstreamer1_tx_converter_source_source_last;
-assign liteethudpstreamer1_tx_converter_source_source_ready = liteethudpstreamer1_tx_converter_source_ready;
-assign {liteethudpstreamer1_tx_converter_source_payload_error, liteethudpstreamer1_tx_converter_source_payload_last_be, liteethudpstreamer1_tx_converter_source_payload_data} = liteethudpstreamer1_tx_converter_source_source_payload_data;
-assign liteethudpstreamer1_tx_converter_source_param_src_port = liteethudpstreamer1_tx_converter_sink_param_src_port;
-assign liteethudpstreamer1_tx_converter_source_param_dst_port = liteethudpstreamer1_tx_converter_sink_param_dst_port;
-assign liteethudpstreamer1_tx_converter_source_param_ip_address = liteethudpstreamer1_tx_converter_sink_param_ip_address;
-assign liteethudpstreamer1_tx_converter_source_param_length = liteethudpstreamer1_tx_converter_sink_param_length;
+assign liteethudpstreamer1_tx_converter_converter_sink_valid = liteethudpstreamer1_tx_converter_sink_sink_valid;
+assign liteethudpstreamer1_tx_converter_converter_sink_first = liteethudpstreamer1_tx_converter_sink_sink_first;
+assign liteethudpstreamer1_tx_converter_converter_sink_last = liteethudpstreamer1_tx_converter_sink_sink_last;
+assign liteethudpstreamer1_tx_converter_sink_sink_ready = liteethudpstreamer1_tx_converter_converter_sink_ready;
+assign liteethudpstreamer1_tx_converter_converter_sink_payload_data = {liteethudpstreamer1_tx_converter_sink_sink_payload_error, liteethudpstreamer1_tx_converter_sink_sink_payload_be, liteethudpstreamer1_tx_converter_sink_sink_payload_data};
 assign liteethudpstreamer1_tx_converter_source_source_valid = liteethudpstreamer1_tx_converter_converter_source_valid;
-assign liteethudpstreamer1_tx_converter_converter_source_ready = liteethudpstreamer1_tx_converter_source_source_ready;
 assign liteethudpstreamer1_tx_converter_source_source_first = liteethudpstreamer1_tx_converter_converter_source_first;
 assign liteethudpstreamer1_tx_converter_source_source_last = liteethudpstreamer1_tx_converter_converter_source_last;
-assign liteethudpstreamer1_tx_converter_source_source_payload_data = liteethudpstreamer1_tx_converter_converter_source_payload_data;
+assign liteethudpstreamer1_tx_converter_converter_source_ready = liteethudpstreamer1_tx_converter_source_source_ready;
+assign {liteethudpstreamer1_tx_converter_source_source_payload_error, liteethudpstreamer1_tx_converter_source_source_payload_be, liteethudpstreamer1_tx_converter_source_source_payload_data} = liteethudpstreamer1_tx_converter_converter_source_payload_data;
+assign liteethudpstreamer1_tx_converter_source_source_param_src_port = liteethudpstreamer1_tx_converter_sink_sink_param_src_port;
+assign liteethudpstreamer1_tx_converter_source_source_param_dst_port = liteethudpstreamer1_tx_converter_sink_sink_param_dst_port;
+assign liteethudpstreamer1_tx_converter_source_source_param_ip_address = liteethudpstreamer1_tx_converter_sink_sink_param_ip_address;
+assign liteethudpstreamer1_tx_converter_source_source_param_length = liteethudpstreamer1_tx_converter_sink_sink_param_length;
 assign liteethudpstreamer1_tx_converter_converter_source_valid = liteethudpstreamer1_tx_converter_converter_sink_valid;
 assign liteethudpstreamer1_tx_converter_converter_sink_ready = liteethudpstreamer1_tx_converter_converter_source_ready;
 assign liteethudpstreamer1_tx_converter_converter_source_first = liteethudpstreamer1_tx_converter_converter_sink_first;
 assign liteethudpstreamer1_tx_converter_converter_source_last = liteethudpstreamer1_tx_converter_converter_sink_last;
 assign liteethudpstreamer1_tx_converter_converter_source_payload_data = liteethudpstreamer1_tx_converter_converter_sink_payload_data;
 assign liteethudpstreamer1_tx_converter_converter_source_payload_valid_token_count = 1'd1;
-assign liteethudpstreamer1_rx_converter_converter_sink_valid = liteethudpstreamer1_rx_converter_sink_valid;
-assign liteethudpstreamer1_rx_converter_converter_sink_first = liteethudpstreamer1_rx_converter_sink_first;
-assign liteethudpstreamer1_rx_converter_converter_sink_last = liteethudpstreamer1_rx_converter_sink_last;
-assign liteethudpstreamer1_rx_converter_sink_ready = liteethudpstreamer1_rx_converter_converter_sink_ready;
-assign liteethudpstreamer1_rx_converter_converter_sink_payload_data = {liteethudpstreamer1_rx_converter_sink_payload_error, liteethudpstreamer1_rx_converter_sink_payload_last_be, liteethudpstreamer1_rx_converter_sink_payload_data};
-assign liteethudpstreamer1_rx_converter_source_valid = liteethudpstreamer1_rx_converter_source_source_valid;
-assign liteethudpstreamer1_rx_converter_source_first = liteethudpstreamer1_rx_converter_source_source_first;
-assign liteethudpstreamer1_rx_converter_source_last = liteethudpstreamer1_rx_converter_source_source_last;
-assign liteethudpstreamer1_rx_converter_source_source_ready = liteethudpstreamer1_rx_converter_source_ready;
-assign {liteethudpstreamer1_rx_converter_source_payload_error, liteethudpstreamer1_rx_converter_source_payload_last_be, liteethudpstreamer1_rx_converter_source_payload_data} = liteethudpstreamer1_rx_converter_source_source_payload_data;
-assign liteethudpstreamer1_rx_converter_source_param_src_port = liteethudpstreamer1_rx_converter_sink_param_src_port;
-assign liteethudpstreamer1_rx_converter_source_param_dst_port = liteethudpstreamer1_rx_converter_sink_param_dst_port;
-assign liteethudpstreamer1_rx_converter_source_param_ip_address = liteethudpstreamer1_rx_converter_sink_param_ip_address;
-assign liteethudpstreamer1_rx_converter_source_param_length = liteethudpstreamer1_rx_converter_sink_param_length;
+assign liteethudpstreamer1_rx_converter_converter_sink_valid = liteethudpstreamer1_rx_converter_sink_sink_valid;
+assign liteethudpstreamer1_rx_converter_converter_sink_first = liteethudpstreamer1_rx_converter_sink_sink_first;
+assign liteethudpstreamer1_rx_converter_converter_sink_last = liteethudpstreamer1_rx_converter_sink_sink_last;
+assign liteethudpstreamer1_rx_converter_sink_sink_ready = liteethudpstreamer1_rx_converter_converter_sink_ready;
+assign liteethudpstreamer1_rx_converter_converter_sink_payload_data = {liteethudpstreamer1_rx_converter_sink_sink_payload_error, liteethudpstreamer1_rx_converter_sink_sink_payload_be, liteethudpstreamer1_rx_converter_sink_sink_payload_data};
 assign liteethudpstreamer1_rx_converter_source_source_valid = liteethudpstreamer1_rx_converter_converter_source_valid;
-assign liteethudpstreamer1_rx_converter_converter_source_ready = liteethudpstreamer1_rx_converter_source_source_ready;
 assign liteethudpstreamer1_rx_converter_source_source_first = liteethudpstreamer1_rx_converter_converter_source_first;
 assign liteethudpstreamer1_rx_converter_source_source_last = liteethudpstreamer1_rx_converter_converter_source_last;
-assign liteethudpstreamer1_rx_converter_source_source_payload_data = liteethudpstreamer1_rx_converter_converter_source_payload_data;
+assign liteethudpstreamer1_rx_converter_converter_source_ready = liteethudpstreamer1_rx_converter_source_source_ready;
+assign {liteethudpstreamer1_rx_converter_source_source_payload_error, liteethudpstreamer1_rx_converter_source_source_payload_be, liteethudpstreamer1_rx_converter_source_source_payload_data} = liteethudpstreamer1_rx_converter_converter_source_payload_data;
+assign liteethudpstreamer1_rx_converter_source_source_param_src_port = liteethudpstreamer1_rx_converter_sink_sink_param_src_port;
+assign liteethudpstreamer1_rx_converter_source_source_param_dst_port = liteethudpstreamer1_rx_converter_sink_sink_param_dst_port;
+assign liteethudpstreamer1_rx_converter_source_source_param_ip_address = liteethudpstreamer1_rx_converter_sink_sink_param_ip_address;
+assign liteethudpstreamer1_rx_converter_source_source_param_length = liteethudpstreamer1_rx_converter_sink_sink_param_length;
 assign liteethudpstreamer1_rx_converter_converter_source_valid = liteethudpstreamer1_rx_converter_converter_sink_valid;
 assign liteethudpstreamer1_rx_converter_converter_sink_ready = liteethudpstreamer1_rx_converter_converter_source_ready;
 assign liteethudpstreamer1_rx_converter_converter_source_first = liteethudpstreamer1_rx_converter_converter_sink_first;
@@ -6546,56 +7686,56 @@ assign liteethudpstreamer1_rx_cdc_sink_ready = liteethudpstreamer1_rx_cdc_source
 assign liteethudpstreamer1_rx_cdc_source_first = liteethudpstreamer1_rx_cdc_sink_first;
 assign liteethudpstreamer1_rx_cdc_source_last = liteethudpstreamer1_rx_cdc_sink_last;
 assign liteethudpstreamer1_rx_cdc_source_payload_data = liteethudpstreamer1_rx_cdc_sink_payload_data;
-assign liteethudpstreamer1_rx_cdc_source_payload_last_be = liteethudpstreamer1_rx_cdc_sink_payload_last_be;
+assign liteethudpstreamer1_rx_cdc_source_payload_be = liteethudpstreamer1_rx_cdc_sink_payload_be;
 assign liteethudpstreamer1_rx_cdc_source_payload_error = liteethudpstreamer1_rx_cdc_sink_payload_error;
 assign liteethudpstreamer1_rx_cdc_source_param_src_port = liteethudpstreamer1_rx_cdc_sink_param_src_port;
 assign liteethudpstreamer1_rx_cdc_source_param_dst_port = liteethudpstreamer1_rx_cdc_sink_param_dst_port;
 assign liteethudpstreamer1_rx_cdc_source_param_ip_address = liteethudpstreamer1_rx_cdc_sink_param_ip_address;
 assign liteethudpstreamer1_rx_cdc_source_param_length = liteethudpstreamer1_rx_cdc_sink_param_length;
 always @(*) begin
-    liteethudp_request <= 2'd0;
-    liteethudp_request[0] <= liteethudp_status0_ongoing0;
-    liteethudp_request[1] <= liteethudp_status1_ongoing0;
+    liteethudp_request = 2'd0;
+    liteethudp_request[0] = liteethudp_status0_ongoing0;
+    liteethudp_request[1] = liteethudp_status1_ongoing0;
 end
 always @(*) begin
-    crossbar_source_first <= 1'd0;
-    crossbar_source_last <= 1'd0;
-    crossbar_source_param_dst_port <= 16'd0;
-    crossbar_source_param_ip_address <= 32'd0;
-    crossbar_source_param_length <= 16'd0;
-    crossbar_source_param_src_port <= 16'd0;
-    crossbar_source_payload_data <= 8'd0;
-    crossbar_source_payload_error <= 1'd0;
-    crossbar_source_payload_last_be <= 1'd0;
-    crossbar_source_valid <= 1'd0;
-    liteethudpstreamer0_internal_port_sink_ready <= 1'd0;
-    liteethudpstreamer1_internal_port_sink_ready <= 1'd0;
+    crossbar_source_first = 1'd0;
+    crossbar_source_last = 1'd0;
+    crossbar_source_param_dst_port = 16'd0;
+    crossbar_source_param_ip_address = 32'd0;
+    crossbar_source_param_length = 16'd0;
+    crossbar_source_param_src_port = 16'd0;
+    crossbar_source_payload_be = 1'd0;
+    crossbar_source_payload_data = 8'd0;
+    crossbar_source_payload_error = 1'd0;
+    crossbar_source_valid = 1'd0;
+    liteethudpstreamer0_internal_port_sink_ready = 1'd0;
+    liteethudpstreamer1_internal_port_sink_ready = 1'd0;
     case (liteethudp_grant)
         1'd0: begin
-            crossbar_source_valid <= liteethudpstreamer0_internal_port_sink_valid;
-            liteethudpstreamer0_internal_port_sink_ready <= crossbar_source_ready;
-            crossbar_source_first <= liteethudpstreamer0_internal_port_sink_first;
-            crossbar_source_last <= liteethudpstreamer0_internal_port_sink_last;
-            crossbar_source_payload_data <= liteethudpstreamer0_internal_port_sink_payload_data;
-            crossbar_source_payload_last_be <= liteethudpstreamer0_internal_port_sink_payload_last_be;
-            crossbar_source_payload_error <= liteethudpstreamer0_internal_port_sink_payload_error;
-            crossbar_source_param_src_port <= liteethudpstreamer0_internal_port_sink_param_src_port;
-            crossbar_source_param_dst_port <= liteethudpstreamer0_internal_port_sink_param_dst_port;
-            crossbar_source_param_ip_address <= liteethudpstreamer0_internal_port_sink_param_ip_address;
-            crossbar_source_param_length <= liteethudpstreamer0_internal_port_sink_param_length;
+            crossbar_source_valid = liteethudpstreamer0_internal_port_sink_valid;
+            liteethudpstreamer0_internal_port_sink_ready = crossbar_source_ready;
+            crossbar_source_first = liteethudpstreamer0_internal_port_sink_first;
+            crossbar_source_last = liteethudpstreamer0_internal_port_sink_last;
+            crossbar_source_payload_data = liteethudpstreamer0_internal_port_sink_payload_data;
+            crossbar_source_payload_be = liteethudpstreamer0_internal_port_sink_payload_be;
+            crossbar_source_payload_error = liteethudpstreamer0_internal_port_sink_payload_error;
+            crossbar_source_param_src_port = liteethudpstreamer0_internal_port_sink_param_src_port;
+            crossbar_source_param_dst_port = liteethudpstreamer0_internal_port_sink_param_dst_port;
+            crossbar_source_param_ip_address = liteethudpstreamer0_internal_port_sink_param_ip_address;
+            crossbar_source_param_length = liteethudpstreamer0_internal_port_sink_param_length;
         end
         1'd1: begin
-            crossbar_source_valid <= liteethudpstreamer1_internal_port_sink_valid;
-            liteethudpstreamer1_internal_port_sink_ready <= crossbar_source_ready;
-            crossbar_source_first <= liteethudpstreamer1_internal_port_sink_first;
-            crossbar_source_last <= liteethudpstreamer1_internal_port_sink_last;
-            crossbar_source_payload_data <= liteethudpstreamer1_internal_port_sink_payload_data;
-            crossbar_source_payload_last_be <= liteethudpstreamer1_internal_port_sink_payload_last_be;
-            crossbar_source_payload_error <= liteethudpstreamer1_internal_port_sink_payload_error;
-            crossbar_source_param_src_port <= liteethudpstreamer1_internal_port_sink_param_src_port;
-            crossbar_source_param_dst_port <= liteethudpstreamer1_internal_port_sink_param_dst_port;
-            crossbar_source_param_ip_address <= liteethudpstreamer1_internal_port_sink_param_ip_address;
-            crossbar_source_param_length <= liteethudpstreamer1_internal_port_sink_param_length;
+            crossbar_source_valid = liteethudpstreamer1_internal_port_sink_valid;
+            liteethudpstreamer1_internal_port_sink_ready = crossbar_source_ready;
+            crossbar_source_first = liteethudpstreamer1_internal_port_sink_first;
+            crossbar_source_last = liteethudpstreamer1_internal_port_sink_last;
+            crossbar_source_payload_data = liteethudpstreamer1_internal_port_sink_payload_data;
+            crossbar_source_payload_be = liteethudpstreamer1_internal_port_sink_payload_be;
+            crossbar_source_payload_error = liteethudpstreamer1_internal_port_sink_payload_error;
+            crossbar_source_param_src_port = liteethudpstreamer1_internal_port_sink_param_src_port;
+            crossbar_source_param_dst_port = liteethudpstreamer1_internal_port_sink_param_dst_port;
+            crossbar_source_param_ip_address = liteethudpstreamer1_internal_port_sink_param_ip_address;
+            crossbar_source_param_length = liteethudpstreamer1_internal_port_sink_param_length;
         end
     endcase
 end
@@ -6604,226 +7744,244 @@ assign liteethudp_status0_ongoing0 = ((liteethudpstreamer0_internal_port_sink_va
 assign liteethudp_status1_last = ((liteethudpstreamer1_internal_port_sink_valid & liteethudpstreamer1_internal_port_sink_last) & liteethudpstreamer1_internal_port_sink_ready);
 assign liteethudp_status1_ongoing0 = ((liteethudpstreamer1_internal_port_sink_valid | liteethudp_status1_ongoing1) & (~liteethudp_status1_last));
 always @(*) begin
-    liteethudp_sel1 <= 2'd0;
-    if (liteethudp_first) begin
-        liteethudp_sel1 <= liteethudp_sel0;
+    liteethudp_sel1 = 2'd0;
+    if ((~liteethudp_sel_locked)) begin
+        liteethudp_sel1 = liteethudp_sel0;
     end else begin
-        liteethudp_sel1 <= liteethudp_sel_ongoing;
+        liteethudp_sel1 = liteethudp_sel_ongoing;
     end
 end
 always @(*) begin
-    crossbar_sink_ready <= 1'd0;
-    liteethudpstreamer0_internal_port_source_first <= 1'd0;
-    liteethudpstreamer0_internal_port_source_last <= 1'd0;
-    liteethudpstreamer0_internal_port_source_param_dst_port <= 16'd0;
-    liteethudpstreamer0_internal_port_source_param_ip_address <= 32'd0;
-    liteethudpstreamer0_internal_port_source_param_length <= 16'd0;
-    liteethudpstreamer0_internal_port_source_param_src_port <= 16'd0;
-    liteethudpstreamer0_internal_port_source_payload_data <= 8'd0;
-    liteethudpstreamer0_internal_port_source_payload_error <= 1'd0;
-    liteethudpstreamer0_internal_port_source_payload_last_be <= 1'd0;
-    liteethudpstreamer0_internal_port_source_valid <= 1'd0;
-    liteethudpstreamer1_internal_port_source_first <= 1'd0;
-    liteethudpstreamer1_internal_port_source_last <= 1'd0;
-    liteethudpstreamer1_internal_port_source_param_dst_port <= 16'd0;
-    liteethudpstreamer1_internal_port_source_param_ip_address <= 32'd0;
-    liteethudpstreamer1_internal_port_source_param_length <= 16'd0;
-    liteethudpstreamer1_internal_port_source_param_src_port <= 16'd0;
-    liteethudpstreamer1_internal_port_source_payload_data <= 8'd0;
-    liteethudpstreamer1_internal_port_source_payload_error <= 1'd0;
-    liteethudpstreamer1_internal_port_source_payload_last_be <= 1'd0;
-    liteethudpstreamer1_internal_port_source_valid <= 1'd0;
+    crossbar_sink_ready = 1'd0;
+    liteethudpstreamer0_internal_port_source_first = 1'd0;
+    liteethudpstreamer0_internal_port_source_last = 1'd0;
+    liteethudpstreamer0_internal_port_source_param_dst_port = 16'd0;
+    liteethudpstreamer0_internal_port_source_param_ip_address = 32'd0;
+    liteethudpstreamer0_internal_port_source_param_length = 16'd0;
+    liteethudpstreamer0_internal_port_source_param_src_port = 16'd0;
+    liteethudpstreamer0_internal_port_source_payload_be = 1'd0;
+    liteethudpstreamer0_internal_port_source_payload_data = 8'd0;
+    liteethudpstreamer0_internal_port_source_payload_error = 1'd0;
+    liteethudpstreamer0_internal_port_source_valid = 1'd0;
+    liteethudpstreamer1_internal_port_source_first = 1'd0;
+    liteethudpstreamer1_internal_port_source_last = 1'd0;
+    liteethudpstreamer1_internal_port_source_param_dst_port = 16'd0;
+    liteethudpstreamer1_internal_port_source_param_ip_address = 32'd0;
+    liteethudpstreamer1_internal_port_source_param_length = 16'd0;
+    liteethudpstreamer1_internal_port_source_param_src_port = 16'd0;
+    liteethudpstreamer1_internal_port_source_payload_be = 1'd0;
+    liteethudpstreamer1_internal_port_source_payload_data = 8'd0;
+    liteethudpstreamer1_internal_port_source_payload_error = 1'd0;
+    liteethudpstreamer1_internal_port_source_valid = 1'd0;
     case (liteethudp_sel1)
         1'd1: begin
-            liteethudpstreamer0_internal_port_source_valid <= crossbar_sink_valid;
-            crossbar_sink_ready <= liteethudpstreamer0_internal_port_source_ready;
-            liteethudpstreamer0_internal_port_source_first <= crossbar_sink_first;
-            liteethudpstreamer0_internal_port_source_last <= crossbar_sink_last;
-            liteethudpstreamer0_internal_port_source_payload_data <= crossbar_sink_payload_data;
-            liteethudpstreamer0_internal_port_source_payload_last_be <= crossbar_sink_payload_last_be;
-            liteethudpstreamer0_internal_port_source_payload_error <= crossbar_sink_payload_error;
-            liteethudpstreamer0_internal_port_source_param_src_port <= crossbar_sink_param_src_port;
-            liteethudpstreamer0_internal_port_source_param_dst_port <= crossbar_sink_param_dst_port;
-            liteethudpstreamer0_internal_port_source_param_ip_address <= crossbar_sink_param_ip_address;
-            liteethudpstreamer0_internal_port_source_param_length <= crossbar_sink_param_length;
+            liteethudpstreamer0_internal_port_source_valid = crossbar_sink_valid;
+            crossbar_sink_ready = liteethudpstreamer0_internal_port_source_ready;
+            liteethudpstreamer0_internal_port_source_first = crossbar_sink_first;
+            liteethudpstreamer0_internal_port_source_last = crossbar_sink_last;
+            liteethudpstreamer0_internal_port_source_payload_data = crossbar_sink_payload_data;
+            liteethudpstreamer0_internal_port_source_payload_be = crossbar_sink_payload_be;
+            liteethudpstreamer0_internal_port_source_payload_error = crossbar_sink_payload_error;
+            liteethudpstreamer0_internal_port_source_param_src_port = crossbar_sink_param_src_port;
+            liteethudpstreamer0_internal_port_source_param_dst_port = crossbar_sink_param_dst_port;
+            liteethudpstreamer0_internal_port_source_param_ip_address = crossbar_sink_param_ip_address;
+            liteethudpstreamer0_internal_port_source_param_length = crossbar_sink_param_length;
         end
         2'd2: begin
-            liteethudpstreamer1_internal_port_source_valid <= crossbar_sink_valid;
-            crossbar_sink_ready <= liteethudpstreamer1_internal_port_source_ready;
-            liteethudpstreamer1_internal_port_source_first <= crossbar_sink_first;
-            liteethudpstreamer1_internal_port_source_last <= crossbar_sink_last;
-            liteethudpstreamer1_internal_port_source_payload_data <= crossbar_sink_payload_data;
-            liteethudpstreamer1_internal_port_source_payload_last_be <= crossbar_sink_payload_last_be;
-            liteethudpstreamer1_internal_port_source_payload_error <= crossbar_sink_payload_error;
-            liteethudpstreamer1_internal_port_source_param_src_port <= crossbar_sink_param_src_port;
-            liteethudpstreamer1_internal_port_source_param_dst_port <= crossbar_sink_param_dst_port;
-            liteethudpstreamer1_internal_port_source_param_ip_address <= crossbar_sink_param_ip_address;
-            liteethudpstreamer1_internal_port_source_param_length <= crossbar_sink_param_length;
+            liteethudpstreamer1_internal_port_source_valid = crossbar_sink_valid;
+            crossbar_sink_ready = liteethudpstreamer1_internal_port_source_ready;
+            liteethudpstreamer1_internal_port_source_first = crossbar_sink_first;
+            liteethudpstreamer1_internal_port_source_last = crossbar_sink_last;
+            liteethudpstreamer1_internal_port_source_payload_data = crossbar_sink_payload_data;
+            liteethudpstreamer1_internal_port_source_payload_be = crossbar_sink_payload_be;
+            liteethudpstreamer1_internal_port_source_payload_error = crossbar_sink_payload_error;
+            liteethudpstreamer1_internal_port_source_param_src_port = crossbar_sink_param_src_port;
+            liteethudpstreamer1_internal_port_source_param_dst_port = crossbar_sink_param_dst_port;
+            liteethudpstreamer1_internal_port_source_param_ip_address = crossbar_sink_param_ip_address;
+            liteethudpstreamer1_internal_port_source_param_length = crossbar_sink_param_length;
         end
         default: begin
-            crossbar_sink_ready <= 1'd1;
+            crossbar_sink_ready = 1'd1;
         end
     endcase
 end
 assign liteethudp_last = ((crossbar_sink_valid & crossbar_sink_last) & crossbar_sink_ready);
 assign liteethudp_ongoing0 = ((crossbar_sink_valid | liteethudp_ongoing1) & (~liteethudp_last));
-assign liteethudpstreamer0_user_port_sink_valid = liteethudpstreamer0_tx_source_source_valid;
-assign liteethudpstreamer0_tx_source_source_ready = liteethudpstreamer0_user_port_sink_ready;
-assign liteethudpstreamer0_user_port_sink_first = liteethudpstreamer0_tx_source_source_first;
-assign liteethudpstreamer0_user_port_sink_last = liteethudpstreamer0_tx_source_source_last;
-assign liteethudpstreamer0_user_port_sink_payload_data = liteethudpstreamer0_tx_source_source_payload_data;
-assign liteethudpstreamer0_user_port_sink_payload_last_be = liteethudpstreamer0_tx_source_source_payload_last_be;
-assign liteethudpstreamer0_user_port_sink_payload_error = liteethudpstreamer0_tx_source_source_payload_error;
-assign liteethudpstreamer0_user_port_sink_param_src_port = liteethudpstreamer0_tx_source_source_param_src_port;
-assign liteethudpstreamer0_user_port_sink_param_dst_port = liteethudpstreamer0_tx_source_source_param_dst_port;
-assign liteethudpstreamer0_user_port_sink_param_ip_address = liteethudpstreamer0_tx_source_source_param_ip_address;
-assign liteethudpstreamer0_user_port_sink_param_length = liteethudpstreamer0_tx_source_source_param_length;
+assign liteethudpstreamer0_user_port_sink_valid = liteethudpstreamer0_tx_source_valid;
+assign liteethudpstreamer0_tx_source_ready = liteethudpstreamer0_user_port_sink_ready;
+assign liteethudpstreamer0_user_port_sink_first = liteethudpstreamer0_tx_source_first;
+assign liteethudpstreamer0_user_port_sink_last = liteethudpstreamer0_tx_source_last;
+assign liteethudpstreamer0_user_port_sink_payload_data = liteethudpstreamer0_tx_source_payload_data;
+assign liteethudpstreamer0_user_port_sink_payload_be = liteethudpstreamer0_tx_source_payload_be;
+assign liteethudpstreamer0_user_port_sink_payload_error = liteethudpstreamer0_tx_source_payload_error;
+assign liteethudpstreamer0_user_port_sink_param_src_port = liteethudpstreamer0_tx_source_param_src_port;
+assign liteethudpstreamer0_user_port_sink_param_dst_port = liteethudpstreamer0_tx_source_param_dst_port;
+assign liteethudpstreamer0_user_port_sink_param_ip_address = liteethudpstreamer0_tx_source_param_ip_address;
+assign liteethudpstreamer0_user_port_sink_param_length = liteethudpstreamer0_tx_source_param_length;
 assign liteethudpstreamer0_rx_sink_sink_valid = liteethudpstreamer0_user_port_source_valid;
 assign liteethudpstreamer0_user_port_source_ready = liteethudpstreamer0_rx_sink_sink_ready;
 assign liteethudpstreamer0_rx_sink_sink_first = liteethudpstreamer0_user_port_source_first;
 assign liteethudpstreamer0_rx_sink_sink_last = liteethudpstreamer0_user_port_source_last;
 assign liteethudpstreamer0_rx_sink_sink_payload_data = liteethudpstreamer0_user_port_source_payload_data;
-assign liteethudpstreamer0_rx_sink_sink_payload_last_be = liteethudpstreamer0_user_port_source_payload_last_be;
+assign liteethudpstreamer0_rx_sink_sink_payload_be = liteethudpstreamer0_user_port_source_payload_be;
 assign liteethudpstreamer0_rx_sink_sink_payload_error = liteethudpstreamer0_user_port_source_payload_error;
 assign liteethudpstreamer0_rx_sink_sink_param_src_port = liteethudpstreamer0_user_port_source_param_src_port;
 assign liteethudpstreamer0_rx_sink_sink_param_dst_port = liteethudpstreamer0_user_port_source_param_dst_port;
 assign liteethudpstreamer0_rx_sink_sink_param_ip_address = liteethudpstreamer0_user_port_source_param_ip_address;
 assign liteethudpstreamer0_rx_sink_sink_param_length = liteethudpstreamer0_user_port_source_param_length;
-assign liteethudpstreamer0_tx_fifo_sink_valid = liteethudpstreamer0_tx_sink_sink_valid;
-assign liteethudpstreamer0_tx_sink_sink_ready = liteethudpstreamer0_tx_fifo_sink_ready;
-assign liteethudpstreamer0_tx_fifo_sink_first = liteethudpstreamer0_tx_sink_sink_first;
-assign liteethudpstreamer0_tx_fifo_sink_last = liteethudpstreamer0_tx_sink_sink_last;
-assign liteethudpstreamer0_tx_fifo_sink_payload_data = liteethudpstreamer0_tx_sink_sink_payload_data;
-assign liteethudpstreamer0_tx_fifo_syncfifo0_din = {liteethudpstreamer0_tx_fifo_fifo_in_last, liteethudpstreamer0_tx_fifo_fifo_in_first, liteethudpstreamer0_tx_fifo_fifo_in_payload_data};
-assign {liteethudpstreamer0_tx_fifo_fifo_out_last, liteethudpstreamer0_tx_fifo_fifo_out_first, liteethudpstreamer0_tx_fifo_fifo_out_payload_data} = liteethudpstreamer0_tx_fifo_syncfifo0_dout;
-assign liteethudpstreamer0_tx_fifo_sink_ready = liteethudpstreamer0_tx_fifo_syncfifo0_writable;
-assign liteethudpstreamer0_tx_fifo_syncfifo0_we = liteethudpstreamer0_tx_fifo_sink_valid;
-assign liteethudpstreamer0_tx_fifo_fifo_in_first = liteethudpstreamer0_tx_fifo_sink_first;
-assign liteethudpstreamer0_tx_fifo_fifo_in_last = liteethudpstreamer0_tx_fifo_sink_last;
-assign liteethudpstreamer0_tx_fifo_fifo_in_payload_data = liteethudpstreamer0_tx_fifo_sink_payload_data;
-assign liteethudpstreamer0_tx_fifo_source_valid = liteethudpstreamer0_tx_fifo_readable;
-assign liteethudpstreamer0_tx_fifo_source_first = liteethudpstreamer0_tx_fifo_fifo_out_first;
-assign liteethudpstreamer0_tx_fifo_source_last = liteethudpstreamer0_tx_fifo_fifo_out_last;
-assign liteethudpstreamer0_tx_fifo_source_payload_data = liteethudpstreamer0_tx_fifo_fifo_out_payload_data;
-assign liteethudpstreamer0_tx_fifo_re = liteethudpstreamer0_tx_fifo_source_ready;
-assign liteethudpstreamer0_tx_fifo_syncfifo0_re = (liteethudpstreamer0_tx_fifo_syncfifo0_readable & ((~liteethudpstreamer0_tx_fifo_readable) | liteethudpstreamer0_tx_fifo_re));
-assign liteethudpstreamer0_tx_fifo_level1 = (liteethudpstreamer0_tx_fifo_level0 + liteethudpstreamer0_tx_fifo_readable);
+assign liteethudpstreamer0_tx_ip_address_sig = udp0_ip_address;
+assign liteethudpstreamer0_tx_udp_port_sig = udp0_udp_port;
+assign liteethudpstreamer0_tx_sink_be = liteethudpstreamer0_tx_sink_payload_be;
+assign liteethudpstreamer0_tx_sink_bytes = (1'd0 + liteethudpstreamer0_tx_sink_be);
+assign liteethudpstreamer0_tx_packet_full = (liteethudpstreamer0_tx_counter == 4'd15);
+assign liteethudpstreamer0_tx_packet_last = (liteethudpstreamer0_tx_sink_last | liteethudpstreamer0_tx_packet_full);
+assign liteethudpstreamer0_tx_packet_length = ((liteethudpstreamer0_tx_counter * 1'd1) + liteethudpstreamer0_tx_sink_bytes);
+assign liteethudpstreamer0_tx_sink_ready = liteethudpstreamer0_tx_sink_sink_ready;
+assign liteethudpstreamer0_tx_sink_sink_valid = liteethudpstreamer0_tx_sink_valid;
+assign liteethudpstreamer0_tx_sink_sink_last = liteethudpstreamer0_tx_packet_last;
+assign liteethudpstreamer0_tx_sink_sink_payload_data = liteethudpstreamer0_tx_sink_payload_data;
+assign liteethudpstreamer0_tx_sink_sink_param_length = liteethudpstreamer0_tx_packet_length;
+assign liteethudpstreamer0_tx_source_valid = (liteethudpstreamer0_tx_source_source_valid & (liteethudpstreamer0_tx_enable | liteethudpstreamer0_tx_source_active));
+assign liteethudpstreamer0_tx_source_source_ready = (liteethudpstreamer0_tx_source_ready & (liteethudpstreamer0_tx_enable | liteethudpstreamer0_tx_source_active));
+assign liteethudpstreamer0_tx_source_payload_data = liteethudpstreamer0_tx_source_source_payload_data;
+assign liteethudpstreamer0_tx_source_last = liteethudpstreamer0_tx_source_source_last;
+assign liteethudpstreamer0_tx_source_param_length = liteethudpstreamer0_tx_source_source_param_length;
+assign liteethudpstreamer0_tx_sink_sink_payload_be = liteethudpstreamer0_tx_sink_be;
+assign liteethudpstreamer0_tx_source_payload_be = liteethudpstreamer0_tx_source_source_payload_be;
+assign liteethudpstreamer0_tx_source_param_src_port = (liteethudpstreamer0_tx_source_active ? liteethudpstreamer0_tx_udp_port : liteethudpstreamer0_tx_udp_port_sig);
+assign liteethudpstreamer0_tx_source_param_dst_port = (liteethudpstreamer0_tx_source_active ? liteethudpstreamer0_tx_udp_port : liteethudpstreamer0_tx_udp_port_sig);
+assign liteethudpstreamer0_tx_source_param_ip_address = (liteethudpstreamer0_tx_source_active ? liteethudpstreamer0_tx_ip_address : liteethudpstreamer0_tx_ip_address_sig);
+assign liteethudpstreamer0_tx_param_fifo_sink_param_length = liteethudpstreamer0_tx_sink_sink_param_length;
+assign liteethudpstreamer0_tx_payload_fifo_sink_first = liteethudpstreamer0_tx_sink_sink_first;
+assign liteethudpstreamer0_tx_payload_fifo_sink_last = liteethudpstreamer0_tx_sink_sink_last;
+assign liteethudpstreamer0_tx_payload_fifo_sink_payload_data = liteethudpstreamer0_tx_sink_sink_payload_data;
+assign liteethudpstreamer0_tx_payload_fifo_sink_payload_be = liteethudpstreamer0_tx_sink_sink_payload_be;
+assign liteethudpstreamer0_tx_param_fifo_sink_valid = ((liteethudpstreamer0_tx_sink_sink_valid & liteethudpstreamer0_tx_sink_sink_last) & liteethudpstreamer0_tx_payload_fifo_sink_ready);
+assign liteethudpstreamer0_tx_payload_fifo_sink_valid = (liteethudpstreamer0_tx_sink_sink_valid & liteethudpstreamer0_tx_param_fifo_sink_ready);
+assign liteethudpstreamer0_tx_sink_sink_ready = (liteethudpstreamer0_tx_param_fifo_sink_ready & liteethudpstreamer0_tx_payload_fifo_sink_ready);
+assign liteethudpstreamer0_tx_source_source_valid = liteethudpstreamer0_tx_param_fifo_source_valid;
+assign liteethudpstreamer0_tx_source_source_param_length = liteethudpstreamer0_tx_param_fifo_source_param_length;
 always @(*) begin
-    liteethudpstreamer0_tx_fifo_wrport_adr <= 4'd0;
-    if (liteethudpstreamer0_tx_fifo_replace) begin
-        liteethudpstreamer0_tx_fifo_wrport_adr <= (liteethudpstreamer0_tx_fifo_produce - 1'd1);
+    liteethudpstreamer0_tx_source_source_first = 1'd0;
+    liteethudpstreamer0_tx_source_source_first = liteethudpstreamer0_tx_param_fifo_source_first;
+    liteethudpstreamer0_tx_source_source_first = liteethudpstreamer0_tx_payload_fifo_source_first;
+end
+assign liteethudpstreamer0_tx_source_source_last = liteethudpstreamer0_tx_payload_fifo_source_last;
+assign liteethudpstreamer0_tx_source_source_payload_data = liteethudpstreamer0_tx_payload_fifo_source_payload_data;
+assign liteethudpstreamer0_tx_source_source_payload_be = liteethudpstreamer0_tx_payload_fifo_source_payload_be;
+assign liteethudpstreamer0_tx_param_fifo_source_ready = ((liteethudpstreamer0_tx_source_source_valid & liteethudpstreamer0_tx_source_source_last) & liteethudpstreamer0_tx_source_source_ready);
+assign liteethudpstreamer0_tx_payload_fifo_source_ready = (liteethudpstreamer0_tx_source_source_valid & liteethudpstreamer0_tx_source_source_ready);
+assign liteethudpstreamer0_tx_payload_fifo_syncfifo0_din = {liteethudpstreamer0_tx_payload_fifo_fifo_in_last, liteethudpstreamer0_tx_payload_fifo_fifo_in_first, liteethudpstreamer0_tx_payload_fifo_fifo_in_payload_be, liteethudpstreamer0_tx_payload_fifo_fifo_in_payload_data};
+assign {liteethudpstreamer0_tx_payload_fifo_fifo_out_last, liteethudpstreamer0_tx_payload_fifo_fifo_out_first, liteethudpstreamer0_tx_payload_fifo_fifo_out_payload_be, liteethudpstreamer0_tx_payload_fifo_fifo_out_payload_data} = liteethudpstreamer0_tx_payload_fifo_syncfifo0_dout;
+assign liteethudpstreamer0_tx_payload_fifo_sink_ready = liteethudpstreamer0_tx_payload_fifo_syncfifo0_writable;
+assign liteethudpstreamer0_tx_payload_fifo_syncfifo0_we = liteethudpstreamer0_tx_payload_fifo_sink_valid;
+assign liteethudpstreamer0_tx_payload_fifo_fifo_in_first = liteethudpstreamer0_tx_payload_fifo_sink_first;
+assign liteethudpstreamer0_tx_payload_fifo_fifo_in_last = liteethudpstreamer0_tx_payload_fifo_sink_last;
+assign liteethudpstreamer0_tx_payload_fifo_fifo_in_payload_data = liteethudpstreamer0_tx_payload_fifo_sink_payload_data;
+assign liteethudpstreamer0_tx_payload_fifo_fifo_in_payload_be = liteethudpstreamer0_tx_payload_fifo_sink_payload_be;
+assign liteethudpstreamer0_tx_payload_fifo_source_valid = liteethudpstreamer0_tx_payload_fifo_readable;
+assign liteethudpstreamer0_tx_payload_fifo_source_first = liteethudpstreamer0_tx_payload_fifo_fifo_out_first;
+assign liteethudpstreamer0_tx_payload_fifo_source_last = liteethudpstreamer0_tx_payload_fifo_fifo_out_last;
+assign liteethudpstreamer0_tx_payload_fifo_source_payload_data = liteethudpstreamer0_tx_payload_fifo_fifo_out_payload_data;
+assign liteethudpstreamer0_tx_payload_fifo_source_payload_be = liteethudpstreamer0_tx_payload_fifo_fifo_out_payload_be;
+assign liteethudpstreamer0_tx_payload_fifo_re = liteethudpstreamer0_tx_payload_fifo_source_ready;
+assign liteethudpstreamer0_tx_payload_fifo_syncfifo0_re = (liteethudpstreamer0_tx_payload_fifo_syncfifo0_readable & ((~liteethudpstreamer0_tx_payload_fifo_readable) | liteethudpstreamer0_tx_payload_fifo_re));
+assign liteethudpstreamer0_tx_payload_fifo_level1 = (liteethudpstreamer0_tx_payload_fifo_level0 + liteethudpstreamer0_tx_payload_fifo_readable);
+always @(*) begin
+    liteethudpstreamer0_tx_payload_fifo_wrport_adr = 4'd0;
+    if (liteethudpstreamer0_tx_payload_fifo_replace) begin
+        liteethudpstreamer0_tx_payload_fifo_wrport_adr = (liteethudpstreamer0_tx_payload_fifo_produce - 1'd1);
     end else begin
-        liteethudpstreamer0_tx_fifo_wrport_adr <= liteethudpstreamer0_tx_fifo_produce;
+        liteethudpstreamer0_tx_payload_fifo_wrport_adr = liteethudpstreamer0_tx_payload_fifo_produce;
     end
 end
-assign liteethudpstreamer0_tx_fifo_wrport_dat_w = liteethudpstreamer0_tx_fifo_syncfifo0_din;
-assign liteethudpstreamer0_tx_fifo_wrport_we = (liteethudpstreamer0_tx_fifo_syncfifo0_we & (liteethudpstreamer0_tx_fifo_syncfifo0_writable | liteethudpstreamer0_tx_fifo_replace));
-assign liteethudpstreamer0_tx_fifo_do_read = (liteethudpstreamer0_tx_fifo_syncfifo0_readable & liteethudpstreamer0_tx_fifo_syncfifo0_re);
-assign liteethudpstreamer0_tx_fifo_rdport_adr = liteethudpstreamer0_tx_fifo_consume;
-assign liteethudpstreamer0_tx_fifo_syncfifo0_dout = liteethudpstreamer0_tx_fifo_rdport_dat_r;
-assign liteethudpstreamer0_tx_fifo_rdport_re = liteethudpstreamer0_tx_fifo_do_read;
-assign liteethudpstreamer0_tx_fifo_syncfifo0_writable = (liteethudpstreamer0_tx_fifo_level0 != 5'd16);
-assign liteethudpstreamer0_tx_fifo_syncfifo0_readable = (liteethudpstreamer0_tx_fifo_level0 != 1'd0);
+assign liteethudpstreamer0_tx_payload_fifo_wrport_dat_w = liteethudpstreamer0_tx_payload_fifo_syncfifo0_din;
+assign liteethudpstreamer0_tx_payload_fifo_wrport_we = (liteethudpstreamer0_tx_payload_fifo_syncfifo0_we & (liteethudpstreamer0_tx_payload_fifo_syncfifo0_writable | liteethudpstreamer0_tx_payload_fifo_replace));
+assign liteethudpstreamer0_tx_payload_fifo_do_read = (liteethudpstreamer0_tx_payload_fifo_syncfifo0_readable & liteethudpstreamer0_tx_payload_fifo_syncfifo0_re);
+assign liteethudpstreamer0_tx_payload_fifo_rdport_adr = liteethudpstreamer0_tx_payload_fifo_consume;
+assign liteethudpstreamer0_tx_payload_fifo_syncfifo0_dout = liteethudpstreamer0_tx_payload_fifo_rdport_dat_r;
+assign liteethudpstreamer0_tx_payload_fifo_rdport_re = liteethudpstreamer0_tx_payload_fifo_do_read;
+assign liteethudpstreamer0_tx_payload_fifo_syncfifo0_writable = (liteethudpstreamer0_tx_payload_fifo_level0 != 5'd16);
+assign liteethudpstreamer0_tx_payload_fifo_syncfifo0_readable = (liteethudpstreamer0_tx_payload_fifo_level0 != 1'd0);
+assign liteethudpstreamer0_tx_param_fifo_syncfifo0_din = {liteethudpstreamer0_tx_param_fifo_fifo_in_last, liteethudpstreamer0_tx_param_fifo_fifo_in_first, liteethudpstreamer0_tx_param_fifo_fifo_in_param_length};
+assign {liteethudpstreamer0_tx_param_fifo_fifo_out_last, liteethudpstreamer0_tx_param_fifo_fifo_out_first, liteethudpstreamer0_tx_param_fifo_fifo_out_param_length} = liteethudpstreamer0_tx_param_fifo_syncfifo0_dout;
+assign liteethudpstreamer0_tx_param_fifo_sink_ready = liteethudpstreamer0_tx_param_fifo_syncfifo0_writable;
+assign liteethudpstreamer0_tx_param_fifo_syncfifo0_we = liteethudpstreamer0_tx_param_fifo_sink_valid;
+assign liteethudpstreamer0_tx_param_fifo_fifo_in_first = liteethudpstreamer0_tx_param_fifo_sink_first;
+assign liteethudpstreamer0_tx_param_fifo_fifo_in_last = liteethudpstreamer0_tx_param_fifo_sink_last;
+assign liteethudpstreamer0_tx_param_fifo_fifo_in_param_length = liteethudpstreamer0_tx_param_fifo_sink_param_length;
+assign liteethudpstreamer0_tx_param_fifo_source_valid = liteethudpstreamer0_tx_param_fifo_readable;
+assign liteethudpstreamer0_tx_param_fifo_source_first = liteethudpstreamer0_tx_param_fifo_fifo_out_first;
+assign liteethudpstreamer0_tx_param_fifo_source_last = liteethudpstreamer0_tx_param_fifo_fifo_out_last;
+assign liteethudpstreamer0_tx_param_fifo_source_param_length = liteethudpstreamer0_tx_param_fifo_fifo_out_param_length;
+assign liteethudpstreamer0_tx_param_fifo_re = liteethudpstreamer0_tx_param_fifo_source_ready;
+assign liteethudpstreamer0_tx_param_fifo_syncfifo0_re = (liteethudpstreamer0_tx_param_fifo_syncfifo0_readable & ((~liteethudpstreamer0_tx_param_fifo_readable) | liteethudpstreamer0_tx_param_fifo_re));
+assign liteethudpstreamer0_tx_param_fifo_level1 = (liteethudpstreamer0_tx_param_fifo_level0 + liteethudpstreamer0_tx_param_fifo_readable);
 always @(*) begin
-    liteethudpstreamer0_next_state <= 1'd0;
-    liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value0 <= 5'd0;
-    liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value_ce0 <= 1'd0;
-    liteethudpstreamer0_tx_fifo_source_ready <= 1'd0;
-    liteethudpstreamer0_tx_ip_address_liteethudpstreamer0_next_value1 <= 32'd0;
-    liteethudpstreamer0_tx_ip_address_liteethudpstreamer0_next_value_ce1 <= 1'd0;
-    liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value3 <= 5'd0;
-    liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value_ce3 <= 1'd0;
-    liteethudpstreamer0_tx_source_source_last <= 1'd0;
-    liteethudpstreamer0_tx_source_source_param_dst_port <= 16'd0;
-    liteethudpstreamer0_tx_source_source_param_ip_address <= 32'd0;
-    liteethudpstreamer0_tx_source_source_param_length <= 16'd0;
-    liteethudpstreamer0_tx_source_source_param_src_port <= 16'd0;
-    liteethudpstreamer0_tx_source_source_payload_data <= 8'd0;
-    liteethudpstreamer0_tx_source_source_payload_last_be <= 1'd0;
-    liteethudpstreamer0_tx_source_source_valid <= 1'd0;
-    liteethudpstreamer0_tx_udp_port_liteethudpstreamer0_next_value2 <= 16'd0;
-    liteethudpstreamer0_tx_udp_port_liteethudpstreamer0_next_value_ce2 <= 1'd0;
-    liteethudpstreamer0_next_state <= liteethudpstreamer0_state;
-    case (liteethudpstreamer0_state)
-        1'd1: begin
-            liteethudpstreamer0_tx_source_source_valid <= 1'd1;
-            liteethudpstreamer0_tx_source_source_last <= (liteethudpstreamer0_tx_counter == (liteethudpstreamer0_tx_level - 1'd1));
-            liteethudpstreamer0_tx_source_source_param_src_port <= liteethudpstreamer0_tx_udp_port;
-            liteethudpstreamer0_tx_source_source_param_dst_port <= liteethudpstreamer0_tx_udp_port;
-            liteethudpstreamer0_tx_source_source_param_ip_address <= liteethudpstreamer0_tx_ip_address;
-            liteethudpstreamer0_tx_source_source_param_length <= (liteethudpstreamer0_tx_level * 1'd1);
-            liteethudpstreamer0_tx_source_source_payload_data <= liteethudpstreamer0_tx_fifo_source_payload_data;
-            if (liteethudpstreamer0_tx_source_source_last) begin
-                liteethudpstreamer0_tx_source_source_payload_last_be <= 1'd1;
-            end
-            if (liteethudpstreamer0_tx_source_source_ready) begin
-                liteethudpstreamer0_tx_fifo_source_ready <= 1'd1;
-                liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value0 <= (liteethudpstreamer0_tx_counter + 1'd1);
-                liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value_ce0 <= 1'd1;
-                if (liteethudpstreamer0_tx_source_source_last) begin
-                    liteethudpstreamer0_next_state <= 1'd0;
-                end
-            end
-        end
-        default: begin
-            liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value0 <= 1'd0;
-            liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value_ce0 <= 1'd1;
-            liteethudpstreamer0_tx_ip_address_liteethudpstreamer0_next_value1 <= udp0_ip_address;
-            liteethudpstreamer0_tx_ip_address_liteethudpstreamer0_next_value_ce1 <= 1'd1;
-            liteethudpstreamer0_tx_udp_port_liteethudpstreamer0_next_value2 <= udp0_udp_port;
-            liteethudpstreamer0_tx_udp_port_liteethudpstreamer0_next_value_ce2 <= 1'd1;
-            if (((liteethudpstreamer0_tx_fifo_sink_valid & liteethudpstreamer0_tx_fifo_sink_ready) & liteethudpstreamer0_tx_fifo_sink_last)) begin
-                liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value3 <= (liteethudpstreamer0_tx_fifo_level1 + 1'd1);
-                liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value_ce3 <= 1'd1;
-                liteethudpstreamer0_next_state <= 1'd1;
-            end
-            if ((~liteethudpstreamer0_tx_fifo_sink_ready)) begin
-                liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value3 <= 5'd16;
-                liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value_ce3 <= 1'd1;
-                liteethudpstreamer0_next_state <= 1'd1;
-            end
-        end
-    endcase
-end
-always @(*) begin
-    liteethudpstreamer0_rx_valid <= 1'd1;
-    if ((liteethudpstreamer0_rx_sink_sink_param_dst_port != udp0_udp_port)) begin
-        liteethudpstreamer0_rx_valid <= 1'd0;
+    liteethudpstreamer0_tx_param_fifo_wrport_adr = 5'd0;
+    if (liteethudpstreamer0_tx_param_fifo_replace) begin
+        liteethudpstreamer0_tx_param_fifo_wrport_adr = (liteethudpstreamer0_tx_param_fifo_produce - 1'd1);
+    end else begin
+        liteethudpstreamer0_tx_param_fifo_wrport_adr = liteethudpstreamer0_tx_param_fifo_produce;
     end
 end
+assign liteethudpstreamer0_tx_param_fifo_wrport_dat_w = liteethudpstreamer0_tx_param_fifo_syncfifo0_din;
+assign liteethudpstreamer0_tx_param_fifo_wrport_we = (liteethudpstreamer0_tx_param_fifo_syncfifo0_we & (liteethudpstreamer0_tx_param_fifo_syncfifo0_writable | liteethudpstreamer0_tx_param_fifo_replace));
+assign liteethudpstreamer0_tx_param_fifo_do_read = (liteethudpstreamer0_tx_param_fifo_syncfifo0_readable & liteethudpstreamer0_tx_param_fifo_syncfifo0_re);
+assign liteethudpstreamer0_tx_param_fifo_rdport_adr = liteethudpstreamer0_tx_param_fifo_consume;
+assign liteethudpstreamer0_tx_param_fifo_syncfifo0_dout = liteethudpstreamer0_tx_param_fifo_rdport_dat_r;
+assign liteethudpstreamer0_tx_param_fifo_rdport_re = liteethudpstreamer0_tx_param_fifo_do_read;
+assign liteethudpstreamer0_tx_param_fifo_syncfifo0_writable = (liteethudpstreamer0_tx_param_fifo_level0 != 5'd17);
+assign liteethudpstreamer0_tx_param_fifo_syncfifo0_readable = (liteethudpstreamer0_tx_param_fifo_level0 != 1'd0);
+assign liteethudpstreamer0_rx_ip_address_sig = udp0_ip_address;
+assign liteethudpstreamer0_rx_udp_port_sig = udp0_udp_port;
+always @(*) begin
+    liteethudpstreamer0_rx_valid = 1'd1;
+    if ((~liteethudpstreamer0_rx_enable)) begin
+        liteethudpstreamer0_rx_valid = 1'd0;
+    end
+    if ((liteethudpstreamer0_rx_sink_sink_param_dst_port != liteethudpstreamer0_rx_udp_port_sig)) begin
+        liteethudpstreamer0_rx_valid = 1'd0;
+    end
+end
+assign liteethudpstreamer0_rx_accept = (liteethudpstreamer0_rx_first ? liteethudpstreamer0_rx_valid : liteethudpstreamer0_rx_selected);
 assign liteethudpstreamer0_rx_fifo_sink_last = liteethudpstreamer0_rx_sink_sink_last;
 assign liteethudpstreamer0_rx_fifo_sink_payload_data = liteethudpstreamer0_rx_sink_sink_payload_data;
-assign liteethudpstreamer0_rx_fifo_sink_payload_error = liteethudpstreamer0_rx_sink_sink_payload_error;
-assign liteethudpstreamer0_rx_fifo_sink_valid = (liteethudpstreamer0_rx_sink_sink_valid & liteethudpstreamer0_rx_valid);
-assign liteethudpstreamer0_rx_sink_sink_ready = (liteethudpstreamer0_rx_fifo_sink_ready | (~liteethudpstreamer0_rx_valid));
+assign liteethudpstreamer0_rx_fifo_sink_payload_be = liteethudpstreamer0_rx_sink_sink_payload_be;
+assign liteethudpstreamer0_rx_fifo_sink_payload_error = ((liteethudpstreamer0_rx_sink_sink_payload_error & liteethudpstreamer0_rx_sink_sink_payload_be) != 1'd0);
+assign liteethudpstreamer0_rx_fifo_sink_valid = (liteethudpstreamer0_rx_sink_sink_valid & liteethudpstreamer0_rx_accept);
+assign liteethudpstreamer0_rx_sink_sink_ready = (liteethudpstreamer0_rx_fifo_sink_ready | (~liteethudpstreamer0_rx_accept));
 assign liteethudpstreamer0_rx_source_source_valid = liteethudpstreamer0_rx_fifo_source_valid;
 assign liteethudpstreamer0_rx_fifo_source_ready = liteethudpstreamer0_rx_source_source_ready;
 assign liteethudpstreamer0_rx_source_source_first = liteethudpstreamer0_rx_fifo_source_first;
 assign liteethudpstreamer0_rx_source_source_last = liteethudpstreamer0_rx_fifo_source_last;
 assign liteethudpstreamer0_rx_source_source_payload_data = liteethudpstreamer0_rx_fifo_source_payload_data;
 assign liteethudpstreamer0_rx_source_source_payload_error = liteethudpstreamer0_rx_fifo_source_payload_error;
-assign liteethudpstreamer0_rx_fifo_syncfifo0_din = {liteethudpstreamer0_rx_fifo_fifo_in_last, liteethudpstreamer0_rx_fifo_fifo_in_first, liteethudpstreamer0_rx_fifo_fifo_in_payload_error, liteethudpstreamer0_rx_fifo_fifo_in_payload_data};
-assign {liteethudpstreamer0_rx_fifo_fifo_out_last, liteethudpstreamer0_rx_fifo_fifo_out_first, liteethudpstreamer0_rx_fifo_fifo_out_payload_error, liteethudpstreamer0_rx_fifo_fifo_out_payload_data} = liteethudpstreamer0_rx_fifo_syncfifo0_dout;
+assign liteethudpstreamer0_rx_source_source_payload_be = liteethudpstreamer0_rx_fifo_source_payload_be;
+assign liteethudpstreamer0_rx_fifo_syncfifo0_din = {liteethudpstreamer0_rx_fifo_fifo_in_last, liteethudpstreamer0_rx_fifo_fifo_in_first, liteethudpstreamer0_rx_fifo_fifo_in_payload_be, liteethudpstreamer0_rx_fifo_fifo_in_payload_error, liteethudpstreamer0_rx_fifo_fifo_in_payload_data};
+assign {liteethudpstreamer0_rx_fifo_fifo_out_last, liteethudpstreamer0_rx_fifo_fifo_out_first, liteethudpstreamer0_rx_fifo_fifo_out_payload_be, liteethudpstreamer0_rx_fifo_fifo_out_payload_error, liteethudpstreamer0_rx_fifo_fifo_out_payload_data} = liteethudpstreamer0_rx_fifo_syncfifo0_dout;
 assign liteethudpstreamer0_rx_fifo_sink_ready = liteethudpstreamer0_rx_fifo_syncfifo0_writable;
 assign liteethudpstreamer0_rx_fifo_syncfifo0_we = liteethudpstreamer0_rx_fifo_sink_valid;
 assign liteethudpstreamer0_rx_fifo_fifo_in_first = liteethudpstreamer0_rx_fifo_sink_first;
 assign liteethudpstreamer0_rx_fifo_fifo_in_last = liteethudpstreamer0_rx_fifo_sink_last;
 assign liteethudpstreamer0_rx_fifo_fifo_in_payload_data = liteethudpstreamer0_rx_fifo_sink_payload_data;
 assign liteethudpstreamer0_rx_fifo_fifo_in_payload_error = liteethudpstreamer0_rx_fifo_sink_payload_error;
+assign liteethudpstreamer0_rx_fifo_fifo_in_payload_be = liteethudpstreamer0_rx_fifo_sink_payload_be;
 assign liteethudpstreamer0_rx_fifo_source_valid = liteethudpstreamer0_rx_fifo_readable;
 assign liteethudpstreamer0_rx_fifo_source_first = liteethudpstreamer0_rx_fifo_fifo_out_first;
 assign liteethudpstreamer0_rx_fifo_source_last = liteethudpstreamer0_rx_fifo_fifo_out_last;
 assign liteethudpstreamer0_rx_fifo_source_payload_data = liteethudpstreamer0_rx_fifo_fifo_out_payload_data;
 assign liteethudpstreamer0_rx_fifo_source_payload_error = liteethudpstreamer0_rx_fifo_fifo_out_payload_error;
+assign liteethudpstreamer0_rx_fifo_source_payload_be = liteethudpstreamer0_rx_fifo_fifo_out_payload_be;
 assign liteethudpstreamer0_rx_fifo_re = liteethudpstreamer0_rx_fifo_source_ready;
 assign liteethudpstreamer0_rx_fifo_syncfifo0_re = (liteethudpstreamer0_rx_fifo_syncfifo0_readable & ((~liteethudpstreamer0_rx_fifo_readable) | liteethudpstreamer0_rx_fifo_re));
 assign liteethudpstreamer0_rx_fifo_level1 = (liteethudpstreamer0_rx_fifo_level0 + liteethudpstreamer0_rx_fifo_readable);
 always @(*) begin
-    liteethudpstreamer0_rx_fifo_wrport_adr <= 4'd0;
+    liteethudpstreamer0_rx_fifo_wrport_adr = 4'd0;
     if (liteethudpstreamer0_rx_fifo_replace) begin
-        liteethudpstreamer0_rx_fifo_wrport_adr <= (liteethudpstreamer0_rx_fifo_produce - 1'd1);
+        liteethudpstreamer0_rx_fifo_wrport_adr = (liteethudpstreamer0_rx_fifo_produce - 1'd1);
     end else begin
-        liteethudpstreamer0_rx_fifo_wrport_adr <= liteethudpstreamer0_rx_fifo_produce;
+        liteethudpstreamer0_rx_fifo_wrport_adr = liteethudpstreamer0_rx_fifo_produce;
     end
 end
 assign liteethudpstreamer0_rx_fifo_wrport_dat_w = liteethudpstreamer0_rx_fifo_syncfifo0_din;
@@ -6834,163 +7992,181 @@ assign liteethudpstreamer0_rx_fifo_syncfifo0_dout = liteethudpstreamer0_rx_fifo_
 assign liteethudpstreamer0_rx_fifo_rdport_re = liteethudpstreamer0_rx_fifo_do_read;
 assign liteethudpstreamer0_rx_fifo_syncfifo0_writable = (liteethudpstreamer0_rx_fifo_level0 != 5'd16);
 assign liteethudpstreamer0_rx_fifo_syncfifo0_readable = (liteethudpstreamer0_rx_fifo_level0 != 1'd0);
-assign liteethudpstreamer1_user_port_sink_valid = liteethudpstreamer1_tx_source_source_valid;
-assign liteethudpstreamer1_tx_source_source_ready = liteethudpstreamer1_user_port_sink_ready;
-assign liteethudpstreamer1_user_port_sink_first = liteethudpstreamer1_tx_source_source_first;
-assign liteethudpstreamer1_user_port_sink_last = liteethudpstreamer1_tx_source_source_last;
-assign liteethudpstreamer1_user_port_sink_payload_data = liteethudpstreamer1_tx_source_source_payload_data;
-assign liteethudpstreamer1_user_port_sink_payload_last_be = liteethudpstreamer1_tx_source_source_payload_last_be;
-assign liteethudpstreamer1_user_port_sink_payload_error = liteethudpstreamer1_tx_source_source_payload_error;
-assign liteethudpstreamer1_user_port_sink_param_src_port = liteethudpstreamer1_tx_source_source_param_src_port;
-assign liteethudpstreamer1_user_port_sink_param_dst_port = liteethudpstreamer1_tx_source_source_param_dst_port;
-assign liteethudpstreamer1_user_port_sink_param_ip_address = liteethudpstreamer1_tx_source_source_param_ip_address;
-assign liteethudpstreamer1_user_port_sink_param_length = liteethudpstreamer1_tx_source_source_param_length;
+assign liteethudpstreamer1_user_port_sink_valid = liteethudpstreamer1_tx_source_valid;
+assign liteethudpstreamer1_tx_source_ready = liteethudpstreamer1_user_port_sink_ready;
+assign liteethudpstreamer1_user_port_sink_first = liteethudpstreamer1_tx_source_first;
+assign liteethudpstreamer1_user_port_sink_last = liteethudpstreamer1_tx_source_last;
+assign liteethudpstreamer1_user_port_sink_payload_data = liteethudpstreamer1_tx_source_payload_data;
+assign liteethudpstreamer1_user_port_sink_payload_be = liteethudpstreamer1_tx_source_payload_be;
+assign liteethudpstreamer1_user_port_sink_payload_error = liteethudpstreamer1_tx_source_payload_error;
+assign liteethudpstreamer1_user_port_sink_param_src_port = liteethudpstreamer1_tx_source_param_src_port;
+assign liteethudpstreamer1_user_port_sink_param_dst_port = liteethudpstreamer1_tx_source_param_dst_port;
+assign liteethudpstreamer1_user_port_sink_param_ip_address = liteethudpstreamer1_tx_source_param_ip_address;
+assign liteethudpstreamer1_user_port_sink_param_length = liteethudpstreamer1_tx_source_param_length;
 assign liteethudpstreamer1_rx_sink_sink_valid = liteethudpstreamer1_user_port_source_valid;
 assign liteethudpstreamer1_user_port_source_ready = liteethudpstreamer1_rx_sink_sink_ready;
 assign liteethudpstreamer1_rx_sink_sink_first = liteethudpstreamer1_user_port_source_first;
 assign liteethudpstreamer1_rx_sink_sink_last = liteethudpstreamer1_user_port_source_last;
 assign liteethudpstreamer1_rx_sink_sink_payload_data = liteethudpstreamer1_user_port_source_payload_data;
-assign liteethudpstreamer1_rx_sink_sink_payload_last_be = liteethudpstreamer1_user_port_source_payload_last_be;
+assign liteethudpstreamer1_rx_sink_sink_payload_be = liteethudpstreamer1_user_port_source_payload_be;
 assign liteethudpstreamer1_rx_sink_sink_payload_error = liteethudpstreamer1_user_port_source_payload_error;
 assign liteethudpstreamer1_rx_sink_sink_param_src_port = liteethudpstreamer1_user_port_source_param_src_port;
 assign liteethudpstreamer1_rx_sink_sink_param_dst_port = liteethudpstreamer1_user_port_source_param_dst_port;
 assign liteethudpstreamer1_rx_sink_sink_param_ip_address = liteethudpstreamer1_user_port_source_param_ip_address;
 assign liteethudpstreamer1_rx_sink_sink_param_length = liteethudpstreamer1_user_port_source_param_length;
-assign liteethudpstreamer1_tx_fifo_sink_valid = liteethudpstreamer1_tx_sink_sink_valid;
-assign liteethudpstreamer1_tx_sink_sink_ready = liteethudpstreamer1_tx_fifo_sink_ready;
-assign liteethudpstreamer1_tx_fifo_sink_first = liteethudpstreamer1_tx_sink_sink_first;
-assign liteethudpstreamer1_tx_fifo_sink_last = liteethudpstreamer1_tx_sink_sink_last;
-assign liteethudpstreamer1_tx_fifo_sink_payload_data = liteethudpstreamer1_tx_sink_sink_payload_data;
-assign liteethudpstreamer1_tx_fifo_syncfifo1_din = {liteethudpstreamer1_tx_fifo_fifo_in_last, liteethudpstreamer1_tx_fifo_fifo_in_first, liteethudpstreamer1_tx_fifo_fifo_in_payload_data};
-assign {liteethudpstreamer1_tx_fifo_fifo_out_last, liteethudpstreamer1_tx_fifo_fifo_out_first, liteethudpstreamer1_tx_fifo_fifo_out_payload_data} = liteethudpstreamer1_tx_fifo_syncfifo1_dout;
-assign liteethudpstreamer1_tx_fifo_sink_ready = liteethudpstreamer1_tx_fifo_syncfifo1_writable;
-assign liteethudpstreamer1_tx_fifo_syncfifo1_we = liteethudpstreamer1_tx_fifo_sink_valid;
-assign liteethudpstreamer1_tx_fifo_fifo_in_first = liteethudpstreamer1_tx_fifo_sink_first;
-assign liteethudpstreamer1_tx_fifo_fifo_in_last = liteethudpstreamer1_tx_fifo_sink_last;
-assign liteethudpstreamer1_tx_fifo_fifo_in_payload_data = liteethudpstreamer1_tx_fifo_sink_payload_data;
-assign liteethudpstreamer1_tx_fifo_source_valid = liteethudpstreamer1_tx_fifo_readable;
-assign liteethudpstreamer1_tx_fifo_source_first = liteethudpstreamer1_tx_fifo_fifo_out_first;
-assign liteethudpstreamer1_tx_fifo_source_last = liteethudpstreamer1_tx_fifo_fifo_out_last;
-assign liteethudpstreamer1_tx_fifo_source_payload_data = liteethudpstreamer1_tx_fifo_fifo_out_payload_data;
-assign liteethudpstreamer1_tx_fifo_re = liteethudpstreamer1_tx_fifo_source_ready;
-assign liteethudpstreamer1_tx_fifo_syncfifo1_re = (liteethudpstreamer1_tx_fifo_syncfifo1_readable & ((~liteethudpstreamer1_tx_fifo_readable) | liteethudpstreamer1_tx_fifo_re));
-assign liteethudpstreamer1_tx_fifo_level1 = (liteethudpstreamer1_tx_fifo_level0 + liteethudpstreamer1_tx_fifo_readable);
+assign liteethudpstreamer1_tx_ip_address_sig = udp1_ip_address;
+assign liteethudpstreamer1_tx_udp_port_sig = udp1_udp_port;
+assign liteethudpstreamer1_tx_sink_be = liteethudpstreamer1_tx_sink_payload_be;
+assign liteethudpstreamer1_tx_sink_bytes = (1'd0 + liteethudpstreamer1_tx_sink_be);
+assign liteethudpstreamer1_tx_packet_full = (liteethudpstreamer1_tx_counter == 4'd15);
+assign liteethudpstreamer1_tx_packet_last = (liteethudpstreamer1_tx_sink_last | liteethudpstreamer1_tx_packet_full);
+assign liteethudpstreamer1_tx_packet_length = ((liteethudpstreamer1_tx_counter * 1'd1) + liteethudpstreamer1_tx_sink_bytes);
+assign liteethudpstreamer1_tx_sink_ready = liteethudpstreamer1_tx_sink_sink_ready;
+assign liteethudpstreamer1_tx_sink_sink_valid = liteethudpstreamer1_tx_sink_valid;
+assign liteethudpstreamer1_tx_sink_sink_last = liteethudpstreamer1_tx_packet_last;
+assign liteethudpstreamer1_tx_sink_sink_payload_data = liteethudpstreamer1_tx_sink_payload_data;
+assign liteethudpstreamer1_tx_sink_sink_param_length = liteethudpstreamer1_tx_packet_length;
+assign liteethudpstreamer1_tx_source_valid = (liteethudpstreamer1_tx_source_source_valid & (liteethudpstreamer1_tx_enable | liteethudpstreamer1_tx_source_active));
+assign liteethudpstreamer1_tx_source_source_ready = (liteethudpstreamer1_tx_source_ready & (liteethudpstreamer1_tx_enable | liteethudpstreamer1_tx_source_active));
+assign liteethudpstreamer1_tx_source_payload_data = liteethudpstreamer1_tx_source_source_payload_data;
+assign liteethudpstreamer1_tx_source_last = liteethudpstreamer1_tx_source_source_last;
+assign liteethudpstreamer1_tx_source_param_length = liteethudpstreamer1_tx_source_source_param_length;
+assign liteethudpstreamer1_tx_sink_sink_payload_be = liteethudpstreamer1_tx_sink_be;
+assign liteethudpstreamer1_tx_source_payload_be = liteethudpstreamer1_tx_source_source_payload_be;
+assign liteethudpstreamer1_tx_source_param_src_port = (liteethudpstreamer1_tx_source_active ? liteethudpstreamer1_tx_udp_port : liteethudpstreamer1_tx_udp_port_sig);
+assign liteethudpstreamer1_tx_source_param_dst_port = (liteethudpstreamer1_tx_source_active ? liteethudpstreamer1_tx_udp_port : liteethudpstreamer1_tx_udp_port_sig);
+assign liteethudpstreamer1_tx_source_param_ip_address = (liteethudpstreamer1_tx_source_active ? liteethudpstreamer1_tx_ip_address : liteethudpstreamer1_tx_ip_address_sig);
+assign liteethudpstreamer1_tx_param_fifo_sink_param_length = liteethudpstreamer1_tx_sink_sink_param_length;
+assign liteethudpstreamer1_tx_payload_fifo_sink_first = liteethudpstreamer1_tx_sink_sink_first;
+assign liteethudpstreamer1_tx_payload_fifo_sink_last = liteethudpstreamer1_tx_sink_sink_last;
+assign liteethudpstreamer1_tx_payload_fifo_sink_payload_data = liteethudpstreamer1_tx_sink_sink_payload_data;
+assign liteethudpstreamer1_tx_payload_fifo_sink_payload_be = liteethudpstreamer1_tx_sink_sink_payload_be;
+assign liteethudpstreamer1_tx_param_fifo_sink_valid = ((liteethudpstreamer1_tx_sink_sink_valid & liteethudpstreamer1_tx_sink_sink_last) & liteethudpstreamer1_tx_payload_fifo_sink_ready);
+assign liteethudpstreamer1_tx_payload_fifo_sink_valid = (liteethudpstreamer1_tx_sink_sink_valid & liteethudpstreamer1_tx_param_fifo_sink_ready);
+assign liteethudpstreamer1_tx_sink_sink_ready = (liteethudpstreamer1_tx_param_fifo_sink_ready & liteethudpstreamer1_tx_payload_fifo_sink_ready);
+assign liteethudpstreamer1_tx_source_source_valid = liteethudpstreamer1_tx_param_fifo_source_valid;
+assign liteethudpstreamer1_tx_source_source_param_length = liteethudpstreamer1_tx_param_fifo_source_param_length;
 always @(*) begin
-    liteethudpstreamer1_tx_fifo_wrport_adr <= 4'd0;
-    if (liteethudpstreamer1_tx_fifo_replace) begin
-        liteethudpstreamer1_tx_fifo_wrport_adr <= (liteethudpstreamer1_tx_fifo_produce - 1'd1);
+    liteethudpstreamer1_tx_source_source_first = 1'd0;
+    liteethudpstreamer1_tx_source_source_first = liteethudpstreamer1_tx_param_fifo_source_first;
+    liteethudpstreamer1_tx_source_source_first = liteethudpstreamer1_tx_payload_fifo_source_first;
+end
+assign liteethudpstreamer1_tx_source_source_last = liteethudpstreamer1_tx_payload_fifo_source_last;
+assign liteethudpstreamer1_tx_source_source_payload_data = liteethudpstreamer1_tx_payload_fifo_source_payload_data;
+assign liteethudpstreamer1_tx_source_source_payload_be = liteethudpstreamer1_tx_payload_fifo_source_payload_be;
+assign liteethudpstreamer1_tx_param_fifo_source_ready = ((liteethudpstreamer1_tx_source_source_valid & liteethudpstreamer1_tx_source_source_last) & liteethudpstreamer1_tx_source_source_ready);
+assign liteethudpstreamer1_tx_payload_fifo_source_ready = (liteethudpstreamer1_tx_source_source_valid & liteethudpstreamer1_tx_source_source_ready);
+assign liteethudpstreamer1_tx_payload_fifo_syncfifo1_din = {liteethudpstreamer1_tx_payload_fifo_fifo_in_last, liteethudpstreamer1_tx_payload_fifo_fifo_in_first, liteethudpstreamer1_tx_payload_fifo_fifo_in_payload_be, liteethudpstreamer1_tx_payload_fifo_fifo_in_payload_data};
+assign {liteethudpstreamer1_tx_payload_fifo_fifo_out_last, liteethudpstreamer1_tx_payload_fifo_fifo_out_first, liteethudpstreamer1_tx_payload_fifo_fifo_out_payload_be, liteethudpstreamer1_tx_payload_fifo_fifo_out_payload_data} = liteethudpstreamer1_tx_payload_fifo_syncfifo1_dout;
+assign liteethudpstreamer1_tx_payload_fifo_sink_ready = liteethudpstreamer1_tx_payload_fifo_syncfifo1_writable;
+assign liteethudpstreamer1_tx_payload_fifo_syncfifo1_we = liteethudpstreamer1_tx_payload_fifo_sink_valid;
+assign liteethudpstreamer1_tx_payload_fifo_fifo_in_first = liteethudpstreamer1_tx_payload_fifo_sink_first;
+assign liteethudpstreamer1_tx_payload_fifo_fifo_in_last = liteethudpstreamer1_tx_payload_fifo_sink_last;
+assign liteethudpstreamer1_tx_payload_fifo_fifo_in_payload_data = liteethudpstreamer1_tx_payload_fifo_sink_payload_data;
+assign liteethudpstreamer1_tx_payload_fifo_fifo_in_payload_be = liteethudpstreamer1_tx_payload_fifo_sink_payload_be;
+assign liteethudpstreamer1_tx_payload_fifo_source_valid = liteethudpstreamer1_tx_payload_fifo_readable;
+assign liteethudpstreamer1_tx_payload_fifo_source_first = liteethudpstreamer1_tx_payload_fifo_fifo_out_first;
+assign liteethudpstreamer1_tx_payload_fifo_source_last = liteethudpstreamer1_tx_payload_fifo_fifo_out_last;
+assign liteethudpstreamer1_tx_payload_fifo_source_payload_data = liteethudpstreamer1_tx_payload_fifo_fifo_out_payload_data;
+assign liteethudpstreamer1_tx_payload_fifo_source_payload_be = liteethudpstreamer1_tx_payload_fifo_fifo_out_payload_be;
+assign liteethudpstreamer1_tx_payload_fifo_re = liteethudpstreamer1_tx_payload_fifo_source_ready;
+assign liteethudpstreamer1_tx_payload_fifo_syncfifo1_re = (liteethudpstreamer1_tx_payload_fifo_syncfifo1_readable & ((~liteethudpstreamer1_tx_payload_fifo_readable) | liteethudpstreamer1_tx_payload_fifo_re));
+assign liteethudpstreamer1_tx_payload_fifo_level1 = (liteethudpstreamer1_tx_payload_fifo_level0 + liteethudpstreamer1_tx_payload_fifo_readable);
+always @(*) begin
+    liteethudpstreamer1_tx_payload_fifo_wrport_adr = 4'd0;
+    if (liteethudpstreamer1_tx_payload_fifo_replace) begin
+        liteethudpstreamer1_tx_payload_fifo_wrport_adr = (liteethudpstreamer1_tx_payload_fifo_produce - 1'd1);
     end else begin
-        liteethudpstreamer1_tx_fifo_wrport_adr <= liteethudpstreamer1_tx_fifo_produce;
+        liteethudpstreamer1_tx_payload_fifo_wrport_adr = liteethudpstreamer1_tx_payload_fifo_produce;
     end
 end
-assign liteethudpstreamer1_tx_fifo_wrport_dat_w = liteethudpstreamer1_tx_fifo_syncfifo1_din;
-assign liteethudpstreamer1_tx_fifo_wrport_we = (liteethudpstreamer1_tx_fifo_syncfifo1_we & (liteethudpstreamer1_tx_fifo_syncfifo1_writable | liteethudpstreamer1_tx_fifo_replace));
-assign liteethudpstreamer1_tx_fifo_do_read = (liteethudpstreamer1_tx_fifo_syncfifo1_readable & liteethudpstreamer1_tx_fifo_syncfifo1_re);
-assign liteethudpstreamer1_tx_fifo_rdport_adr = liteethudpstreamer1_tx_fifo_consume;
-assign liteethudpstreamer1_tx_fifo_syncfifo1_dout = liteethudpstreamer1_tx_fifo_rdport_dat_r;
-assign liteethudpstreamer1_tx_fifo_rdport_re = liteethudpstreamer1_tx_fifo_do_read;
-assign liteethudpstreamer1_tx_fifo_syncfifo1_writable = (liteethudpstreamer1_tx_fifo_level0 != 5'd16);
-assign liteethudpstreamer1_tx_fifo_syncfifo1_readable = (liteethudpstreamer1_tx_fifo_level0 != 1'd0);
+assign liteethudpstreamer1_tx_payload_fifo_wrport_dat_w = liteethudpstreamer1_tx_payload_fifo_syncfifo1_din;
+assign liteethudpstreamer1_tx_payload_fifo_wrport_we = (liteethudpstreamer1_tx_payload_fifo_syncfifo1_we & (liteethudpstreamer1_tx_payload_fifo_syncfifo1_writable | liteethudpstreamer1_tx_payload_fifo_replace));
+assign liteethudpstreamer1_tx_payload_fifo_do_read = (liteethudpstreamer1_tx_payload_fifo_syncfifo1_readable & liteethudpstreamer1_tx_payload_fifo_syncfifo1_re);
+assign liteethudpstreamer1_tx_payload_fifo_rdport_adr = liteethudpstreamer1_tx_payload_fifo_consume;
+assign liteethudpstreamer1_tx_payload_fifo_syncfifo1_dout = liteethudpstreamer1_tx_payload_fifo_rdport_dat_r;
+assign liteethudpstreamer1_tx_payload_fifo_rdport_re = liteethudpstreamer1_tx_payload_fifo_do_read;
+assign liteethudpstreamer1_tx_payload_fifo_syncfifo1_writable = (liteethudpstreamer1_tx_payload_fifo_level0 != 5'd16);
+assign liteethudpstreamer1_tx_payload_fifo_syncfifo1_readable = (liteethudpstreamer1_tx_payload_fifo_level0 != 1'd0);
+assign liteethudpstreamer1_tx_param_fifo_syncfifo1_din = {liteethudpstreamer1_tx_param_fifo_fifo_in_last, liteethudpstreamer1_tx_param_fifo_fifo_in_first, liteethudpstreamer1_tx_param_fifo_fifo_in_param_length};
+assign {liteethudpstreamer1_tx_param_fifo_fifo_out_last, liteethudpstreamer1_tx_param_fifo_fifo_out_first, liteethudpstreamer1_tx_param_fifo_fifo_out_param_length} = liteethudpstreamer1_tx_param_fifo_syncfifo1_dout;
+assign liteethudpstreamer1_tx_param_fifo_sink_ready = liteethudpstreamer1_tx_param_fifo_syncfifo1_writable;
+assign liteethudpstreamer1_tx_param_fifo_syncfifo1_we = liteethudpstreamer1_tx_param_fifo_sink_valid;
+assign liteethudpstreamer1_tx_param_fifo_fifo_in_first = liteethudpstreamer1_tx_param_fifo_sink_first;
+assign liteethudpstreamer1_tx_param_fifo_fifo_in_last = liteethudpstreamer1_tx_param_fifo_sink_last;
+assign liteethudpstreamer1_tx_param_fifo_fifo_in_param_length = liteethudpstreamer1_tx_param_fifo_sink_param_length;
+assign liteethudpstreamer1_tx_param_fifo_source_valid = liteethudpstreamer1_tx_param_fifo_readable;
+assign liteethudpstreamer1_tx_param_fifo_source_first = liteethudpstreamer1_tx_param_fifo_fifo_out_first;
+assign liteethudpstreamer1_tx_param_fifo_source_last = liteethudpstreamer1_tx_param_fifo_fifo_out_last;
+assign liteethudpstreamer1_tx_param_fifo_source_param_length = liteethudpstreamer1_tx_param_fifo_fifo_out_param_length;
+assign liteethudpstreamer1_tx_param_fifo_re = liteethudpstreamer1_tx_param_fifo_source_ready;
+assign liteethudpstreamer1_tx_param_fifo_syncfifo1_re = (liteethudpstreamer1_tx_param_fifo_syncfifo1_readable & ((~liteethudpstreamer1_tx_param_fifo_readable) | liteethudpstreamer1_tx_param_fifo_re));
+assign liteethudpstreamer1_tx_param_fifo_level1 = (liteethudpstreamer1_tx_param_fifo_level0 + liteethudpstreamer1_tx_param_fifo_readable);
 always @(*) begin
-    liteethudpstreamer1_next_state <= 1'd0;
-    liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value0 <= 5'd0;
-    liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value_ce0 <= 1'd0;
-    liteethudpstreamer1_tx_fifo_source_ready <= 1'd0;
-    liteethudpstreamer1_tx_ip_address_liteethudpstreamer1_next_value1 <= 32'd0;
-    liteethudpstreamer1_tx_ip_address_liteethudpstreamer1_next_value_ce1 <= 1'd0;
-    liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value3 <= 5'd0;
-    liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value_ce3 <= 1'd0;
-    liteethudpstreamer1_tx_source_source_last <= 1'd0;
-    liteethudpstreamer1_tx_source_source_param_dst_port <= 16'd0;
-    liteethudpstreamer1_tx_source_source_param_ip_address <= 32'd0;
-    liteethudpstreamer1_tx_source_source_param_length <= 16'd0;
-    liteethudpstreamer1_tx_source_source_param_src_port <= 16'd0;
-    liteethudpstreamer1_tx_source_source_payload_data <= 8'd0;
-    liteethudpstreamer1_tx_source_source_payload_last_be <= 1'd0;
-    liteethudpstreamer1_tx_source_source_valid <= 1'd0;
-    liteethudpstreamer1_tx_udp_port_liteethudpstreamer1_next_value2 <= 16'd0;
-    liteethudpstreamer1_tx_udp_port_liteethudpstreamer1_next_value_ce2 <= 1'd0;
-    liteethudpstreamer1_next_state <= liteethudpstreamer1_state;
-    case (liteethudpstreamer1_state)
-        1'd1: begin
-            liteethudpstreamer1_tx_source_source_valid <= 1'd1;
-            liteethudpstreamer1_tx_source_source_last <= (liteethudpstreamer1_tx_counter == (liteethudpstreamer1_tx_level - 1'd1));
-            liteethudpstreamer1_tx_source_source_param_src_port <= liteethudpstreamer1_tx_udp_port;
-            liteethudpstreamer1_tx_source_source_param_dst_port <= liteethudpstreamer1_tx_udp_port;
-            liteethudpstreamer1_tx_source_source_param_ip_address <= liteethudpstreamer1_tx_ip_address;
-            liteethudpstreamer1_tx_source_source_param_length <= (liteethudpstreamer1_tx_level * 1'd1);
-            liteethudpstreamer1_tx_source_source_payload_data <= liteethudpstreamer1_tx_fifo_source_payload_data;
-            if (liteethudpstreamer1_tx_source_source_last) begin
-                liteethudpstreamer1_tx_source_source_payload_last_be <= 1'd1;
-            end
-            if (liteethudpstreamer1_tx_source_source_ready) begin
-                liteethudpstreamer1_tx_fifo_source_ready <= 1'd1;
-                liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value0 <= (liteethudpstreamer1_tx_counter + 1'd1);
-                liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value_ce0 <= 1'd1;
-                if (liteethudpstreamer1_tx_source_source_last) begin
-                    liteethudpstreamer1_next_state <= 1'd0;
-                end
-            end
-        end
-        default: begin
-            liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value0 <= 1'd0;
-            liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value_ce0 <= 1'd1;
-            liteethudpstreamer1_tx_ip_address_liteethudpstreamer1_next_value1 <= udp1_ip_address;
-            liteethudpstreamer1_tx_ip_address_liteethudpstreamer1_next_value_ce1 <= 1'd1;
-            liteethudpstreamer1_tx_udp_port_liteethudpstreamer1_next_value2 <= udp1_udp_port;
-            liteethudpstreamer1_tx_udp_port_liteethudpstreamer1_next_value_ce2 <= 1'd1;
-            if (((liteethudpstreamer1_tx_fifo_sink_valid & liteethudpstreamer1_tx_fifo_sink_ready) & liteethudpstreamer1_tx_fifo_sink_last)) begin
-                liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value3 <= (liteethudpstreamer1_tx_fifo_level1 + 1'd1);
-                liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value_ce3 <= 1'd1;
-                liteethudpstreamer1_next_state <= 1'd1;
-            end
-            if ((~liteethudpstreamer1_tx_fifo_sink_ready)) begin
-                liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value3 <= 5'd16;
-                liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value_ce3 <= 1'd1;
-                liteethudpstreamer1_next_state <= 1'd1;
-            end
-        end
-    endcase
-end
-always @(*) begin
-    liteethudpstreamer1_rx_valid <= 1'd1;
-    if ((liteethudpstreamer1_rx_sink_sink_param_dst_port != udp1_udp_port)) begin
-        liteethudpstreamer1_rx_valid <= 1'd0;
+    liteethudpstreamer1_tx_param_fifo_wrport_adr = 5'd0;
+    if (liteethudpstreamer1_tx_param_fifo_replace) begin
+        liteethudpstreamer1_tx_param_fifo_wrport_adr = (liteethudpstreamer1_tx_param_fifo_produce - 1'd1);
+    end else begin
+        liteethudpstreamer1_tx_param_fifo_wrport_adr = liteethudpstreamer1_tx_param_fifo_produce;
     end
 end
+assign liteethudpstreamer1_tx_param_fifo_wrport_dat_w = liteethudpstreamer1_tx_param_fifo_syncfifo1_din;
+assign liteethudpstreamer1_tx_param_fifo_wrport_we = (liteethudpstreamer1_tx_param_fifo_syncfifo1_we & (liteethudpstreamer1_tx_param_fifo_syncfifo1_writable | liteethudpstreamer1_tx_param_fifo_replace));
+assign liteethudpstreamer1_tx_param_fifo_do_read = (liteethudpstreamer1_tx_param_fifo_syncfifo1_readable & liteethudpstreamer1_tx_param_fifo_syncfifo1_re);
+assign liteethudpstreamer1_tx_param_fifo_rdport_adr = liteethudpstreamer1_tx_param_fifo_consume;
+assign liteethudpstreamer1_tx_param_fifo_syncfifo1_dout = liteethudpstreamer1_tx_param_fifo_rdport_dat_r;
+assign liteethudpstreamer1_tx_param_fifo_rdport_re = liteethudpstreamer1_tx_param_fifo_do_read;
+assign liteethudpstreamer1_tx_param_fifo_syncfifo1_writable = (liteethudpstreamer1_tx_param_fifo_level0 != 5'd17);
+assign liteethudpstreamer1_tx_param_fifo_syncfifo1_readable = (liteethudpstreamer1_tx_param_fifo_level0 != 1'd0);
+assign liteethudpstreamer1_rx_ip_address_sig = udp1_ip_address;
+assign liteethudpstreamer1_rx_udp_port_sig = udp1_udp_port;
+always @(*) begin
+    liteethudpstreamer1_rx_valid = 1'd1;
+    if ((~liteethudpstreamer1_rx_enable)) begin
+        liteethudpstreamer1_rx_valid = 1'd0;
+    end
+    if ((liteethudpstreamer1_rx_sink_sink_param_dst_port != liteethudpstreamer1_rx_udp_port_sig)) begin
+        liteethudpstreamer1_rx_valid = 1'd0;
+    end
+end
+assign liteethudpstreamer1_rx_accept = (liteethudpstreamer1_rx_first ? liteethudpstreamer1_rx_valid : liteethudpstreamer1_rx_selected);
 assign liteethudpstreamer1_rx_fifo_sink_last = liteethudpstreamer1_rx_sink_sink_last;
 assign liteethudpstreamer1_rx_fifo_sink_payload_data = liteethudpstreamer1_rx_sink_sink_payload_data;
-assign liteethudpstreamer1_rx_fifo_sink_payload_error = liteethudpstreamer1_rx_sink_sink_payload_error;
-assign liteethudpstreamer1_rx_fifo_sink_valid = (liteethudpstreamer1_rx_sink_sink_valid & liteethudpstreamer1_rx_valid);
-assign liteethudpstreamer1_rx_sink_sink_ready = (liteethudpstreamer1_rx_fifo_sink_ready | (~liteethudpstreamer1_rx_valid));
+assign liteethudpstreamer1_rx_fifo_sink_payload_be = liteethudpstreamer1_rx_sink_sink_payload_be;
+assign liteethudpstreamer1_rx_fifo_sink_payload_error = ((liteethudpstreamer1_rx_sink_sink_payload_error & liteethudpstreamer1_rx_sink_sink_payload_be) != 1'd0);
+assign liteethudpstreamer1_rx_fifo_sink_valid = (liteethudpstreamer1_rx_sink_sink_valid & liteethudpstreamer1_rx_accept);
+assign liteethudpstreamer1_rx_sink_sink_ready = (liteethudpstreamer1_rx_fifo_sink_ready | (~liteethudpstreamer1_rx_accept));
 assign liteethudpstreamer1_rx_source_source_valid = liteethudpstreamer1_rx_fifo_source_valid;
 assign liteethudpstreamer1_rx_fifo_source_ready = liteethudpstreamer1_rx_source_source_ready;
 assign liteethudpstreamer1_rx_source_source_first = liteethudpstreamer1_rx_fifo_source_first;
 assign liteethudpstreamer1_rx_source_source_last = liteethudpstreamer1_rx_fifo_source_last;
 assign liteethudpstreamer1_rx_source_source_payload_data = liteethudpstreamer1_rx_fifo_source_payload_data;
 assign liteethudpstreamer1_rx_source_source_payload_error = liteethudpstreamer1_rx_fifo_source_payload_error;
-assign liteethudpstreamer1_rx_fifo_syncfifo1_din = {liteethudpstreamer1_rx_fifo_fifo_in_last, liteethudpstreamer1_rx_fifo_fifo_in_first, liteethudpstreamer1_rx_fifo_fifo_in_payload_error, liteethudpstreamer1_rx_fifo_fifo_in_payload_data};
-assign {liteethudpstreamer1_rx_fifo_fifo_out_last, liteethudpstreamer1_rx_fifo_fifo_out_first, liteethudpstreamer1_rx_fifo_fifo_out_payload_error, liteethudpstreamer1_rx_fifo_fifo_out_payload_data} = liteethudpstreamer1_rx_fifo_syncfifo1_dout;
+assign liteethudpstreamer1_rx_source_source_payload_be = liteethudpstreamer1_rx_fifo_source_payload_be;
+assign liteethudpstreamer1_rx_fifo_syncfifo1_din = {liteethudpstreamer1_rx_fifo_fifo_in_last, liteethudpstreamer1_rx_fifo_fifo_in_first, liteethudpstreamer1_rx_fifo_fifo_in_payload_be, liteethudpstreamer1_rx_fifo_fifo_in_payload_error, liteethudpstreamer1_rx_fifo_fifo_in_payload_data};
+assign {liteethudpstreamer1_rx_fifo_fifo_out_last, liteethudpstreamer1_rx_fifo_fifo_out_first, liteethudpstreamer1_rx_fifo_fifo_out_payload_be, liteethudpstreamer1_rx_fifo_fifo_out_payload_error, liteethudpstreamer1_rx_fifo_fifo_out_payload_data} = liteethudpstreamer1_rx_fifo_syncfifo1_dout;
 assign liteethudpstreamer1_rx_fifo_sink_ready = liteethudpstreamer1_rx_fifo_syncfifo1_writable;
 assign liteethudpstreamer1_rx_fifo_syncfifo1_we = liteethudpstreamer1_rx_fifo_sink_valid;
 assign liteethudpstreamer1_rx_fifo_fifo_in_first = liteethudpstreamer1_rx_fifo_sink_first;
 assign liteethudpstreamer1_rx_fifo_fifo_in_last = liteethudpstreamer1_rx_fifo_sink_last;
 assign liteethudpstreamer1_rx_fifo_fifo_in_payload_data = liteethudpstreamer1_rx_fifo_sink_payload_data;
 assign liteethudpstreamer1_rx_fifo_fifo_in_payload_error = liteethudpstreamer1_rx_fifo_sink_payload_error;
+assign liteethudpstreamer1_rx_fifo_fifo_in_payload_be = liteethudpstreamer1_rx_fifo_sink_payload_be;
 assign liteethudpstreamer1_rx_fifo_source_valid = liteethudpstreamer1_rx_fifo_readable;
 assign liteethudpstreamer1_rx_fifo_source_first = liteethudpstreamer1_rx_fifo_fifo_out_first;
 assign liteethudpstreamer1_rx_fifo_source_last = liteethudpstreamer1_rx_fifo_fifo_out_last;
 assign liteethudpstreamer1_rx_fifo_source_payload_data = liteethudpstreamer1_rx_fifo_fifo_out_payload_data;
 assign liteethudpstreamer1_rx_fifo_source_payload_error = liteethudpstreamer1_rx_fifo_fifo_out_payload_error;
+assign liteethudpstreamer1_rx_fifo_source_payload_be = liteethudpstreamer1_rx_fifo_fifo_out_payload_be;
 assign liteethudpstreamer1_rx_fifo_re = liteethudpstreamer1_rx_fifo_source_ready;
 assign liteethudpstreamer1_rx_fifo_syncfifo1_re = (liteethudpstreamer1_rx_fifo_syncfifo1_readable & ((~liteethudpstreamer1_rx_fifo_readable) | liteethudpstreamer1_rx_fifo_re));
 assign liteethudpstreamer1_rx_fifo_level1 = (liteethudpstreamer1_rx_fifo_level0 + liteethudpstreamer1_rx_fifo_readable);
 always @(*) begin
-    liteethudpstreamer1_rx_fifo_wrport_adr <= 4'd0;
+    liteethudpstreamer1_rx_fifo_wrport_adr = 4'd0;
     if (liteethudpstreamer1_rx_fifo_replace) begin
-        liteethudpstreamer1_rx_fifo_wrport_adr <= (liteethudpstreamer1_rx_fifo_produce - 1'd1);
+        liteethudpstreamer1_rx_fifo_wrport_adr = (liteethudpstreamer1_rx_fifo_produce - 1'd1);
     end else begin
-        liteethudpstreamer1_rx_fifo_wrport_adr <= liteethudpstreamer1_rx_fifo_produce;
+        liteethudpstreamer1_rx_fifo_wrport_adr = liteethudpstreamer1_rx_fifo_produce;
     end
 end
 assign liteethudpstreamer1_rx_fifo_wrport_dat_w = liteethudpstreamer1_rx_fifo_syncfifo1_din;
@@ -7002,105 +8178,118 @@ assign liteethudpstreamer1_rx_fifo_rdport_re = liteethudpstreamer1_rx_fifo_do_re
 assign liteethudpstreamer1_rx_fifo_syncfifo1_writable = (liteethudpstreamer1_rx_fifo_level0 != 5'd16);
 assign liteethudpstreamer1_rx_fifo_syncfifo1_readable = (liteethudpstreamer1_rx_fifo_level0 != 1'd0);
 always @(*) begin
-    interface0_ack <= 1'd0;
-    interface0_dat_r <= 32'd0;
-    interface1_adr <= 14'd0;
-    interface1_dat_w <= 32'd0;
-    interface1_re <= 1'd0;
-    interface1_we <= 1'd0;
-    wishbone2csr_next_state <= 1'd0;
-    wishbone2csr_next_state <= wishbone2csr_state;
-    case (wishbone2csr_state)
+    csr_data_width = 1'd0;
+    csr_data_width = 1'd0;
+    if ((interface0_sel != 1'd0)) begin
+        csr_data_width = 1'd0;
+    end
+end
+always @(*) begin
+    interface0_ack = 1'd0;
+    interface0_dat_r = 32'd0;
+    interface1_adr = 14'd0;
+    interface1_dat_w = 32'd0;
+    interface1_re = 1'd0;
+    interface1_we = 1'd0;
+    next_state = 1'd0;
+    next_state = state;
+    case (state)
         1'd1: begin
-            interface0_ack <= 1'd1;
-            interface0_dat_r <= interface1_dat_r;
-            wishbone2csr_next_state <= 1'd0;
+            interface0_ack = 1'd1;
+            interface0_dat_r = 1'd0;
+            case (csr_data_width)
+                1'd0: begin
+                    interface0_dat_r = interface1_dat_r;
+                end
+            endcase
+            next_state = 1'd0;
         end
         default: begin
-            interface1_dat_w <= interface0_dat_w;
+            interface1_dat_w = self;
             if ((interface0_cyc & interface0_stb)) begin
-                interface1_adr <= interface0_adr[29:0];
-                interface1_re <= ((~interface0_we) & (interface0_sel != 1'd0));
-                interface1_we <= (interface0_we & (interface0_sel != 1'd0));
-                wishbone2csr_next_state <= 1'd1;
+                interface1_adr = interface0_adr;
+                interface1_re = ((~interface0_we) & (interface0_sel != 1'd0));
+                interface1_we = (interface0_we & (interface0_sel != 1'd0));
+                next_state = 1'd1;
             end
         end
     endcase
 end
 assign csrbank0_sel = (interface0_bank_bus_adr[13:9] == 1'd0);
-assign csrbank0_reset0_r = interface0_bank_bus_dat_w[1:0];
+assign csrbank0_reset_r = interface0_bank_bus_dat_w[1:0];
 always @(*) begin
-    csrbank0_reset0_re <= 1'd0;
-    csrbank0_reset0_we <= 1'd0;
+    csrbank0_reset_re = 1'd0;
+    csrbank0_reset_we = 1'd0;
     if ((csrbank0_sel & (interface0_bank_bus_adr[8:0] == 1'd0))) begin
-        csrbank0_reset0_re <= interface0_bank_bus_we;
-        csrbank0_reset0_we <= interface0_bank_bus_re;
+        csrbank0_reset_re = interface0_bank_bus_we;
+        csrbank0_reset_we = interface0_bank_bus_re;
     end
 end
-assign csrbank0_scratch0_r = interface0_bank_bus_dat_w[31:0];
+assign csrbank0_scratch_r = interface0_bank_bus_dat_w;
 always @(*) begin
-    csrbank0_scratch0_re <= 1'd0;
-    csrbank0_scratch0_we <= 1'd0;
+    csrbank0_scratch_re = 1'd0;
+    csrbank0_scratch_we = 1'd0;
     if ((csrbank0_sel & (interface0_bank_bus_adr[8:0] == 1'd1))) begin
-        csrbank0_scratch0_re <= interface0_bank_bus_we;
-        csrbank0_scratch0_we <= interface0_bank_bus_re;
+        csrbank0_scratch_re = interface0_bank_bus_we;
+        csrbank0_scratch_we = interface0_bank_bus_re;
     end
 end
-assign csrbank0_bus_errors_r = interface0_bank_bus_dat_w[31:0];
+assign csrbank0_bus_errors_r = interface0_bank_bus_dat_w;
 always @(*) begin
-    csrbank0_bus_errors_re <= 1'd0;
-    csrbank0_bus_errors_we <= 1'd0;
+    csrbank0_bus_errors_re = 1'd0;
+    csrbank0_bus_errors_we = 1'd0;
     if ((csrbank0_sel & (interface0_bank_bus_adr[8:0] == 2'd2))) begin
-        csrbank0_bus_errors_re <= interface0_bank_bus_we;
-        csrbank0_bus_errors_we <= interface0_bank_bus_re;
+        csrbank0_bus_errors_re = interface0_bank_bus_we;
+        csrbank0_bus_errors_we = interface0_bank_bus_re;
     end
 end
 always @(*) begin
-    udpcore_soc_rst <= 1'd0;
-    if (udpcore_reset_re) begin
-        udpcore_soc_rst <= udpcore_reset_storage[0];
+    udpcore_soc_rst = 1'd0;
+    if (udpcore_reset_wr_stb) begin
+        udpcore_soc_rst = udpcore_reset_storage[0];
     end
 end
 assign udpcore_cpu_rst = udpcore_reset_storage[1];
-assign csrbank0_reset0_w = udpcore_reset_storage[1:0];
-assign csrbank0_scratch0_w = udpcore_scratch_storage[31:0];
-assign csrbank0_bus_errors_w = udpcore_bus_errors_status[31:0];
-assign udpcore_bus_errors_we = csrbank0_bus_errors_we;
+assign csrbank0_reset_w = udpcore_reset_storage;
+assign csrbank0_scratch_w = udpcore_scratch_storage;
+assign csrbank0_bus_errors_w = udpcore_bus_errors_status;
+assign udpcore_bus_errors_rd_stb = csrbank0_bus_errors_we;
 assign csrbank1_sel = (interface1_bank_bus_adr[13:9] == 1'd1);
-assign csrbank1_crg_reset0_r = interface1_bank_bus_dat_w[0];
+assign csrbank1_crg_reset_r = interface1_bank_bus_dat_w[0];
 always @(*) begin
-    csrbank1_crg_reset0_re <= 1'd0;
-    csrbank1_crg_reset0_we <= 1'd0;
+    csrbank1_crg_reset_re = 1'd0;
+    csrbank1_crg_reset_we = 1'd0;
     if ((csrbank1_sel & (interface1_bank_bus_adr[8:0] == 1'd0))) begin
-        csrbank1_crg_reset0_re <= interface1_bank_bus_we;
-        csrbank1_crg_reset0_we <= interface1_bank_bus_re;
+        csrbank1_crg_reset_re = interface1_bank_bus_we;
+        csrbank1_crg_reset_we = interface1_bank_bus_re;
     end
 end
-assign csrbank1_mdio_w0_r = interface1_bank_bus_dat_w[2:0];
+assign csrbank1_mdio_w_r = interface1_bank_bus_dat_w[2:0];
 always @(*) begin
-    csrbank1_mdio_w0_re <= 1'd0;
-    csrbank1_mdio_w0_we <= 1'd0;
+    csrbank1_mdio_w_re = 1'd0;
+    csrbank1_mdio_w_we = 1'd0;
     if ((csrbank1_sel & (interface1_bank_bus_adr[8:0] == 1'd1))) begin
-        csrbank1_mdio_w0_re <= interface1_bank_bus_we;
-        csrbank1_mdio_w0_we <= interface1_bank_bus_re;
+        csrbank1_mdio_w_re = interface1_bank_bus_we;
+        csrbank1_mdio_w_we = interface1_bank_bus_re;
     end
 end
 assign csrbank1_mdio_r_r = interface1_bank_bus_dat_w[0];
 always @(*) begin
-    csrbank1_mdio_r_re <= 1'd0;
-    csrbank1_mdio_r_we <= 1'd0;
+    csrbank1_mdio_r_re = 1'd0;
+    csrbank1_mdio_r_we = 1'd0;
     if ((csrbank1_sel & (interface1_bank_bus_adr[8:0] == 2'd2))) begin
-        csrbank1_mdio_r_re <= interface1_bank_bus_we;
-        csrbank1_mdio_r_we <= interface1_bank_bus_re;
+        csrbank1_mdio_r_re = interface1_bank_bus_we;
+        csrbank1_mdio_r_we = interface1_bank_bus_re;
     end
 end
-assign csrbank1_crg_reset0_w = ethphy_reset_storage;
+assign csrbank1_crg_reset_w = ethphy_reset_storage;
 assign ethphy_mdc = ethphy__w_storage[0];
 assign ethphy_oe = ethphy__w_storage[1];
 assign ethphy_w = ethphy__w_storage[2];
-assign csrbank1_mdio_w0_w = ethphy__w_storage[2:0];
+assign csrbank1_mdio_w_w = ethphy__w_storage;
+assign ethphy__r_status = ethphy_r;
 assign csrbank1_mdio_r_w = ethphy__r_status;
-assign ethphy__r_we = csrbank1_mdio_r_we;
+assign ethphy__r_rd_stb = csrbank1_mdio_r_we;
 assign adr = interface1_adr;
 assign re = interface1_re;
 assign we = interface1_we;
@@ -7115,95 +8304,22 @@ assign interface1_bank_bus_we = we;
 assign interface0_bank_bus_dat_w = dat_w;
 assign interface1_bank_bus_dat_w = dat_w;
 assign dat_r = (interface0_bank_bus_dat_r | interface1_bank_bus_dat_r);
-assign cases_slice_proxy = {mac_core_tx_crc_value, mac_core_tx_crc_sink_payload_data[7:0]};
-assign rhs_slice_proxy0 = mac_depacketizer_header[111:96];
-assign rhs_slice_proxy1 = mac_depacketizer_header[111:96];
-assign rhs_slice_proxy2 = mac_depacketizer_header[95:48];
-assign rhs_slice_proxy3 = mac_depacketizer_header[95:48];
-assign rhs_slice_proxy4 = mac_depacketizer_header[95:48];
-assign rhs_slice_proxy5 = mac_depacketizer_header[95:48];
-assign rhs_slice_proxy6 = mac_depacketizer_header[95:48];
-assign rhs_slice_proxy7 = mac_depacketizer_header[95:48];
-assign rhs_slice_proxy8 = mac_depacketizer_header[47:0];
-assign rhs_slice_proxy9 = mac_depacketizer_header[47:0];
-assign rhs_slice_proxy10 = mac_depacketizer_header[47:0];
-assign rhs_slice_proxy11 = mac_depacketizer_header[47:0];
-assign rhs_slice_proxy12 = mac_depacketizer_header[47:0];
-assign rhs_slice_proxy13 = mac_depacketizer_header[47:0];
-assign rhs_slice_proxy14 = arp_rx_depacketizer_header[39:32];
-assign rhs_slice_proxy15 = arp_rx_depacketizer_header[15:0];
-assign rhs_slice_proxy16 = arp_rx_depacketizer_header[15:0];
-assign rhs_slice_proxy17 = arp_rx_depacketizer_header[63:48];
-assign rhs_slice_proxy18 = arp_rx_depacketizer_header[63:48];
-assign rhs_slice_proxy19 = arp_rx_depacketizer_header[31:16];
-assign rhs_slice_proxy20 = arp_rx_depacketizer_header[31:16];
-assign rhs_slice_proxy21 = arp_rx_depacketizer_header[47:40];
-assign rhs_slice_proxy22 = arp_rx_depacketizer_header[143:112];
-assign rhs_slice_proxy23 = arp_rx_depacketizer_header[143:112];
-assign rhs_slice_proxy24 = arp_rx_depacketizer_header[143:112];
-assign rhs_slice_proxy25 = arp_rx_depacketizer_header[143:112];
-assign rhs_slice_proxy26 = arp_rx_depacketizer_header[111:64];
-assign rhs_slice_proxy27 = arp_rx_depacketizer_header[111:64];
-assign rhs_slice_proxy28 = arp_rx_depacketizer_header[111:64];
-assign rhs_slice_proxy29 = arp_rx_depacketizer_header[111:64];
-assign rhs_slice_proxy30 = arp_rx_depacketizer_header[111:64];
-assign rhs_slice_proxy31 = arp_rx_depacketizer_header[111:64];
-assign rhs_slice_proxy32 = arp_rx_depacketizer_header[223:192];
-assign rhs_slice_proxy33 = arp_rx_depacketizer_header[223:192];
-assign rhs_slice_proxy34 = arp_rx_depacketizer_header[223:192];
-assign rhs_slice_proxy35 = arp_rx_depacketizer_header[223:192];
-assign rhs_slice_proxy36 = arp_rx_depacketizer_header[191:144];
-assign rhs_slice_proxy37 = arp_rx_depacketizer_header[191:144];
-assign rhs_slice_proxy38 = arp_rx_depacketizer_header[191:144];
-assign rhs_slice_proxy39 = arp_rx_depacketizer_header[191:144];
-assign rhs_slice_proxy40 = arp_rx_depacketizer_header[191:144];
-assign rhs_slice_proxy41 = arp_rx_depacketizer_header[191:144];
-assign rhs_slice_proxy42 = ip_rx_depacketizer_header[95:80];
-assign rhs_slice_proxy43 = ip_rx_depacketizer_header[95:80];
-assign rhs_slice_proxy44 = ip_rx_depacketizer_header[47:32];
-assign rhs_slice_proxy45 = ip_rx_depacketizer_header[47:32];
-assign rhs_slice_proxy46 = ip_rx_depacketizer_header[3:0];
-assign rhs_slice_proxy47 = ip_rx_depacketizer_header[79:72];
-assign rhs_slice_proxy48 = ip_rx_depacketizer_header[127:96];
-assign rhs_slice_proxy49 = ip_rx_depacketizer_header[127:96];
-assign rhs_slice_proxy50 = ip_rx_depacketizer_header[127:96];
-assign rhs_slice_proxy51 = ip_rx_depacketizer_header[127:96];
-assign rhs_slice_proxy52 = ip_rx_depacketizer_header[159:128];
-assign rhs_slice_proxy53 = ip_rx_depacketizer_header[159:128];
-assign rhs_slice_proxy54 = ip_rx_depacketizer_header[159:128];
-assign rhs_slice_proxy55 = ip_rx_depacketizer_header[159:128];
-assign rhs_slice_proxy56 = ip_rx_depacketizer_header[31:16];
-assign rhs_slice_proxy57 = ip_rx_depacketizer_header[31:16];
-assign rhs_slice_proxy58 = ip_rx_depacketizer_header[71:64];
-assign rhs_slice_proxy59 = ip_rx_depacketizer_header[7:4];
-assign rhs_slice_proxy60 = icmp_rx_depacketizer_header[31:16];
-assign rhs_slice_proxy61 = icmp_rx_depacketizer_header[31:16];
-assign rhs_slice_proxy62 = icmp_rx_depacketizer_header[15:8];
-assign rhs_slice_proxy63 = icmp_rx_depacketizer_header[7:0];
-assign rhs_slice_proxy64 = icmp_rx_depacketizer_header[63:32];
-assign rhs_slice_proxy65 = icmp_rx_depacketizer_header[63:32];
-assign rhs_slice_proxy66 = icmp_rx_depacketizer_header[63:32];
-assign rhs_slice_proxy67 = icmp_rx_depacketizer_header[63:32];
-assign rhs_slice_proxy68 = rx_depacketizer_header[63:48];
-assign rhs_slice_proxy69 = rx_depacketizer_header[63:48];
-assign rhs_slice_proxy70 = rx_depacketizer_header[31:16];
-assign rhs_slice_proxy71 = rx_depacketizer_header[31:16];
-assign rhs_slice_proxy72 = rx_depacketizer_header[47:32];
-assign rhs_slice_proxy73 = rx_depacketizer_header[47:32];
-assign rhs_slice_proxy74 = rx_depacketizer_header[15:0];
-assign rhs_slice_proxy75 = rx_depacketizer_header[15:0];
-assign xilinxasyncresetsynchronizerimpl0 = (~ethphy_locked);
 always @(*) begin
-    ethphy__r_status <= 1'd0;
-    ethphy__r_status <= ethphy_r;
-    ethphy__r_status <= xilinxmultiregimpl0_regs1;
+    self = 32'd0;
+    case (csr_data_width)
+        default: begin
+            self = interface0_dat_w;
+        end
+    endcase
 end
-assign mac_core_tx_cdc_cdc_produce_rdomain = xilinxmultiregimpl1_regs1;
-assign mac_core_tx_cdc_cdc_consume_wdomain = xilinxmultiregimpl2_regs1;
-assign mac_core_pulsesynchronizer0_toggle_o = xilinxmultiregimpl3_regs1;
-assign mac_core_pulsesynchronizer1_toggle_o = xilinxmultiregimpl4_regs1;
-assign mac_core_cdc_produce_rdomain = xilinxmultiregimpl5_regs1;
-assign mac_core_cdc_consume_wdomain = xilinxmultiregimpl6_regs1;
+assign xilinxasyncresetsynchronizerimpl0 = (~ethphy_locked);
+assign ethphy_r = xilinxmultiregimpl01;
+assign mac_core_txdatapath_cdc_produce_rdomain = xilinxmultiregimpl11;
+assign mac_core_txdatapath_cdc_consume_wdomain = xilinxmultiregimpl21;
+assign mac_core_pulsesynchronizer0_toggle_o = xilinxmultiregimpl31;
+assign mac_core_pulsesynchronizer1_toggle_o = xilinxmultiregimpl41;
+assign mac_core_cdc_produce_rdomain = xilinxmultiregimpl51;
+assign mac_core_cdc_consume_wdomain = xilinxmultiregimpl61;
 
 
 //------------------------------------------------------------------------------
@@ -7211,18 +8327,32 @@ assign mac_core_cdc_consume_wdomain = xilinxmultiregimpl6_regs1;
 //------------------------------------------------------------------------------
 
 always @(posedge eth_rx_clk) begin
-    ethphy_liteethphyrgmiirx_rx_ctl_d <= ethphy_liteethphyrgmiirx_rx_ctl;
-    ethphy_liteethphyrgmiirx_source_valid <= ethphy_liteethphyrgmiirx_rx_ctl;
-    ethphy_liteethphyrgmiirx_source_payload_data <= ethphy_liteethphyrgmiirx_rx_data;
+    ethphy_rx_ctl_d <= ethphy_rx_ctl[0];
+    ethphy_source_valid <= ethphy_rx_ctl[0];
+    ethphy_source_payload_data <= ethphy_rx_data;
+    if ((~ethphy_rx_ctl[0])) begin
+        ethphy_source_payload_error <= 1'd0;
+    end else begin
+        if ((~ethphy_rx_ctl[1])) begin
+            ethphy_source_payload_error <= 1'd1;
+        end
+    end
     liteethmac_rxdatapath_liteethmacpreamblechecker_state <= liteethmac_rxdatapath_liteethmacpreamblechecker_next_state;
     if (mac_core_pulsesynchronizer0_i) begin
         mac_core_pulsesynchronizer0_toggle_i <= (~mac_core_pulsesynchronizer0_toggle_i);
+    end
+    if (mac_core_liteethmaccrc32checker_is_ongoing2) begin
+        mac_core_liteethmaccrc32checker_packet_error <= 1'd0;
+    end else begin
+        if ((mac_core_liteethmaccrc32checker_sink_sink_valid & mac_core_liteethmaccrc32checker_sink_sink_ready)) begin
+            mac_core_liteethmaccrc32checker_packet_error <= (mac_core_liteethmaccrc32checker_packet_error | ((mac_core_liteethmaccrc32checker_sink_sink_payload_error & mac_core_liteethmaccrc32checker_sink_sink_payload_be) != 1'd0));
+        end
     end
     if (mac_core_liteethmaccrc32checker_crc_ce) begin
         mac_core_liteethmaccrc32checker_crc_reg <= mac_core_liteethmaccrc32checker_crc_crc_next;
     end
     if (mac_core_liteethmaccrc32checker_crc_reset) begin
-        mac_core_liteethmaccrc32checker_crc_reg <= 32'd4294967295;
+        mac_core_liteethmaccrc32checker_crc_reg <= 32'hffffffff;
     end
     if (((mac_core_liteethmaccrc32checker_syncfifo_syncfifo_we & mac_core_liteethmaccrc32checker_syncfifo_syncfifo_writable) & (~mac_core_liteethmaccrc32checker_syncfifo_replace))) begin
         if ((mac_core_liteethmaccrc32checker_syncfifo_produce == 3'd4)) begin
@@ -7253,54 +8383,58 @@ always @(posedge eth_rx_clk) begin
         mac_core_liteethmaccrc32checker_syncfifo_consume <= 3'd0;
     end
     liteethmac_rxdatapath_bufferizeendpoints_state <= liteethmac_rxdatapath_bufferizeendpoints_next_state;
-    if (mac_core_liteethmaccrc32checker_last_be_liteethmac_next_value_ce0) begin
-        mac_core_liteethmaccrc32checker_last_be <= mac_core_liteethmaccrc32checker_last_be_liteethmac_next_value0;
+    if (mac_core_liteethmaccrc32checker_be_liteethmaccore_next_value_ce0) begin
+        mac_core_liteethmaccrc32checker_be <= mac_core_liteethmaccrc32checker_be_liteethmaccore_next_value0;
     end
-    if (mac_core_liteethmaccrc32checker_crc_error1_liteethmac_next_value_ce1) begin
-        mac_core_liteethmaccrc32checker_crc_error1 <= mac_core_liteethmaccrc32checker_crc_error1_liteethmac_next_value1;
+    if (mac_core_liteethmaccrc32checker_last_error_liteethmaccore_next_value_ce1) begin
+        mac_core_liteethmaccrc32checker_last_error <= mac_core_liteethmaccrc32checker_last_error_liteethmaccore_next_value1;
     end
     if (((~mac_core_bufferizeendpoints_pipe_valid_source_valid) | mac_core_bufferizeendpoints_pipe_valid_source_ready)) begin
         mac_core_bufferizeendpoints_pipe_valid_source_valid <= mac_core_bufferizeendpoints_pipe_valid_sink_valid;
         mac_core_bufferizeendpoints_pipe_valid_source_first <= mac_core_bufferizeendpoints_pipe_valid_sink_first;
         mac_core_bufferizeendpoints_pipe_valid_source_last <= mac_core_bufferizeendpoints_pipe_valid_sink_last;
         mac_core_bufferizeendpoints_pipe_valid_source_payload_data <= mac_core_bufferizeendpoints_pipe_valid_sink_payload_data;
-        mac_core_bufferizeendpoints_pipe_valid_source_payload_last_be <= mac_core_bufferizeendpoints_pipe_valid_sink_payload_last_be;
+        mac_core_bufferizeendpoints_pipe_valid_source_payload_be <= mac_core_bufferizeendpoints_pipe_valid_sink_payload_be;
         mac_core_bufferizeendpoints_pipe_valid_source_payload_error <= mac_core_bufferizeendpoints_pipe_valid_sink_payload_error;
     end
     if (mac_core_pulsesynchronizer1_i) begin
         mac_core_pulsesynchronizer1_toggle_i <= (~mac_core_pulsesynchronizer1_toggle_i);
     end
+    if ((mac_core_rx_padding_sink_valid & mac_core_rx_padding_sink_ready)) begin
+        if (mac_core_rx_padding_sink_last) begin
+            mac_core_rx_padding_length <= 1'd0;
+        end else begin
+            mac_core_rx_padding_length <= (mac_core_rx_padding_length + mac_core_rx_padding_length_inc);
+        end
+    end
     mac_core_cdc_graycounter0_q_binary <= mac_core_cdc_graycounter0_q_next_binary;
     mac_core_cdc_graycounter0_q <= mac_core_cdc_graycounter0_q_next;
     if (eth_rx_rst) begin
-        ethphy_liteethphyrgmiirx_source_valid <= 1'd0;
-        ethphy_liteethphyrgmiirx_source_payload_data <= 8'd0;
-        ethphy_liteethphyrgmiirx_rx_ctl_d <= 1'd0;
-        mac_core_liteethmaccrc32checker_crc_reg <= 32'd4294967295;
+        ethphy_source_valid <= 1'd0;
+        ethphy_rx_ctl_d <= 1'd0;
+        mac_core_liteethmaccrc32checker_crc_reg <= 32'hffffffff;
         mac_core_liteethmaccrc32checker_syncfifo_level <= 3'd0;
         mac_core_liteethmaccrc32checker_syncfifo_produce <= 3'd0;
         mac_core_liteethmaccrc32checker_syncfifo_consume <= 3'd0;
-        mac_core_liteethmaccrc32checker_last_be <= 1'd0;
-        mac_core_liteethmaccrc32checker_crc_error1 <= 1'd0;
+        mac_core_liteethmaccrc32checker_last_error <= 1'd0;
+        mac_core_liteethmaccrc32checker_packet_error <= 1'd0;
         mac_core_bufferizeendpoints_pipe_valid_source_valid <= 1'd0;
-        mac_core_bufferizeendpoints_pipe_valid_source_payload_data <= 8'd0;
-        mac_core_bufferizeendpoints_pipe_valid_source_payload_last_be <= 1'd0;
-        mac_core_bufferizeendpoints_pipe_valid_source_payload_error <= 1'd0;
+        mac_core_rx_padding_length <= 11'd0;
         mac_core_cdc_graycounter0_q <= 6'd0;
         mac_core_cdc_graycounter0_q_binary <= 6'd0;
         liteethmac_rxdatapath_liteethmacpreamblechecker_state <= 1'd0;
         liteethmac_rxdatapath_bufferizeendpoints_state <= 2'd0;
     end
-    xilinxmultiregimpl6_regs0 <= mac_core_cdc_graycounter1_q;
-    xilinxmultiregimpl6_regs1 <= xilinxmultiregimpl6_regs0;
+    xilinxmultiregimpl60 <= mac_core_cdc_graycounter1_q;
+    xilinxmultiregimpl61 <= xilinxmultiregimpl60;
 end
 
 always @(posedge eth_tx_clk) begin
-    mac_core_tx_cdc_cdc_graycounter1_q_binary <= mac_core_tx_cdc_cdc_graycounter1_q_next_binary;
-    mac_core_tx_cdc_cdc_graycounter1_q <= mac_core_tx_cdc_cdc_graycounter1_q_next;
+    mac_core_txdatapath_cdc_graycounter1_q_binary <= mac_core_txdatapath_cdc_graycounter1_q_next_binary;
+    mac_core_txdatapath_cdc_graycounter1_q <= mac_core_txdatapath_cdc_graycounter1_q_next;
     liteethmac_txdatapath_liteethmacpaddinginserter_state <= liteethmac_txdatapath_liteethmacpaddinginserter_next_state;
-    if (mac_core_tx_padding_counter_liteethmac_clockdomainsrenamer0_next_value_ce) begin
-        mac_core_tx_padding_counter <= mac_core_tx_padding_counter_liteethmac_clockdomainsrenamer0_next_value;
+    if (mac_core_tx_padding_counter_liteethmaccore_clockdomainsrenamer0_next_value_ce) begin
+        mac_core_tx_padding_counter <= mac_core_tx_padding_counter_liteethmaccore_clockdomainsrenamer0_next_value;
     end
     if (mac_core_tx_crc_is_ongoing0) begin
         mac_core_tx_crc_cnt <= 2'd3;
@@ -7313,48 +8447,45 @@ always @(posedge eth_tx_clk) begin
         mac_core_tx_crc_reg <= mac_core_tx_crc_crc_next;
     end
     if (mac_core_tx_crc_reset) begin
-        mac_core_tx_crc_reg <= 32'd4294967295;
+        mac_core_tx_crc_reg <= 32'hffffffff;
     end
     liteethmac_txdatapath_bufferizeendpoints_state <= liteethmac_txdatapath_bufferizeendpoints_next_state;
-    if (mac_core_tx_crc_crc_packet_liteethmac_clockdomainsrenamer1_next_value_ce0) begin
-        mac_core_tx_crc_crc_packet <= mac_core_tx_crc_crc_packet_liteethmac_clockdomainsrenamer1_next_value0;
+    if (mac_core_tx_crc_crc_packet_liteethmaccore_clockdomainsrenamer1_next_value_ce0) begin
+        mac_core_tx_crc_crc_packet <= mac_core_tx_crc_crc_packet_liteethmaccore_clockdomainsrenamer1_next_value0;
     end
-    if (mac_core_tx_crc_last_be_liteethmac_clockdomainsrenamer1_next_value_ce1) begin
-        mac_core_tx_crc_last_be <= mac_core_tx_crc_last_be_liteethmac_clockdomainsrenamer1_next_value1;
+    if (mac_core_tx_crc_be0_liteethmaccore_clockdomainsrenamer1_next_value_ce1) begin
+        mac_core_tx_crc_be0 <= mac_core_tx_crc_be0_liteethmaccore_clockdomainsrenamer1_next_value1;
     end
     if (((~mac_core_tx_crc_pipe_valid_source_valid) | mac_core_tx_crc_pipe_valid_source_ready)) begin
         mac_core_tx_crc_pipe_valid_source_valid <= mac_core_tx_crc_pipe_valid_sink_valid;
         mac_core_tx_crc_pipe_valid_source_first <= mac_core_tx_crc_pipe_valid_sink_first;
         mac_core_tx_crc_pipe_valid_source_last <= mac_core_tx_crc_pipe_valid_sink_last;
         mac_core_tx_crc_pipe_valid_source_payload_data <= mac_core_tx_crc_pipe_valid_sink_payload_data;
-        mac_core_tx_crc_pipe_valid_source_payload_last_be <= mac_core_tx_crc_pipe_valid_sink_payload_last_be;
+        mac_core_tx_crc_pipe_valid_source_payload_be <= mac_core_tx_crc_pipe_valid_sink_payload_be;
         mac_core_tx_crc_pipe_valid_source_payload_error <= mac_core_tx_crc_pipe_valid_sink_payload_error;
     end
     liteethmac_txdatapath_liteethmacpreambleinserter_state <= liteethmac_txdatapath_liteethmacpreambleinserter_next_state;
-    if (mac_core_tx_preamble_count_liteethmac_clockdomainsrenamer2_next_value_ce) begin
-        mac_core_tx_preamble_count <= mac_core_tx_preamble_count_liteethmac_clockdomainsrenamer2_next_value;
+    if (mac_core_tx_preamble_count_liteethmaccore_clockdomainsrenamer2_next_value_ce) begin
+        mac_core_tx_preamble_count <= mac_core_tx_preamble_count_liteethmaccore_clockdomainsrenamer2_next_value;
     end
     liteethmac_txdatapath_liteethmacgap_state <= liteethmac_txdatapath_liteethmacgap_next_state;
-    if (mac_core_tx_gap_counter_liteethmac_clockdomainsrenamer3_next_value_ce) begin
-        mac_core_tx_gap_counter <= mac_core_tx_gap_counter_liteethmac_clockdomainsrenamer3_next_value;
+    if (mac_core_tx_gap_counter_liteethmaccore_clockdomainsrenamer3_next_value_ce) begin
+        mac_core_tx_gap_counter <= mac_core_tx_gap_counter_liteethmaccore_clockdomainsrenamer3_next_value;
     end
     if (eth_tx_rst) begin
-        mac_core_tx_cdc_cdc_graycounter1_q <= 6'd0;
-        mac_core_tx_cdc_cdc_graycounter1_q_binary <= 6'd0;
+        mac_core_txdatapath_cdc_graycounter1_q <= 6'd0;
+        mac_core_txdatapath_cdc_graycounter1_q_binary <= 6'd0;
         mac_core_tx_padding_counter <= 16'd0;
-        mac_core_tx_crc_reg <= 32'd4294967295;
+        mac_core_tx_crc_reg <= 32'hffffffff;
         mac_core_tx_crc_cnt <= 2'd3;
         mac_core_tx_crc_pipe_valid_source_valid <= 1'd0;
-        mac_core_tx_crc_pipe_valid_source_payload_data <= 8'd0;
-        mac_core_tx_crc_pipe_valid_source_payload_last_be <= 1'd0;
-        mac_core_tx_crc_pipe_valid_source_payload_error <= 1'd0;
         liteethmac_txdatapath_liteethmacpaddinginserter_state <= 1'd0;
         liteethmac_txdatapath_bufferizeendpoints_state <= 2'd0;
         liteethmac_txdatapath_liteethmacpreambleinserter_state <= 2'd0;
         liteethmac_txdatapath_liteethmacgap_state <= 1'd0;
     end
-    xilinxmultiregimpl1_regs0 <= mac_core_tx_cdc_cdc_graycounter0_q;
-    xilinxmultiregimpl1_regs1 <= xilinxmultiregimpl1_regs0;
+    xilinxmultiregimpl10 <= mac_core_txdatapath_cdc_graycounter0_q;
+    xilinxmultiregimpl11 <= xilinxmultiregimpl10;
 end
 
 always @(posedge por_clk) begin
@@ -7362,13 +8493,13 @@ always @(posedge por_clk) begin
 end
 
 always @(posedge sys_clk) begin
-    if ((udpcore_bus_errors != 32'd4294967295)) begin
+    if ((udpcore_bus_errors != 32'hffffffff)) begin
         if (udpcore_bus_error) begin
             udpcore_bus_errors <= (udpcore_bus_errors + 1'd1);
         end
     end
-    mac_core_tx_cdc_cdc_graycounter0_q_binary <= mac_core_tx_cdc_cdc_graycounter0_q_next_binary;
-    mac_core_tx_cdc_cdc_graycounter0_q <= mac_core_tx_cdc_cdc_graycounter0_q_next;
+    mac_core_txdatapath_cdc_graycounter0_q_binary <= mac_core_txdatapath_cdc_graycounter0_q_next_binary;
+    mac_core_txdatapath_cdc_graycounter0_q <= mac_core_txdatapath_cdc_graycounter0_q_next;
     if (mac_core_pulsesynchronizer0_o) begin
         mac_core_preamble_errors_status <= (mac_core_preamble_errors_status + 1'd1);
     end
@@ -7411,8 +8542,13 @@ always @(posedge sys_clk) begin
             liteethmac_status1_first <= 1'd0;
         end
     end
-    if (liteethmac_first) begin
-        liteethmac_sel_ongoing <= liteethmac_sel0;
+    if (liteethmac_last) begin
+        liteethmac_sel_locked <= 1'd0;
+    end else begin
+        if (((liteethmac_first & mac_crossbar_sink_valid) & (~liteethmac_sel_locked))) begin
+            liteethmac_sel_ongoing <= liteethmac_sel0;
+            liteethmac_sel_locked <= 1'd1;
+        end
     end
     liteethmac_ongoing1 <= liteethmac_ongoing0;
     if (liteethmac_last) begin
@@ -7422,128 +8558,98 @@ always @(posedge sys_clk) begin
             liteethmac_first <= 1'd0;
         end
     end
-    if (mac_packetizer_sr_load) begin
-        mac_packetizer_sr <= mac_packetizer_header;
-    end
-    if (mac_packetizer_sr_shift) begin
-        mac_packetizer_sr <= mac_packetizer_sr[111:8];
-    end
-    liteethmac_fsm0_state0 <= liteethmac_fsm0_next_state0;
-    if (mac_packetizer_count_liteethmac_fsm0_next_value_ce0) begin
-        mac_packetizer_count <= mac_packetizer_count_liteethmac_fsm0_next_value0;
-    end
-    if (mac_packetizer_fsm_from_idle_liteethmac_fsm0_next_value_ce1) begin
-        mac_packetizer_fsm_from_idle <= mac_packetizer_fsm_from_idle_liteethmac_fsm0_next_value1;
-    end
-    liteethmac_fsm1_state0 <= liteethmac_fsm1_next_state0;
-    if (mac_packetizer_delayed_last_be_liteethmac_fsm1_next_value_ce0) begin
-        mac_packetizer_delayed_last_be <= mac_packetizer_delayed_last_be_liteethmac_fsm1_next_value0;
+    liteethmac_liteethmacpacketizer_state <= liteethmac_liteethmacpacketizer_next_state;
+    if (mac_packetizer_count_liteethmacpacketizer_next_value_ce) begin
+        mac_packetizer_count <= mac_packetizer_count_liteethmacpacketizer_next_value;
     end
     if (mac_depacketizer_sr_shift) begin
         mac_depacketizer_sr <= {mac_depacketizer_sink_payload_data, mac_depacketizer_sr[111:8]};
     end
     if (mac_depacketizer_sr_shift_leftover) begin
-        mac_depacketizer_sr <= {mac_depacketizer_sink_payload_data, mac_depacketizer_sr[111:0]};
+        mac_depacketizer_sr <= {mac_depacketizer_sink_payload_data, mac_depacketizer_sr};
     end
-    mac_depacketizer_was_in_copy <= mac_depacketizer_is_in_copy;
-    liteethmac_fsm0_state1 <= liteethmac_fsm0_next_state1;
-    if (mac_depacketizer_count_liteethmac_fsm0_next_value_ce2) begin
-        mac_depacketizer_count <= mac_depacketizer_count_liteethmac_fsm0_next_value2;
+    liteethmac_liteethmacdepacketizer_state <= liteethmac_liteethmacdepacketizer_next_state;
+    if (mac_depacketizer_count_liteethmacdepacketizer_next_value_ce0) begin
+        mac_depacketizer_count <= mac_depacketizer_count_liteethmacdepacketizer_next_value0;
     end
-    if (mac_depacketizer_fsm_from_idle_liteethmac_fsm0_next_value_ce3) begin
-        mac_depacketizer_fsm_from_idle <= mac_depacketizer_fsm_from_idle_liteethmac_fsm0_next_value3;
+    if (mac_depacketizer_fsm_from_idle_liteethmacdepacketizer_next_value_ce1) begin
+        mac_depacketizer_fsm_from_idle <= mac_depacketizer_fsm_from_idle_liteethmacdepacketizer_next_value1;
     end
-    liteethmac_fsm1_state1 <= liteethmac_fsm1_next_state1;
-    if (mac_depacketizer_delayed_last_be_liteethmac_fsm1_next_value_ce1) begin
-        mac_depacketizer_delayed_last_be <= mac_depacketizer_delayed_last_be_liteethmac_fsm1_next_value1;
+    if (mac_depacketizer_data_copy_first_liteethmacdepacketizer_next_value_ce2) begin
+        mac_depacketizer_data_copy_first <= mac_depacketizer_data_copy_first_liteethmacdepacketizer_next_value2;
     end
-    if (arp_tx_packetizer_sr_load) begin
-        arp_tx_packetizer_sr <= arp_tx_packetizer_header;
+    liteetharptx_liteetharppacketizer_state <= liteetharptx_liteetharppacketizer_next_state;
+    if (arp_tx_packetizer_count_liteetharp_liteetharptx_liteetharppacketizer_next_value_ce) begin
+        arp_tx_packetizer_count <= arp_tx_packetizer_count_liteetharp_liteetharptx_liteetharppacketizer_next_value;
     end
-    if (arp_tx_packetizer_sr_shift) begin
-        arp_tx_packetizer_sr <= arp_tx_packetizer_sr[223:8];
+    liteetharptx_fsm_state <= liteetharptx_fsm_next_state;
+    if (arp_tx_counter_liteetharp_liteetharptx_fsm_next_value_ce) begin
+        arp_tx_counter <= arp_tx_counter_liteetharp_liteetharptx_fsm_next_value;
     end
-    liteetharptx_fsm0_state <= liteetharptx_fsm0_next_state;
-    if (arp_tx_packetizer_count_liteetharp_fsm0_next_value_ce0) begin
-        arp_tx_packetizer_count <= arp_tx_packetizer_count_liteetharp_fsm0_next_value0;
-    end
-    if (arp_tx_packetizer_fsm_from_idle_liteetharp_fsm0_next_value_ce1) begin
-        arp_tx_packetizer_fsm_from_idle <= arp_tx_packetizer_fsm_from_idle_liteetharp_fsm0_next_value1;
-    end
-    liteetharptx_fsm1_state <= liteetharptx_fsm1_next_state;
-    if (arp_tx_packetizer_delayed_last_be_liteetharp_fsm1_next_value_ce0) begin
-        arp_tx_packetizer_delayed_last_be <= arp_tx_packetizer_delayed_last_be_liteetharp_fsm1_next_value0;
-    end
-    liteetharptx_state <= liteetharptx_next_state;
-    if (arp_tx_counter_liteetharp_next_value_ce) begin
-        arp_tx_counter <= arp_tx_counter_liteetharp_next_value;
-    end
-    arp_rx_valid <= (((((arp_rx_depacketizer_source_valid & (arp_rx_depacketizer_source_param_hwtype == 1'd1)) & (arp_rx_depacketizer_source_param_proto == 12'd2048)) & (arp_rx_depacketizer_source_param_hwsize == 3'd6)) & (arp_rx_depacketizer_source_param_protosize == 3'd4)) & (arp_rx_depacketizer_source_param_target_ip == 32'd3232235792));
+    arp_rx_valid <= (((((arp_rx_depacketizer_source_valid & (arp_rx_depacketizer_source_param_hwtype == 1'd1)) & (arp_rx_depacketizer_source_param_proto == 12'h800)) & (arp_rx_depacketizer_source_param_hwsize == 3'd6)) & (arp_rx_depacketizer_source_param_protosize == 3'd4)) & (arp_rx_depacketizer_source_param_target_ip == 32'd3232235792));
     if (arp_rx_depacketizer_sr_shift) begin
         arp_rx_depacketizer_sr <= {arp_rx_depacketizer_sink_payload_data, arp_rx_depacketizer_sr[223:8]};
     end
     if (arp_rx_depacketizer_sr_shift_leftover) begin
-        arp_rx_depacketizer_sr <= {arp_rx_depacketizer_sink_payload_data, arp_rx_depacketizer_sr[223:0]};
+        arp_rx_depacketizer_sr <= {arp_rx_depacketizer_sink_payload_data, arp_rx_depacketizer_sr};
     end
-    arp_rx_depacketizer_was_in_copy <= arp_rx_depacketizer_is_in_copy;
-    liteetharprx_fsm0_state <= liteetharprx_fsm0_next_state;
-    if (arp_rx_depacketizer_count_liteetharp_fsm0_next_value_ce2) begin
-        arp_rx_depacketizer_count <= arp_rx_depacketizer_count_liteetharp_fsm0_next_value2;
+    liteetharprx_liteetharpdepacketizer_state <= liteetharprx_liteetharpdepacketizer_next_state;
+    if (arp_rx_depacketizer_count_liteetharp_next_value_ce0) begin
+        arp_rx_depacketizer_count <= arp_rx_depacketizer_count_liteetharp_next_value0;
     end
-    if (arp_rx_depacketizer_fsm_from_idle_liteetharp_fsm0_next_value_ce3) begin
-        arp_rx_depacketizer_fsm_from_idle <= arp_rx_depacketizer_fsm_from_idle_liteetharp_fsm0_next_value3;
+    if (arp_rx_depacketizer_fsm_from_idle_liteetharp_next_value_ce1) begin
+        arp_rx_depacketizer_fsm_from_idle <= arp_rx_depacketizer_fsm_from_idle_liteetharp_next_value1;
     end
-    liteetharprx_fsm1_state <= liteetharprx_fsm1_next_state;
-    if (arp_rx_depacketizer_delayed_last_be_liteetharp_fsm1_next_value_ce1) begin
-        arp_rx_depacketizer_delayed_last_be <= arp_rx_depacketizer_delayed_last_be_liteetharp_fsm1_next_value1;
+    if (arp_rx_depacketizer_data_copy_first_liteetharp_next_value_ce2) begin
+        arp_rx_depacketizer_data_copy_first <= arp_rx_depacketizer_data_copy_first_liteetharp_next_value2;
     end
-    liteetharprx_state <= liteetharprx_next_state;
+    liteetharprx_fsm_state <= liteetharprx_fsm_next_state;
     if (arp_table_request_timer_wait) begin
         if ((~arp_table_request_timer_done)) begin
             arp_table_request_timer_count <= (arp_table_request_timer_count - 1'd1);
         end
     end else begin
-        arp_table_request_timer_count <= 25'd20000000;
+        arp_table_request_timer_count <= 25'h1312d00;
     end
     if (arp_table_cache_wait) begin
         if ((~arp_table_cache_done)) begin
             arp_table_cache_count <= (arp_table_cache_count - 1'd1);
         end
     end else begin
-        arp_table_cache_count <= 28'd200000000;
+        arp_table_cache_count <= 28'hbebc200;
     end
-    liteetharpcache_state <= liteetharpcache_next_state;
-    if (arp_table_cache_update_count_liteetharp_liteetharpcache_next_value_ce0) begin
-        arp_table_cache_update_count <= arp_table_cache_update_count_liteetharp_liteetharpcache_next_value0;
+    liteetharptable_liteetharpcache_state <= liteetharptable_liteetharpcache_next_state;
+    if (arp_table_cache_update_count_liteetharp_liteetharptable_liteetharpcache_next_value_ce0) begin
+        arp_table_cache_update_count <= arp_table_cache_update_count_liteetharp_liteetharptable_liteetharpcache_next_value0;
     end
-    if (arp_table_cache_search_count_liteetharp_liteetharpcache_next_value_ce1) begin
-        arp_table_cache_search_count <= arp_table_cache_search_count_liteetharp_liteetharpcache_next_value1;
+    if (arp_table_cache_search_count_liteetharp_liteetharptable_liteetharpcache_next_value_ce1) begin
+        arp_table_cache_search_count <= arp_table_cache_search_count_liteetharp_liteetharptable_liteetharpcache_next_value1;
     end
-    if (arp_table_cache_error_liteetharp_liteetharpcache_next_value_ce2) begin
-        arp_table_cache_error <= arp_table_cache_error_liteetharp_liteetharpcache_next_value2;
+    if (arp_table_cache_error_liteetharp_liteetharptable_liteetharpcache_next_value_ce2) begin
+        arp_table_cache_error <= arp_table_cache_error_liteetharp_liteetharptable_liteetharpcache_next_value2;
     end
-    fsm_state <= fsm_next_state;
-    if (arp_table_request_pending_liteetharp_fsm_next_value_ce0) begin
-        arp_table_request_pending <= arp_table_request_pending_liteetharp_fsm_next_value0;
+    liteetharptable_fsm_state <= liteetharptable_fsm_next_state;
+    if (arp_table_request_pending_liteetharp_liteetharptable_fsm_next_value_ce0) begin
+        arp_table_request_pending <= arp_table_request_pending_liteetharp_liteetharptable_fsm_next_value0;
     end
-    if (arp_table_response_response_payload_mac_address_liteetharp_fsm_next_value_ce1) begin
-        arp_table_response_response_payload_mac_address <= arp_table_response_response_payload_mac_address_liteetharp_fsm_next_value1;
+    if (arp_table_response_response_payload_mac_address_liteetharp_liteetharptable_fsm_next_value_ce1) begin
+        arp_table_response_response_payload_mac_address <= arp_table_response_response_payload_mac_address_liteetharp_liteetharptable_fsm_next_value1;
     end
-    if (arp_table_response_response_payload_failed_liteetharp_fsm_next_value_ce2) begin
-        arp_table_response_response_payload_failed <= arp_table_response_response_payload_failed_liteetharp_fsm_next_value2;
+    if (arp_table_response_response_payload_failed_liteetharp_liteetharptable_fsm_next_value_ce2) begin
+        arp_table_response_response_payload_failed <= arp_table_response_response_payload_failed_liteetharp_liteetharptable_fsm_next_value2;
     end
-    if (arp_table_request_counter_liteetharp_fsm_next_value_ce3) begin
-        arp_table_request_counter <= arp_table_request_counter_liteetharp_fsm_next_value3;
+    if (arp_table_request_counter_liteetharp_liteetharptable_fsm_next_value_ce3) begin
+        arp_table_request_counter <= arp_table_request_counter_liteetharp_liteetharptable_fsm_next_value3;
     end
-    if (arp_table_request_ip_address_liteetharp_fsm_next_value_ce4) begin
-        arp_table_request_ip_address <= arp_table_request_ip_address_liteetharp_fsm_next_value4;
+    if (arp_table_request_ip_address_liteetharp_liteetharptable_fsm_next_value_ce4) begin
+        arp_table_request_ip_address <= arp_table_request_ip_address_liteetharp_liteetharptable_fsm_next_value4;
     end
     if (((~ip_tx_pipe_valid_source_valid) | ip_tx_pipe_valid_source_ready)) begin
         ip_tx_pipe_valid_source_valid <= ip_tx_pipe_valid_sink_valid;
         ip_tx_pipe_valid_source_first <= ip_tx_pipe_valid_sink_first;
         ip_tx_pipe_valid_source_last <= ip_tx_pipe_valid_sink_last;
         ip_tx_pipe_valid_source_payload_data <= ip_tx_pipe_valid_sink_payload_data;
-        ip_tx_pipe_valid_source_payload_last_be <= ip_tx_pipe_valid_sink_payload_last_be;
+        ip_tx_pipe_valid_source_payload_be <= ip_tx_pipe_valid_sink_payload_be;
         ip_tx_pipe_valid_source_payload_error <= ip_tx_pipe_valid_sink_payload_error;
         ip_tx_pipe_valid_source_param_length <= ip_tx_pipe_valid_sink_param_length;
         ip_tx_pipe_valid_source_param_protocol <= ip_tx_pipe_valid_sink_param_protocol;
@@ -7584,44 +8690,29 @@ always @(posedge sys_clk) begin
     if (ip_tx_reset) begin
         ip_tx_liteethipv4checksum_counter <= 4'd0;
     end
-    if (ip_tx_packetizer_sr_load) begin
-        ip_tx_packetizer_sr <= ip_tx_packetizer_header;
+    liteethip_liteethiptx_liteethipv4packetizer_state <= liteethip_liteethiptx_liteethipv4packetizer_next_state;
+    if (ip_tx_packetizer_count_liteethip_liteethipv4packetizer_next_value_ce) begin
+        ip_tx_packetizer_count <= ip_tx_packetizer_count_liteethip_liteethipv4packetizer_next_value;
     end
-    if (ip_tx_packetizer_sr_shift) begin
-        ip_tx_packetizer_sr <= ip_tx_packetizer_sr[159:8];
-    end
-    liteethip_liteethiptx_fsm0_state <= liteethip_liteethiptx_fsm0_next_state;
-    if (ip_tx_packetizer_count_liteethip_fsm0_next_value_ce0) begin
-        ip_tx_packetizer_count <= ip_tx_packetizer_count_liteethip_fsm0_next_value0;
-    end
-    if (ip_tx_packetizer_fsm_from_idle_liteethip_fsm0_next_value_ce1) begin
-        ip_tx_packetizer_fsm_from_idle <= ip_tx_packetizer_fsm_from_idle_liteethip_fsm0_next_value1;
-    end
-    liteethip_liteethiptx_fsm1_state <= liteethip_liteethiptx_fsm1_next_state;
-    if (ip_tx_packetizer_delayed_last_be_liteethip_fsm1_next_value_ce0) begin
-        ip_tx_packetizer_delayed_last_be <= ip_tx_packetizer_delayed_last_be_liteethip_fsm1_next_value0;
-    end
-    liteethip_liteethiptx_state <= liteethip_liteethiptx_next_state;
-    if (ip_tx_target_mac_liteethip_next_value_ce) begin
-        ip_tx_target_mac <= ip_tx_target_mac_liteethip_next_value;
+    liteethip_liteethiptx_fsm_state <= liteethip_liteethiptx_fsm_next_state;
+    if (ip_tx_target_mac_liteethip_fsm_next_value_ce) begin
+        ip_tx_target_mac <= ip_tx_target_mac_liteethip_fsm_next_value;
     end
     if (ip_rx_depacketizer_sr_shift) begin
         ip_rx_depacketizer_sr <= {ip_rx_depacketizer_sink_payload_data, ip_rx_depacketizer_sr[159:8]};
     end
     if (ip_rx_depacketizer_sr_shift_leftover) begin
-        ip_rx_depacketizer_sr <= {ip_rx_depacketizer_sink_payload_data, ip_rx_depacketizer_sr[159:0]};
+        ip_rx_depacketizer_sr <= {ip_rx_depacketizer_sink_payload_data, ip_rx_depacketizer_sr};
     end
-    ip_rx_depacketizer_was_in_copy <= ip_rx_depacketizer_is_in_copy;
-    liteethip_liteethiprx_fsm0_state <= liteethip_liteethiprx_fsm0_next_state;
-    if (ip_rx_depacketizer_count_liteethip_fsm0_next_value_ce2) begin
-        ip_rx_depacketizer_count <= ip_rx_depacketizer_count_liteethip_fsm0_next_value2;
+    liteethip_liteethiprx_liteethipv4depacketizer_state <= liteethip_liteethiprx_liteethipv4depacketizer_next_state;
+    if (ip_rx_depacketizer_count_liteethip_next_value_ce0) begin
+        ip_rx_depacketizer_count <= ip_rx_depacketizer_count_liteethip_next_value0;
     end
-    if (ip_rx_depacketizer_fsm_from_idle_liteethip_fsm0_next_value_ce3) begin
-        ip_rx_depacketizer_fsm_from_idle <= ip_rx_depacketizer_fsm_from_idle_liteethip_fsm0_next_value3;
+    if (ip_rx_depacketizer_fsm_from_idle_liteethip_next_value_ce1) begin
+        ip_rx_depacketizer_fsm_from_idle <= ip_rx_depacketizer_fsm_from_idle_liteethip_next_value1;
     end
-    liteethip_liteethiprx_fsm1_state <= liteethip_liteethiprx_fsm1_next_state;
-    if (ip_rx_depacketizer_delayed_last_be_liteethip_fsm1_next_value_ce1) begin
-        ip_rx_depacketizer_delayed_last_be <= ip_rx_depacketizer_delayed_last_be_liteethip_fsm1_next_value1;
+    if (ip_rx_depacketizer_data_copy_first_liteethip_next_value_ce2) begin
+        ip_rx_depacketizer_data_copy_first <= ip_rx_depacketizer_data_copy_first_liteethip_next_value2;
     end
     if (ip_rx_ce) begin
         if ((~ip_rx_liteethipv4checksum_done)) begin
@@ -7661,7 +8752,7 @@ always @(posedge sys_clk) begin
     if (ip_rx_reset) begin
         ip_rx_liteethipv4checksum_counter <= 4'd0;
     end
-    liteethip_liteethiprx_state <= liteethip_liteethiprx_next_state;
+    liteethip_liteethiprx_fsm_state <= liteethip_liteethiprx_fsm_next_state;
     case (liteethip_grant)
         1'd0: begin
             if ((~liteethip_request[0])) begin
@@ -7682,7 +8773,7 @@ always @(posedge sys_clk) begin
     if (liteethip_status0_last) begin
         liteethip_status0_first <= 1'd1;
     end else begin
-        if ((icmp_ip_port_sink_valid & icmp_ip_port_sink_ready)) begin
+        if ((icmp_sink_valid & icmp_sink_ready)) begin
             liteethip_status0_first <= 1'd0;
         end
     end
@@ -7694,8 +8785,13 @@ always @(posedge sys_clk) begin
             liteethip_status1_first <= 1'd0;
         end
     end
-    if (liteethip_first) begin
-        liteethip_sel_ongoing <= liteethip_sel0;
+    if (liteethip_last) begin
+        liteethip_sel_locked <= 1'd0;
+    end else begin
+        if (((liteethip_first & ip_crossbar_sink_valid) & (~liteethip_sel_locked))) begin
+            liteethip_sel_ongoing <= liteethip_sel0;
+            liteethip_sel_locked <= 1'd1;
+        end
     end
     liteethip_ongoing1 <= liteethip_ongoing0;
     if (liteethip_last) begin
@@ -7705,126 +8801,141 @@ always @(posedge sys_clk) begin
             liteethip_first <= 1'd0;
         end
     end
-    if (icmp_tx_packetizer_sr_load) begin
-        icmp_tx_packetizer_sr <= icmp_tx_packetizer_header;
+    if (icmp_tx_source_source_valid) begin
+        if ((~icmp_tx_active)) begin
+            icmp_tx_length <= (icmp_tx_sink_sink_param_length + 4'd8);
+            icmp_tx_ip_address <= icmp_tx_sink_sink_param_ip_address;
+            icmp_tx_active <= 1'd1;
+        end
+        if ((icmp_tx_source_source_ready & icmp_tx_source_source_last)) begin
+            icmp_tx_active <= 1'd0;
+        end
     end
-    if (icmp_tx_packetizer_sr_shift) begin
-        icmp_tx_packetizer_sr <= icmp_tx_packetizer_sr[63:8];
+    liteethicmp_state <= liteethicmp_next_state;
+    if (icmp_tx_packetizer_count_liteethicmp_next_value_ce) begin
+        icmp_tx_packetizer_count <= icmp_tx_packetizer_count_liteethicmp_next_value;
     end
-    liteethicmptx_fsm0_state <= liteethicmptx_fsm0_next_state;
-    if (icmp_tx_packetizer_count_fsm0_next_value_ce0) begin
-        icmp_tx_packetizer_count <= icmp_tx_packetizer_count_fsm0_next_value0;
+    if ((icmp_rx_sink_sink_valid & icmp_rx_sink_sink_ready)) begin
+        if ((~icmp_rx_active)) begin
+            icmp_rx_length <= icmp_rx_sink_sink_param_length;
+            icmp_rx_protocol <= icmp_rx_sink_sink_param_protocol;
+            icmp_rx_ip_address <= icmp_rx_sink_sink_param_ip_address;
+        end
+        icmp_rx_active <= (~icmp_rx_sink_sink_last);
     end
-    if (icmp_tx_packetizer_fsm_from_idle_fsm0_next_value_ce1) begin
-        icmp_tx_packetizer_fsm_from_idle <= icmp_tx_packetizer_fsm_from_idle_fsm0_next_value1;
-    end
-    liteethicmptx_fsm1_state <= liteethicmptx_fsm1_next_state;
-    if (icmp_tx_packetizer_delayed_last_be_fsm1_next_value_ce0) begin
-        icmp_tx_packetizer_delayed_last_be <= icmp_tx_packetizer_delayed_last_be_fsm1_next_value0;
-    end
-    liteethicmptx_state <= liteethicmptx_next_state;
     if (icmp_rx_depacketizer_sr_shift) begin
         icmp_rx_depacketizer_sr <= {icmp_rx_depacketizer_sink_payload_data, icmp_rx_depacketizer_sr[63:8]};
     end
     if (icmp_rx_depacketizer_sr_shift_leftover) begin
-        icmp_rx_depacketizer_sr <= {icmp_rx_depacketizer_sink_payload_data, icmp_rx_depacketizer_sr[63:0]};
+        icmp_rx_depacketizer_sr <= {icmp_rx_depacketizer_sink_payload_data, icmp_rx_depacketizer_sr};
     end
-    icmp_rx_depacketizer_was_in_copy <= icmp_rx_depacketizer_is_in_copy;
-    liteethicmprx_fsm0_state <= liteethicmprx_fsm0_next_state;
-    if (icmp_rx_depacketizer_count_fsm0_next_value_ce2) begin
-        icmp_rx_depacketizer_count <= icmp_rx_depacketizer_count_fsm0_next_value2;
+    liteethicmp_liteethicmpdepacketizer_state <= liteethicmp_liteethicmpdepacketizer_next_state;
+    if (icmp_rx_depacketizer_count_liteethicmp_liteethicmpdepacketizer_next_value_ce0) begin
+        icmp_rx_depacketizer_count <= icmp_rx_depacketizer_count_liteethicmp_liteethicmpdepacketizer_next_value0;
     end
-    if (icmp_rx_depacketizer_fsm_from_idle_fsm0_next_value_ce3) begin
-        icmp_rx_depacketizer_fsm_from_idle <= icmp_rx_depacketizer_fsm_from_idle_fsm0_next_value3;
+    if (icmp_rx_depacketizer_fsm_from_idle_liteethicmp_liteethicmpdepacketizer_next_value_ce1) begin
+        icmp_rx_depacketizer_fsm_from_idle <= icmp_rx_depacketizer_fsm_from_idle_liteethicmp_liteethicmpdepacketizer_next_value1;
     end
-    liteethicmprx_fsm1_state <= liteethicmprx_fsm1_next_state;
-    if (icmp_rx_depacketizer_delayed_last_be_fsm1_next_value_ce1) begin
-        icmp_rx_depacketizer_delayed_last_be <= icmp_rx_depacketizer_delayed_last_be_fsm1_next_value1;
+    if (icmp_rx_depacketizer_data_copy_first_liteethicmp_liteethicmpdepacketizer_next_value_ce2) begin
+        icmp_rx_depacketizer_data_copy_first <= icmp_rx_depacketizer_data_copy_first_liteethicmp_liteethicmpdepacketizer_next_value2;
     end
-    liteethicmprx_state <= liteethicmprx_next_state;
-    if (icmp_echo_payload_fifo_syncfifo_re) begin
-        icmp_echo_payload_fifo_readable <= 1'd1;
+    liteethicmp_fsm_state <= liteethicmp_fsm_next_state;
+    if (icmp_rx_count_liteethicmp_fsm_next_value_ce) begin
+        icmp_rx_count <= icmp_rx_count_liteethicmp_fsm_next_value;
+    end
+    if ((icmp_echo_sink_sink_valid & icmp_echo_sink_sink_ready)) begin
+        icmp_echo_busy <= 1'd1;
+        icmp_echo_receiving <= (~icmp_echo_sink_sink_last);
+    end
+    if ((icmp_echo_buffer_drop | ((icmp_echo_source_source_valid & icmp_echo_source_source_ready) & icmp_echo_source_source_last))) begin
+        icmp_echo_busy <= 1'd0;
+    end
+    if ((icmp_echo_sink_sink_valid & icmp_echo_sink_sink_ready)) begin
+        if (icmp_echo_sink_sink_last) begin
+            icmp_echo_count <= 1'd0;
+        end else begin
+            if ((icmp_echo_count <= 8'd128)) begin
+                icmp_echo_count <= icmp_echo_size;
+            end
+        end
+    end
+    if (icmp_echo_buffer_sink_valid) begin
+        icmp_echo_buffer_invalid <= (icmp_echo_buffer_invalid | icmp_echo_buffer_discard);
+        if (((~icmp_echo_buffer_overflow) & (~icmp_echo_buffer_full))) begin
+            icmp_echo_buffer_wr_ptr <= (icmp_echo_buffer_wr_ptr + 1'd1);
+        end else begin
+            icmp_echo_buffer_overflow <= 1'd1;
+        end
+        if (icmp_echo_buffer_sink_last) begin
+            icmp_echo_buffer_overflow <= 1'd0;
+            icmp_echo_buffer_invalid <= 1'd0;
+            if (icmp_echo_buffer_commit) begin
+                icmp_echo_buffer_commit_ptr <= (icmp_echo_buffer_wr_ptr + 1'd1);
+            end else begin
+                icmp_echo_buffer_wr_ptr <= icmp_echo_buffer_commit_ptr;
+            end
+        end
+    end
+    if (icmp_echo_buffer_fetch) begin
+        icmp_echo_buffer_rd_ptr <= (icmp_echo_buffer_rd_ptr + 1'd1);
+        icmp_echo_buffer_out_valid <= 1'd1;
     end else begin
-        if (icmp_echo_payload_fifo_re) begin
-            icmp_echo_payload_fifo_readable <= 1'd0;
+        if ((icmp_echo_buffer_source_valid & icmp_echo_buffer_source_ready)) begin
+            icmp_echo_buffer_out_valid <= 1'd0;
         end
     end
-    if (((icmp_echo_payload_fifo_syncfifo_we & icmp_echo_payload_fifo_syncfifo_writable) & (~icmp_echo_payload_fifo_replace))) begin
-        icmp_echo_payload_fifo_produce <= (icmp_echo_payload_fifo_produce + 1'd1);
+    if (((~icmp_echo_buffer_pipe_valid_source_valid) | icmp_echo_buffer_pipe_valid_source_ready)) begin
+        icmp_echo_buffer_pipe_valid_source_valid <= icmp_echo_buffer_pipe_valid_sink_valid;
+        icmp_echo_buffer_pipe_valid_source_first <= icmp_echo_buffer_pipe_valid_sink_first;
+        icmp_echo_buffer_pipe_valid_source_last <= icmp_echo_buffer_pipe_valid_sink_last;
+        icmp_echo_buffer_pipe_valid_source_param_checksum <= icmp_echo_buffer_pipe_valid_sink_param_checksum;
+        icmp_echo_buffer_pipe_valid_source_param_code <= icmp_echo_buffer_pipe_valid_sink_param_code;
+        icmp_echo_buffer_pipe_valid_source_param_msgtype <= icmp_echo_buffer_pipe_valid_sink_param_msgtype;
+        icmp_echo_buffer_pipe_valid_source_param_quench <= icmp_echo_buffer_pipe_valid_sink_param_quench;
+        icmp_echo_buffer_pipe_valid_source_param_ip_address <= icmp_echo_buffer_pipe_valid_sink_param_ip_address;
+        icmp_echo_buffer_pipe_valid_source_param_length <= icmp_echo_buffer_pipe_valid_sink_param_length;
     end
-    if (icmp_echo_payload_fifo_do_read) begin
-        icmp_echo_payload_fifo_consume <= (icmp_echo_payload_fifo_consume + 1'd1);
-    end
-    if (((icmp_echo_payload_fifo_syncfifo_we & icmp_echo_payload_fifo_syncfifo_writable) & (~icmp_echo_payload_fifo_replace))) begin
-        if ((~icmp_echo_payload_fifo_do_read)) begin
-            icmp_echo_payload_fifo_level0 <= (icmp_echo_payload_fifo_level0 + 1'd1);
+    if (tx_source_source_valid) begin
+        if ((~tx_active)) begin
+            tx_length <= tx_packetizer_sink_param_length;
+            tx_ip_address <= tx_sink_sink_param_ip_address;
+            tx_active <= 1'd1;
         end
-    end else begin
-        if (icmp_echo_payload_fifo_do_read) begin
-            icmp_echo_payload_fifo_level0 <= (icmp_echo_payload_fifo_level0 - 1'd1);
-        end
-    end
-    if (icmp_echo_param_fifo_syncfifo_re) begin
-        icmp_echo_param_fifo_readable <= 1'd1;
-    end else begin
-        if (icmp_echo_param_fifo_re) begin
-            icmp_echo_param_fifo_readable <= 1'd0;
-        end
-    end
-    if (((icmp_echo_param_fifo_syncfifo_we & icmp_echo_param_fifo_syncfifo_writable) & (~icmp_echo_param_fifo_replace))) begin
-        icmp_echo_param_fifo_produce <= (icmp_echo_param_fifo_produce + 1'd1);
-    end
-    if (icmp_echo_param_fifo_do_read) begin
-        icmp_echo_param_fifo_consume <= (icmp_echo_param_fifo_consume + 1'd1);
-    end
-    if (((icmp_echo_param_fifo_syncfifo_we & icmp_echo_param_fifo_syncfifo_writable) & (~icmp_echo_param_fifo_replace))) begin
-        if ((~icmp_echo_param_fifo_do_read)) begin
-            icmp_echo_param_fifo_level0 <= (icmp_echo_param_fifo_level0 + 1'd1);
-        end
-    end else begin
-        if (icmp_echo_param_fifo_do_read) begin
-            icmp_echo_param_fifo_level0 <= (icmp_echo_param_fifo_level0 - 1'd1);
+        if ((tx_source_source_ready & tx_source_source_last)) begin
+            tx_active <= 1'd0;
         end
     end
-    if (tx_packetizer_sr_load) begin
-        tx_packetizer_sr <= tx_packetizer_header;
+    liteethudp_state <= liteethudp_next_state;
+    if (tx_packetizer_count_liteethudp_next_value_ce) begin
+        tx_packetizer_count <= tx_packetizer_count_liteethudp_next_value;
     end
-    if (tx_packetizer_sr_shift) begin
-        tx_packetizer_sr <= tx_packetizer_sr[63:8];
+    if ((rx_sink_sink_valid & rx_sink_sink_ready)) begin
+        if ((~rx_active)) begin
+            rx_length <= rx_sink_sink_param_length;
+            rx_protocol <= rx_sink_sink_param_protocol;
+            rx_ip_address <= rx_sink_sink_param_ip_address;
+        end
+        rx_active <= (~rx_sink_sink_last);
     end
-    liteethudp_liteethudptx_fsm0_state <= liteethudp_liteethudptx_fsm0_next_state;
-    if (tx_packetizer_count_liteethudp_fsm0_next_value_ce0) begin
-        tx_packetizer_count <= tx_packetizer_count_liteethudp_fsm0_next_value0;
-    end
-    if (tx_packetizer_fsm_from_idle_liteethudp_fsm0_next_value_ce1) begin
-        tx_packetizer_fsm_from_idle <= tx_packetizer_fsm_from_idle_liteethudp_fsm0_next_value1;
-    end
-    liteethudp_liteethudptx_fsm1_state <= liteethudp_liteethudptx_fsm1_next_state;
-    if (tx_packetizer_delayed_last_be_liteethudp_fsm1_next_value_ce0) begin
-        tx_packetizer_delayed_last_be <= tx_packetizer_delayed_last_be_liteethudp_fsm1_next_value0;
-    end
-    liteethudp_liteethudptx_state <= liteethudp_liteethudptx_next_state;
     if (rx_depacketizer_sr_shift) begin
         rx_depacketizer_sr <= {rx_depacketizer_sink_payload_data, rx_depacketizer_sr[63:8]};
     end
     if (rx_depacketizer_sr_shift_leftover) begin
-        rx_depacketizer_sr <= {rx_depacketizer_sink_payload_data, rx_depacketizer_sr[63:0]};
+        rx_depacketizer_sr <= {rx_depacketizer_sink_payload_data, rx_depacketizer_sr};
     end
-    rx_depacketizer_was_in_copy <= rx_depacketizer_is_in_copy;
-    liteethudp_liteethudprx_fsm0_state <= liteethudp_liteethudprx_fsm0_next_state;
-    if (rx_depacketizer_count_liteethudp_fsm0_next_value_ce2) begin
-        rx_depacketizer_count <= rx_depacketizer_count_liteethudp_fsm0_next_value2;
+    liteethudp_liteethudpdepacketizer_state <= liteethudp_liteethudpdepacketizer_next_state;
+    if (rx_depacketizer_count_liteethudp_liteethudpdepacketizer_next_value_ce0) begin
+        rx_depacketizer_count <= rx_depacketizer_count_liteethudp_liteethudpdepacketizer_next_value0;
     end
-    if (rx_depacketizer_fsm_from_idle_liteethudp_fsm0_next_value_ce3) begin
-        rx_depacketizer_fsm_from_idle <= rx_depacketizer_fsm_from_idle_liteethudp_fsm0_next_value3;
+    if (rx_depacketizer_fsm_from_idle_liteethudp_liteethudpdepacketizer_next_value_ce1) begin
+        rx_depacketizer_fsm_from_idle <= rx_depacketizer_fsm_from_idle_liteethudp_liteethudpdepacketizer_next_value1;
     end
-    liteethudp_liteethudprx_fsm1_state <= liteethudp_liteethudprx_fsm1_next_state;
-    if (rx_depacketizer_delayed_last_be_liteethudp_fsm1_next_value_ce1) begin
-        rx_depacketizer_delayed_last_be <= rx_depacketizer_delayed_last_be_liteethudp_fsm1_next_value1;
+    if (rx_depacketizer_data_copy_first_liteethudp_liteethudpdepacketizer_next_value_ce2) begin
+        rx_depacketizer_data_copy_first <= rx_depacketizer_data_copy_first_liteethudp_liteethudpdepacketizer_next_value2;
     end
-    liteethudp_liteethudprx_state <= liteethudp_liteethudprx_next_state;
-    if (rx_count_liteethudp_next_value_ce) begin
-        rx_count <= rx_count_liteethudp_next_value;
+    liteethudp_fsm_state <= liteethudp_fsm_next_state;
+    if (rx_count_liteethudp_fsm_next_value_ce) begin
+        rx_count <= rx_count_liteethudp_fsm_next_value;
     end
     case (liteethudp_grant)
         1'd0: begin
@@ -7858,8 +8969,13 @@ always @(posedge sys_clk) begin
             liteethudp_status1_first <= 1'd0;
         end
     end
-    if (liteethudp_first) begin
-        liteethudp_sel_ongoing <= liteethudp_sel0;
+    if (liteethudp_last) begin
+        liteethudp_sel_locked <= 1'd0;
+    end else begin
+        if (((liteethudp_first & crossbar_sink_valid) & (~liteethudp_sel_locked))) begin
+            liteethudp_sel_ongoing <= liteethudp_sel0;
+            liteethudp_sel_locked <= 1'd1;
+        end
     end
     liteethudp_ongoing1 <= liteethudp_ongoing0;
     if (liteethudp_last) begin
@@ -7869,40 +8985,81 @@ always @(posedge sys_clk) begin
             liteethudp_first <= 1'd0;
         end
     end
-    if (liteethudpstreamer0_tx_fifo_syncfifo0_re) begin
-        liteethudpstreamer0_tx_fifo_readable <= 1'd1;
+    if ((liteethudpstreamer0_tx_sink_valid & liteethudpstreamer0_tx_sink_ready)) begin
+        if (liteethudpstreamer0_tx_packet_last) begin
+            liteethudpstreamer0_tx_counter <= 1'd0;
+        end else begin
+            liteethudpstreamer0_tx_counter <= (liteethudpstreamer0_tx_counter + 1'd1);
+        end
+    end
+    if ((liteethudpstreamer0_tx_source_valid & (~liteethudpstreamer0_tx_source_active))) begin
+        liteethudpstreamer0_tx_source_active <= 1'd1;
+        liteethudpstreamer0_tx_ip_address <= liteethudpstreamer0_tx_ip_address_sig;
+        liteethudpstreamer0_tx_udp_port <= liteethudpstreamer0_tx_udp_port_sig;
+    end
+    if (((liteethudpstreamer0_tx_source_valid & liteethudpstreamer0_tx_source_ready) & liteethudpstreamer0_tx_source_last)) begin
+        liteethudpstreamer0_tx_source_active <= 1'd0;
+    end
+    if (liteethudpstreamer0_tx_payload_fifo_syncfifo0_re) begin
+        liteethudpstreamer0_tx_payload_fifo_readable <= 1'd1;
     end else begin
-        if (liteethudpstreamer0_tx_fifo_re) begin
-            liteethudpstreamer0_tx_fifo_readable <= 1'd0;
+        if (liteethudpstreamer0_tx_payload_fifo_re) begin
+            liteethudpstreamer0_tx_payload_fifo_readable <= 1'd0;
         end
     end
-    if (((liteethudpstreamer0_tx_fifo_syncfifo0_we & liteethudpstreamer0_tx_fifo_syncfifo0_writable) & (~liteethudpstreamer0_tx_fifo_replace))) begin
-        liteethudpstreamer0_tx_fifo_produce <= (liteethudpstreamer0_tx_fifo_produce + 1'd1);
+    if (((liteethudpstreamer0_tx_payload_fifo_syncfifo0_we & liteethudpstreamer0_tx_payload_fifo_syncfifo0_writable) & (~liteethudpstreamer0_tx_payload_fifo_replace))) begin
+        liteethudpstreamer0_tx_payload_fifo_produce <= (liteethudpstreamer0_tx_payload_fifo_produce + 1'd1);
     end
-    if (liteethudpstreamer0_tx_fifo_do_read) begin
-        liteethudpstreamer0_tx_fifo_consume <= (liteethudpstreamer0_tx_fifo_consume + 1'd1);
+    if (liteethudpstreamer0_tx_payload_fifo_do_read) begin
+        liteethudpstreamer0_tx_payload_fifo_consume <= (liteethudpstreamer0_tx_payload_fifo_consume + 1'd1);
     end
-    if (((liteethudpstreamer0_tx_fifo_syncfifo0_we & liteethudpstreamer0_tx_fifo_syncfifo0_writable) & (~liteethudpstreamer0_tx_fifo_replace))) begin
-        if ((~liteethudpstreamer0_tx_fifo_do_read)) begin
-            liteethudpstreamer0_tx_fifo_level0 <= (liteethudpstreamer0_tx_fifo_level0 + 1'd1);
+    if (((liteethudpstreamer0_tx_payload_fifo_syncfifo0_we & liteethudpstreamer0_tx_payload_fifo_syncfifo0_writable) & (~liteethudpstreamer0_tx_payload_fifo_replace))) begin
+        if ((~liteethudpstreamer0_tx_payload_fifo_do_read)) begin
+            liteethudpstreamer0_tx_payload_fifo_level0 <= (liteethudpstreamer0_tx_payload_fifo_level0 + 1'd1);
         end
     end else begin
-        if (liteethudpstreamer0_tx_fifo_do_read) begin
-            liteethudpstreamer0_tx_fifo_level0 <= (liteethudpstreamer0_tx_fifo_level0 - 1'd1);
+        if (liteethudpstreamer0_tx_payload_fifo_do_read) begin
+            liteethudpstreamer0_tx_payload_fifo_level0 <= (liteethudpstreamer0_tx_payload_fifo_level0 - 1'd1);
         end
     end
-    liteethudpstreamer0_state <= liteethudpstreamer0_next_state;
-    if (liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value_ce0) begin
-        liteethudpstreamer0_tx_counter <= liteethudpstreamer0_tx_counter_liteethudpstreamer0_next_value0;
+    if (liteethudpstreamer0_tx_param_fifo_syncfifo0_re) begin
+        liteethudpstreamer0_tx_param_fifo_readable <= 1'd1;
+    end else begin
+        if (liteethudpstreamer0_tx_param_fifo_re) begin
+            liteethudpstreamer0_tx_param_fifo_readable <= 1'd0;
+        end
     end
-    if (liteethudpstreamer0_tx_ip_address_liteethudpstreamer0_next_value_ce1) begin
-        liteethudpstreamer0_tx_ip_address <= liteethudpstreamer0_tx_ip_address_liteethudpstreamer0_next_value1;
+    if (((liteethudpstreamer0_tx_param_fifo_syncfifo0_we & liteethudpstreamer0_tx_param_fifo_syncfifo0_writable) & (~liteethudpstreamer0_tx_param_fifo_replace))) begin
+        if ((liteethudpstreamer0_tx_param_fifo_produce == 5'd16)) begin
+            liteethudpstreamer0_tx_param_fifo_produce <= 1'd0;
+        end else begin
+            liteethudpstreamer0_tx_param_fifo_produce <= (liteethudpstreamer0_tx_param_fifo_produce + 1'd1);
+        end
     end
-    if (liteethudpstreamer0_tx_udp_port_liteethudpstreamer0_next_value_ce2) begin
-        liteethudpstreamer0_tx_udp_port <= liteethudpstreamer0_tx_udp_port_liteethudpstreamer0_next_value2;
+    if (liteethudpstreamer0_tx_param_fifo_do_read) begin
+        if ((liteethudpstreamer0_tx_param_fifo_consume == 5'd16)) begin
+            liteethudpstreamer0_tx_param_fifo_consume <= 1'd0;
+        end else begin
+            liteethudpstreamer0_tx_param_fifo_consume <= (liteethudpstreamer0_tx_param_fifo_consume + 1'd1);
+        end
     end
-    if (liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value_ce3) begin
-        liteethudpstreamer0_tx_level <= liteethudpstreamer0_tx_level_liteethudpstreamer0_next_value3;
+    if (((liteethudpstreamer0_tx_param_fifo_syncfifo0_we & liteethudpstreamer0_tx_param_fifo_syncfifo0_writable) & (~liteethudpstreamer0_tx_param_fifo_replace))) begin
+        if ((~liteethudpstreamer0_tx_param_fifo_do_read)) begin
+            liteethudpstreamer0_tx_param_fifo_level0 <= (liteethudpstreamer0_tx_param_fifo_level0 + 1'd1);
+        end
+    end else begin
+        if (liteethudpstreamer0_tx_param_fifo_do_read) begin
+            liteethudpstreamer0_tx_param_fifo_level0 <= (liteethudpstreamer0_tx_param_fifo_level0 - 1'd1);
+        end
+    end
+    if (liteethudpstreamer0_rx_sink_sink_valid) begin
+        if (liteethudpstreamer0_rx_first) begin
+            liteethudpstreamer0_rx_selected <= liteethudpstreamer0_rx_valid;
+            liteethudpstreamer0_rx_first <= 1'd0;
+        end
+        if ((liteethudpstreamer0_rx_sink_sink_ready & liteethudpstreamer0_rx_sink_sink_last)) begin
+            liteethudpstreamer0_rx_first <= 1'd1;
+        end
     end
     if (liteethudpstreamer0_rx_fifo_syncfifo0_re) begin
         liteethudpstreamer0_rx_fifo_readable <= 1'd1;
@@ -7926,40 +9083,81 @@ always @(posedge sys_clk) begin
             liteethudpstreamer0_rx_fifo_level0 <= (liteethudpstreamer0_rx_fifo_level0 - 1'd1);
         end
     end
-    if (liteethudpstreamer1_tx_fifo_syncfifo1_re) begin
-        liteethudpstreamer1_tx_fifo_readable <= 1'd1;
+    if ((liteethudpstreamer1_tx_sink_valid & liteethudpstreamer1_tx_sink_ready)) begin
+        if (liteethudpstreamer1_tx_packet_last) begin
+            liteethudpstreamer1_tx_counter <= 1'd0;
+        end else begin
+            liteethudpstreamer1_tx_counter <= (liteethudpstreamer1_tx_counter + 1'd1);
+        end
+    end
+    if ((liteethudpstreamer1_tx_source_valid & (~liteethudpstreamer1_tx_source_active))) begin
+        liteethudpstreamer1_tx_source_active <= 1'd1;
+        liteethudpstreamer1_tx_ip_address <= liteethudpstreamer1_tx_ip_address_sig;
+        liteethudpstreamer1_tx_udp_port <= liteethudpstreamer1_tx_udp_port_sig;
+    end
+    if (((liteethudpstreamer1_tx_source_valid & liteethudpstreamer1_tx_source_ready) & liteethudpstreamer1_tx_source_last)) begin
+        liteethudpstreamer1_tx_source_active <= 1'd0;
+    end
+    if (liteethudpstreamer1_tx_payload_fifo_syncfifo1_re) begin
+        liteethudpstreamer1_tx_payload_fifo_readable <= 1'd1;
     end else begin
-        if (liteethudpstreamer1_tx_fifo_re) begin
-            liteethudpstreamer1_tx_fifo_readable <= 1'd0;
+        if (liteethudpstreamer1_tx_payload_fifo_re) begin
+            liteethudpstreamer1_tx_payload_fifo_readable <= 1'd0;
         end
     end
-    if (((liteethudpstreamer1_tx_fifo_syncfifo1_we & liteethudpstreamer1_tx_fifo_syncfifo1_writable) & (~liteethudpstreamer1_tx_fifo_replace))) begin
-        liteethudpstreamer1_tx_fifo_produce <= (liteethudpstreamer1_tx_fifo_produce + 1'd1);
+    if (((liteethudpstreamer1_tx_payload_fifo_syncfifo1_we & liteethudpstreamer1_tx_payload_fifo_syncfifo1_writable) & (~liteethudpstreamer1_tx_payload_fifo_replace))) begin
+        liteethudpstreamer1_tx_payload_fifo_produce <= (liteethudpstreamer1_tx_payload_fifo_produce + 1'd1);
     end
-    if (liteethudpstreamer1_tx_fifo_do_read) begin
-        liteethudpstreamer1_tx_fifo_consume <= (liteethudpstreamer1_tx_fifo_consume + 1'd1);
+    if (liteethudpstreamer1_tx_payload_fifo_do_read) begin
+        liteethudpstreamer1_tx_payload_fifo_consume <= (liteethudpstreamer1_tx_payload_fifo_consume + 1'd1);
     end
-    if (((liteethudpstreamer1_tx_fifo_syncfifo1_we & liteethudpstreamer1_tx_fifo_syncfifo1_writable) & (~liteethudpstreamer1_tx_fifo_replace))) begin
-        if ((~liteethudpstreamer1_tx_fifo_do_read)) begin
-            liteethudpstreamer1_tx_fifo_level0 <= (liteethudpstreamer1_tx_fifo_level0 + 1'd1);
+    if (((liteethudpstreamer1_tx_payload_fifo_syncfifo1_we & liteethudpstreamer1_tx_payload_fifo_syncfifo1_writable) & (~liteethudpstreamer1_tx_payload_fifo_replace))) begin
+        if ((~liteethudpstreamer1_tx_payload_fifo_do_read)) begin
+            liteethudpstreamer1_tx_payload_fifo_level0 <= (liteethudpstreamer1_tx_payload_fifo_level0 + 1'd1);
         end
     end else begin
-        if (liteethudpstreamer1_tx_fifo_do_read) begin
-            liteethudpstreamer1_tx_fifo_level0 <= (liteethudpstreamer1_tx_fifo_level0 - 1'd1);
+        if (liteethudpstreamer1_tx_payload_fifo_do_read) begin
+            liteethudpstreamer1_tx_payload_fifo_level0 <= (liteethudpstreamer1_tx_payload_fifo_level0 - 1'd1);
         end
     end
-    liteethudpstreamer1_state <= liteethudpstreamer1_next_state;
-    if (liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value_ce0) begin
-        liteethudpstreamer1_tx_counter <= liteethudpstreamer1_tx_counter_liteethudpstreamer1_next_value0;
+    if (liteethudpstreamer1_tx_param_fifo_syncfifo1_re) begin
+        liteethudpstreamer1_tx_param_fifo_readable <= 1'd1;
+    end else begin
+        if (liteethudpstreamer1_tx_param_fifo_re) begin
+            liteethudpstreamer1_tx_param_fifo_readable <= 1'd0;
+        end
     end
-    if (liteethudpstreamer1_tx_ip_address_liteethudpstreamer1_next_value_ce1) begin
-        liteethudpstreamer1_tx_ip_address <= liteethudpstreamer1_tx_ip_address_liteethudpstreamer1_next_value1;
+    if (((liteethudpstreamer1_tx_param_fifo_syncfifo1_we & liteethudpstreamer1_tx_param_fifo_syncfifo1_writable) & (~liteethudpstreamer1_tx_param_fifo_replace))) begin
+        if ((liteethudpstreamer1_tx_param_fifo_produce == 5'd16)) begin
+            liteethudpstreamer1_tx_param_fifo_produce <= 1'd0;
+        end else begin
+            liteethudpstreamer1_tx_param_fifo_produce <= (liteethudpstreamer1_tx_param_fifo_produce + 1'd1);
+        end
     end
-    if (liteethudpstreamer1_tx_udp_port_liteethudpstreamer1_next_value_ce2) begin
-        liteethudpstreamer1_tx_udp_port <= liteethudpstreamer1_tx_udp_port_liteethudpstreamer1_next_value2;
+    if (liteethudpstreamer1_tx_param_fifo_do_read) begin
+        if ((liteethudpstreamer1_tx_param_fifo_consume == 5'd16)) begin
+            liteethudpstreamer1_tx_param_fifo_consume <= 1'd0;
+        end else begin
+            liteethudpstreamer1_tx_param_fifo_consume <= (liteethudpstreamer1_tx_param_fifo_consume + 1'd1);
+        end
     end
-    if (liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value_ce3) begin
-        liteethudpstreamer1_tx_level <= liteethudpstreamer1_tx_level_liteethudpstreamer1_next_value3;
+    if (((liteethudpstreamer1_tx_param_fifo_syncfifo1_we & liteethudpstreamer1_tx_param_fifo_syncfifo1_writable) & (~liteethudpstreamer1_tx_param_fifo_replace))) begin
+        if ((~liteethudpstreamer1_tx_param_fifo_do_read)) begin
+            liteethudpstreamer1_tx_param_fifo_level0 <= (liteethudpstreamer1_tx_param_fifo_level0 + 1'd1);
+        end
+    end else begin
+        if (liteethudpstreamer1_tx_param_fifo_do_read) begin
+            liteethudpstreamer1_tx_param_fifo_level0 <= (liteethudpstreamer1_tx_param_fifo_level0 - 1'd1);
+        end
+    end
+    if (liteethudpstreamer1_rx_sink_sink_valid) begin
+        if (liteethudpstreamer1_rx_first) begin
+            liteethudpstreamer1_rx_selected <= liteethudpstreamer1_rx_valid;
+            liteethudpstreamer1_rx_first <= 1'd0;
+        end
+        if ((liteethudpstreamer1_rx_sink_sink_ready & liteethudpstreamer1_rx_sink_sink_last)) begin
+            liteethudpstreamer1_rx_first <= 1'd1;
+        end
     end
     if (liteethudpstreamer1_rx_fifo_syncfifo1_re) begin
         liteethudpstreamer1_rx_fifo_readable <= 1'd1;
@@ -7983,150 +9181,159 @@ always @(posedge sys_clk) begin
             liteethudpstreamer1_rx_fifo_level0 <= (liteethudpstreamer1_rx_fifo_level0 - 1'd1);
         end
     end
-    wishbone2csr_state <= wishbone2csr_next_state;
+    state <= next_state;
     interface0_bank_bus_dat_r <= 1'd0;
     if (csrbank0_sel) begin
         case (interface0_bank_bus_adr[8:0])
             1'd0: begin
-                interface0_bank_bus_dat_r <= csrbank0_reset0_w;
+                interface0_bank_bus_dat_r <= csrbank0_reset_w;
             end
             1'd1: begin
-                interface0_bank_bus_dat_r <= csrbank0_scratch0_w;
+                interface0_bank_bus_dat_r <= csrbank0_scratch_w;
             end
             2'd2: begin
                 interface0_bank_bus_dat_r <= csrbank0_bus_errors_w;
             end
         endcase
     end
-    if (csrbank0_reset0_re) begin
-        udpcore_reset_storage[1:0] <= csrbank0_reset0_r;
+    if (csrbank0_reset_re) begin
+        udpcore_reset_storage <= csrbank0_reset_r;
     end
-    udpcore_reset_re <= csrbank0_reset0_re;
-    if (csrbank0_scratch0_re) begin
-        udpcore_scratch_storage[31:0] <= csrbank0_scratch0_r;
+    udpcore_reset_wr_stb <= csrbank0_reset_re;
+    if (csrbank0_scratch_re) begin
+        udpcore_scratch_storage <= csrbank0_scratch_r;
     end
-    udpcore_scratch_re <= csrbank0_scratch0_re;
-    udpcore_bus_errors_re <= csrbank0_bus_errors_re;
+    udpcore_scratch_wr_stb <= csrbank0_scratch_re;
+    udpcore_bus_errors_wr_stb <= csrbank0_bus_errors_re;
     interface1_bank_bus_dat_r <= 1'd0;
     if (csrbank1_sel) begin
         case (interface1_bank_bus_adr[8:0])
             1'd0: begin
-                interface1_bank_bus_dat_r <= csrbank1_crg_reset0_w;
+                interface1_bank_bus_dat_r <= csrbank1_crg_reset_w;
             end
             1'd1: begin
-                interface1_bank_bus_dat_r <= csrbank1_mdio_w0_w;
+                interface1_bank_bus_dat_r <= csrbank1_mdio_w_w;
             end
             2'd2: begin
                 interface1_bank_bus_dat_r <= csrbank1_mdio_r_w;
             end
         endcase
     end
-    if (csrbank1_crg_reset0_re) begin
-        ethphy_reset_storage <= csrbank1_crg_reset0_r;
+    if (csrbank1_crg_reset_re) begin
+        ethphy_reset_storage <= csrbank1_crg_reset_r;
     end
-    ethphy_reset_re <= csrbank1_crg_reset0_re;
-    if (csrbank1_mdio_w0_re) begin
-        ethphy__w_storage[2:0] <= csrbank1_mdio_w0_r;
+    ethphy_reset_wr_stb <= csrbank1_crg_reset_re;
+    if (csrbank1_mdio_w_re) begin
+        ethphy__w_storage <= csrbank1_mdio_w_r;
     end
-    ethphy__w_re <= csrbank1_mdio_w0_re;
-    ethphy__r_re <= csrbank1_mdio_r_re;
+    ethphy__w_wr_stb <= csrbank1_mdio_w_re;
+    ethphy__r_wr_stb <= csrbank1_mdio_r_re;
     if (sys_rst) begin
         udpcore_reset_storage <= 2'd0;
-        udpcore_reset_re <= 1'd0;
+        udpcore_reset_wr_stb <= 1'd0;
         udpcore_scratch_storage <= 32'd305419896;
-        udpcore_scratch_re <= 1'd0;
-        udpcore_bus_errors_re <= 1'd0;
+        udpcore_scratch_wr_stb <= 1'd0;
+        udpcore_bus_errors_wr_stb <= 1'd0;
         udpcore_bus_errors <= 32'd0;
         ethphy_reset_storage <= 1'd0;
-        ethphy_reset_re <= 1'd0;
+        ethphy_reset_wr_stb <= 1'd0;
         ethphy__w_storage <= 3'd0;
-        ethphy__w_re <= 1'd0;
-        ethphy__r_re <= 1'd0;
-        mac_core_tx_cdc_cdc_graycounter0_q <= 6'd0;
-        mac_core_tx_cdc_cdc_graycounter0_q_binary <= 6'd0;
+        ethphy__w_wr_stb <= 1'd0;
+        ethphy__r_wr_stb <= 1'd0;
+        mac_core_txdatapath_cdc_graycounter0_q <= 6'd0;
+        mac_core_txdatapath_cdc_graycounter0_q_binary <= 6'd0;
         mac_core_preamble_errors_status <= 32'd0;
         mac_core_crc_errors_status <= 32'd0;
         mac_core_cdc_graycounter1_q <= 6'd0;
         mac_core_cdc_graycounter1_q_binary <= 6'd0;
         mac_packetizer_count <= 4'd0;
-        mac_packetizer_fsm_from_idle <= 1'd0;
-        mac_packetizer_delayed_last_be <= 1'd0;
         mac_depacketizer_count <= 4'd0;
+        mac_depacketizer_data_copy_first <= 1'd0;
         mac_depacketizer_fsm_from_idle <= 1'd0;
-        mac_depacketizer_delayed_last_be <= 1'd0;
-        mac_depacketizer_was_in_copy <= 1'd0;
         arp_tx_packetizer_count <= 5'd0;
-        arp_tx_packetizer_fsm_from_idle <= 1'd0;
-        arp_tx_packetizer_delayed_last_be <= 1'd0;
         arp_rx_depacketizer_count <= 5'd0;
+        arp_rx_depacketizer_data_copy_first <= 1'd0;
         arp_rx_depacketizer_fsm_from_idle <= 1'd0;
-        arp_rx_depacketizer_delayed_last_be <= 1'd0;
-        arp_rx_depacketizer_was_in_copy <= 1'd0;
-        arp_table_response_response_payload_failed <= 1'd0;
-        arp_table_response_response_payload_mac_address <= 48'd0;
         arp_table_request_pending <= 1'd0;
         arp_table_request_counter <= 3'd0;
-        arp_table_request_timer_count <= 25'd20000000;
+        arp_table_request_timer_count <= 25'h1312d00;
         arp_table_cache_update_count <= 1'd0;
         arp_table_cache_search_count <= 1'd0;
         arp_table_cache_error <= 1'd0;
-        arp_table_cache_count <= 28'd200000000;
+        arp_table_cache_count <= 28'hbebc200;
         ip_tx_pipe_valid_source_valid <= 1'd0;
-        ip_tx_pipe_valid_source_payload_data <= 8'd0;
-        ip_tx_pipe_valid_source_payload_last_be <= 1'd0;
-        ip_tx_pipe_valid_source_payload_error <= 1'd0;
         ip_tx_liteethipv4checksum_counter <= 4'd0;
         ip_tx_packetizer_count <= 5'd0;
-        ip_tx_packetizer_fsm_from_idle <= 1'd0;
-        ip_tx_packetizer_delayed_last_be <= 1'd0;
         ip_rx_depacketizer_count <= 5'd0;
+        ip_rx_depacketizer_data_copy_first <= 1'd0;
         ip_rx_depacketizer_fsm_from_idle <= 1'd0;
-        ip_rx_depacketizer_delayed_last_be <= 1'd0;
-        ip_rx_depacketizer_was_in_copy <= 1'd0;
         ip_rx_liteethipv4checksum_counter <= 4'd0;
         icmp_tx_packetizer_count <= 3'd0;
-        icmp_tx_packetizer_fsm_from_idle <= 1'd0;
-        icmp_tx_packetizer_delayed_last_be <= 1'd0;
+        icmp_tx_active <= 1'd0;
+        icmp_tx_length <= 16'd0;
+        icmp_tx_ip_address <= 32'd0;
         icmp_rx_depacketizer_count <= 3'd0;
+        icmp_rx_depacketizer_data_copy_first <= 1'd0;
         icmp_rx_depacketizer_fsm_from_idle <= 1'd0;
-        icmp_rx_depacketizer_delayed_last_be <= 1'd0;
-        icmp_rx_depacketizer_was_in_copy <= 1'd0;
-        icmp_echo_payload_fifo_readable <= 1'd0;
-        icmp_echo_payload_fifo_level0 <= 8'd0;
-        icmp_echo_payload_fifo_produce <= 7'd0;
-        icmp_echo_payload_fifo_consume <= 7'd0;
-        icmp_echo_param_fifo_readable <= 1'd0;
-        icmp_echo_param_fifo_level0 <= 2'd0;
-        icmp_echo_param_fifo_produce <= 1'd0;
-        icmp_echo_param_fifo_consume <= 1'd0;
+        icmp_rx_active <= 1'd0;
+        icmp_rx_length <= 16'd0;
+        icmp_rx_protocol <= 8'd0;
+        icmp_rx_ip_address <= 32'd0;
+        icmp_rx_count <= 17'd0;
+        icmp_echo_buffer_pipe_valid_source_valid <= 1'd0;
+        icmp_echo_buffer_wr_ptr <= 8'd0;
+        icmp_echo_buffer_commit_ptr <= 8'd0;
+        icmp_echo_buffer_rd_ptr <= 8'd0;
+        icmp_echo_buffer_out_valid <= 1'd0;
+        icmp_echo_buffer_overflow <= 1'd0;
+        icmp_echo_buffer_invalid <= 1'd0;
+        icmp_echo_busy <= 1'd0;
+        icmp_echo_receiving <= 1'd0;
+        icmp_echo_count <= 8'd0;
         tx_packetizer_count <= 3'd0;
-        tx_packetizer_fsm_from_idle <= 1'd0;
-        tx_packetizer_delayed_last_be <= 1'd0;
+        tx_active <= 1'd0;
+        tx_length <= 16'd0;
+        tx_ip_address <= 32'd0;
         rx_depacketizer_count <= 3'd0;
+        rx_depacketizer_data_copy_first <= 1'd0;
         rx_depacketizer_fsm_from_idle <= 1'd0;
-        rx_depacketizer_delayed_last_be <= 1'd0;
-        rx_depacketizer_was_in_copy <= 1'd0;
-        rx_count <= 16'd0;
-        liteethudpstreamer0_tx_level <= 5'd0;
-        liteethudpstreamer0_tx_counter <= 5'd0;
+        rx_active <= 1'd0;
+        rx_length <= 16'd0;
+        rx_protocol <= 8'd0;
+        rx_ip_address <= 32'd0;
+        rx_count <= 17'd0;
+        liteethudpstreamer0_tx_source_active <= 1'd0;
         liteethudpstreamer0_tx_ip_address <= 32'd0;
         liteethudpstreamer0_tx_udp_port <= 16'd0;
-        liteethudpstreamer0_tx_fifo_readable <= 1'd0;
-        liteethudpstreamer0_tx_fifo_level0 <= 5'd0;
-        liteethudpstreamer0_tx_fifo_produce <= 4'd0;
-        liteethudpstreamer0_tx_fifo_consume <= 4'd0;
+        liteethudpstreamer0_tx_counter <= 5'd0;
+        liteethudpstreamer0_tx_payload_fifo_readable <= 1'd0;
+        liteethudpstreamer0_tx_payload_fifo_level0 <= 5'd0;
+        liteethudpstreamer0_tx_payload_fifo_produce <= 4'd0;
+        liteethudpstreamer0_tx_payload_fifo_consume <= 4'd0;
+        liteethudpstreamer0_tx_param_fifo_readable <= 1'd0;
+        liteethudpstreamer0_tx_param_fifo_level0 <= 5'd0;
+        liteethudpstreamer0_tx_param_fifo_produce <= 5'd0;
+        liteethudpstreamer0_tx_param_fifo_consume <= 5'd0;
+        liteethudpstreamer0_rx_first <= 1'd1;
+        liteethudpstreamer0_rx_selected <= 1'd0;
         liteethudpstreamer0_rx_fifo_readable <= 1'd0;
         liteethudpstreamer0_rx_fifo_level0 <= 5'd0;
         liteethudpstreamer0_rx_fifo_produce <= 4'd0;
         liteethudpstreamer0_rx_fifo_consume <= 4'd0;
-        liteethudpstreamer1_tx_level <= 5'd0;
-        liteethudpstreamer1_tx_counter <= 5'd0;
+        liteethudpstreamer1_tx_source_active <= 1'd0;
         liteethudpstreamer1_tx_ip_address <= 32'd0;
         liteethudpstreamer1_tx_udp_port <= 16'd0;
-        liteethudpstreamer1_tx_fifo_readable <= 1'd0;
-        liteethudpstreamer1_tx_fifo_level0 <= 5'd0;
-        liteethudpstreamer1_tx_fifo_produce <= 4'd0;
-        liteethudpstreamer1_tx_fifo_consume <= 4'd0;
+        liteethudpstreamer1_tx_counter <= 5'd0;
+        liteethudpstreamer1_tx_payload_fifo_readable <= 1'd0;
+        liteethudpstreamer1_tx_payload_fifo_level0 <= 5'd0;
+        liteethudpstreamer1_tx_payload_fifo_produce <= 4'd0;
+        liteethudpstreamer1_tx_payload_fifo_consume <= 4'd0;
+        liteethudpstreamer1_tx_param_fifo_readable <= 1'd0;
+        liteethudpstreamer1_tx_param_fifo_level0 <= 5'd0;
+        liteethudpstreamer1_tx_param_fifo_produce <= 5'd0;
+        liteethudpstreamer1_tx_param_fifo_consume <= 5'd0;
+        liteethudpstreamer1_rx_first <= 1'd1;
+        liteethudpstreamer1_rx_selected <= 1'd0;
         liteethudpstreamer1_rx_fifo_readable <= 1'd0;
         liteethudpstreamer1_rx_fifo_level0 <= 5'd0;
         liteethudpstreamer1_rx_fifo_produce <= 4'd0;
@@ -8139,24 +9346,19 @@ always @(posedge sys_clk) begin
         liteethmac_first <= 1'd1;
         liteethmac_ongoing1 <= 1'd0;
         liteethmac_sel_ongoing <= 2'd0;
-        liteethmac_fsm0_state0 <= 2'd0;
-        liteethmac_fsm1_state0 <= 1'd0;
-        liteethmac_fsm0_state1 <= 2'd0;
-        liteethmac_fsm1_state1 <= 1'd0;
-        liteetharptx_fsm0_state <= 2'd0;
-        liteetharptx_fsm1_state <= 1'd0;
-        liteetharptx_state <= 1'd0;
-        liteetharprx_fsm0_state <= 2'd0;
-        liteetharprx_fsm1_state <= 1'd0;
-        liteetharprx_state <= 2'd0;
-        liteetharpcache_state <= 3'd0;
-        fsm_state <= 3'd0;
-        liteethip_liteethiptx_fsm0_state <= 2'd0;
-        liteethip_liteethiptx_fsm1_state <= 1'd0;
-        liteethip_liteethiptx_state <= 3'd0;
-        liteethip_liteethiprx_fsm0_state <= 2'd0;
-        liteethip_liteethiprx_fsm1_state <= 1'd0;
-        liteethip_liteethiprx_state <= 2'd0;
+        liteethmac_sel_locked <= 1'd0;
+        liteethmac_liteethmacpacketizer_state <= 1'd1;
+        liteethmac_liteethmacdepacketizer_state <= 2'd0;
+        liteetharptx_liteetharppacketizer_state <= 1'd1;
+        liteetharptx_fsm_state <= 1'd0;
+        liteetharprx_liteetharpdepacketizer_state <= 2'd0;
+        liteetharprx_fsm_state <= 2'd0;
+        liteetharptable_liteetharpcache_state <= 3'd0;
+        liteetharptable_fsm_state <= 3'd0;
+        liteethip_liteethiptx_liteethipv4packetizer_state <= 1'd1;
+        liteethip_liteethiptx_fsm_state <= 3'd2;
+        liteethip_liteethiprx_liteethipv4depacketizer_state <= 2'd0;
+        liteethip_liteethiprx_fsm_state <= 2'd1;
         liteethip_grant <= 1'd0;
         liteethip_status0_first <= 1'd1;
         liteethip_status0_ongoing1 <= 1'd0;
@@ -8165,18 +9367,13 @@ always @(posedge sys_clk) begin
         liteethip_first <= 1'd1;
         liteethip_ongoing1 <= 1'd0;
         liteethip_sel_ongoing <= 2'd0;
-        liteethicmptx_fsm0_state <= 2'd0;
-        liteethicmptx_fsm1_state <= 1'd0;
-        liteethicmptx_state <= 1'd0;
-        liteethicmprx_fsm0_state <= 2'd0;
-        liteethicmprx_fsm1_state <= 1'd0;
-        liteethicmprx_state <= 2'd0;
-        liteethudp_liteethudptx_fsm0_state <= 2'd0;
-        liteethudp_liteethudptx_fsm1_state <= 1'd0;
-        liteethudp_liteethudptx_state <= 1'd0;
-        liteethudp_liteethudprx_fsm0_state <= 2'd0;
-        liteethudp_liteethudprx_fsm1_state <= 1'd0;
-        liteethudp_liteethudprx_state <= 2'd0;
+        liteethip_sel_locked <= 1'd0;
+        liteethicmp_state <= 1'd1;
+        liteethicmp_liteethicmpdepacketizer_state <= 2'd0;
+        liteethicmp_fsm_state <= 2'd2;
+        liteethudp_state <= 1'd1;
+        liteethudp_liteethudpdepacketizer_state <= 2'd0;
+        liteethudp_fsm_state <= 2'd2;
         liteethudp_grant <= 1'd0;
         liteethudp_status0_first <= 1'd1;
         liteethudp_status0_ongoing1 <= 1'd0;
@@ -8185,20 +9382,19 @@ always @(posedge sys_clk) begin
         liteethudp_first <= 1'd1;
         liteethudp_ongoing1 <= 1'd0;
         liteethudp_sel_ongoing <= 2'd0;
-        liteethudpstreamer0_state <= 1'd0;
-        liteethudpstreamer1_state <= 1'd0;
-        wishbone2csr_state <= 1'd0;
+        liteethudp_sel_locked <= 1'd0;
+        state <= 1'd0;
     end
-    xilinxmultiregimpl0_regs0 <= ethphy_data_r;
-    xilinxmultiregimpl0_regs1 <= xilinxmultiregimpl0_regs0;
-    xilinxmultiregimpl2_regs0 <= mac_core_tx_cdc_cdc_graycounter1_q;
-    xilinxmultiregimpl2_regs1 <= xilinxmultiregimpl2_regs0;
-    xilinxmultiregimpl3_regs0 <= mac_core_pulsesynchronizer0_toggle_i;
-    xilinxmultiregimpl3_regs1 <= xilinxmultiregimpl3_regs0;
-    xilinxmultiregimpl4_regs0 <= mac_core_pulsesynchronizer1_toggle_i;
-    xilinxmultiregimpl4_regs1 <= xilinxmultiregimpl4_regs0;
-    xilinxmultiregimpl5_regs0 <= mac_core_cdc_graycounter0_q;
-    xilinxmultiregimpl5_regs1 <= xilinxmultiregimpl5_regs0;
+    xilinxmultiregimpl00 <= ethphy_data_r;
+    xilinxmultiregimpl01 <= xilinxmultiregimpl00;
+    xilinxmultiregimpl20 <= mac_core_txdatapath_cdc_graycounter1_q;
+    xilinxmultiregimpl21 <= xilinxmultiregimpl20;
+    xilinxmultiregimpl30 <= mac_core_pulsesynchronizer0_toggle_i;
+    xilinxmultiregimpl31 <= xilinxmultiregimpl30;
+    xilinxmultiregimpl40 <= mac_core_pulsesynchronizer1_toggle_i;
+    xilinxmultiregimpl41 <= xilinxmultiregimpl40;
+    xilinxmultiregimpl50 <= mac_core_cdc_graycounter0_q;
+    xilinxmultiregimpl51 <= xilinxmultiregimpl50;
 end
 
 
@@ -8408,7 +9604,7 @@ IBUF IBUF_1(
 	.I (rgmii_rx_ctl),
 
 	// Outputs.
-	.O (ethphy_liteethphyrgmiirx_rx_ctl_ibuf)
+	.O (ethphy_rx_ctl_ibuf)
 );
 
 //------------------------------------------------------------------------------
@@ -8420,7 +9616,7 @@ IDELAYE3 #(
 	.DELAY_FORMAT     ("TIME"),
 	.DELAY_SRC        ("IDATAIN"),
 	.DELAY_TYPE       ("FIXED"),
-	.DELAY_VALUE      (11'd2000),
+	.DELAY_VALUE      (1'd0),
 	.REFCLK_FREQUENCY (300.0),
 	.SIM_DEVICE       ("ULTRASCALE_PLUS"),
 	.UPDATE_MODE      ("ASYNC")
@@ -8432,13 +9628,13 @@ IDELAYE3 #(
 	.CLK         (1'd0),
 	.CNTVALUEIN  (1'd0),
 	.EN_VTC      (1'd1),
-	.IDATAIN     (ethphy_liteethphyrgmiirx_rx_ctl_ibuf),
+	.IDATAIN     (ethphy_rx_ctl_ibuf),
 	.INC         (1'd0),
 	.LOAD        (1'd0),
 	.RST         (1'd0),
 
 	// Outputs.
-	.DATAOUT     (ethphy_liteethphyrgmiirx_rx_ctl_idelay)
+	.DATAOUT     (ethphy_rx_ctl_idelay)
 );
 
 //------------------------------------------------------------------------------
@@ -8453,12 +9649,12 @@ IDDRE1 #(
 	// Inputs.
 	.C  (eth_rx_clk),
 	.CB (eth_rx_clk),
-	.D  (ethphy_liteethphyrgmiirx_rx_ctl_idelay),
+	.D  (ethphy_rx_ctl_idelay),
 	.R  (1'd0),
 
 	// Outputs.
-	.Q1 (ethphy_liteethphyrgmiirx_rx_ctl),
-	.Q2 (ethphy_liteethphyrgmiirx)
+	.Q1 (ethphy_rx_ctl[0]),
+	.Q2 (ethphy_rx_ctl[1])
 );
 
 //------------------------------------------------------------------------------
@@ -8469,7 +9665,7 @@ IBUF IBUF_2(
 	.I (rgmii_rx_data[0]),
 
 	// Outputs.
-	.O (ethphy_liteethphyrgmiirx_rx_data_ibuf[0])
+	.O (ethphy_rx_data_ibuf[0])
 );
 
 //------------------------------------------------------------------------------
@@ -8481,7 +9677,7 @@ IDELAYE3 #(
 	.DELAY_FORMAT     ("TIME"),
 	.DELAY_SRC        ("IDATAIN"),
 	.DELAY_TYPE       ("FIXED"),
-	.DELAY_VALUE      (11'd2000),
+	.DELAY_VALUE      (1'd0),
 	.REFCLK_FREQUENCY (300.0),
 	.SIM_DEVICE       ("ULTRASCALE_PLUS"),
 	.UPDATE_MODE      ("ASYNC")
@@ -8493,13 +9689,13 @@ IDELAYE3 #(
 	.CLK         (1'd0),
 	.CNTVALUEIN  (1'd0),
 	.EN_VTC      (1'd1),
-	.IDATAIN     (ethphy_liteethphyrgmiirx_rx_data_ibuf[0]),
+	.IDATAIN     (ethphy_rx_data_ibuf[0]),
 	.INC         (1'd0),
 	.LOAD        (1'd0),
 	.RST         (1'd0),
 
 	// Outputs.
-	.DATAOUT     (ethphy_liteethphyrgmiirx_rx_data_idelay[0])
+	.DATAOUT     (ethphy_rx_data_idelay[0])
 );
 
 //------------------------------------------------------------------------------
@@ -8514,12 +9710,12 @@ IDDRE1 #(
 	// Inputs.
 	.C  (eth_rx_clk),
 	.CB (eth_rx_clk),
-	.D  (ethphy_liteethphyrgmiirx_rx_data_idelay[0]),
+	.D  (ethphy_rx_data_idelay[0]),
 	.R  (1'd0),
 
 	// Outputs.
-	.Q1 (ethphy_liteethphyrgmiirx_rx_data[0]),
-	.Q2 (ethphy_liteethphyrgmiirx_rx_data[4])
+	.Q1 (ethphy_rx_data[0]),
+	.Q2 (ethphy_rx_data[4])
 );
 
 //------------------------------------------------------------------------------
@@ -8530,7 +9726,7 @@ IBUF IBUF_3(
 	.I (rgmii_rx_data[1]),
 
 	// Outputs.
-	.O (ethphy_liteethphyrgmiirx_rx_data_ibuf[1])
+	.O (ethphy_rx_data_ibuf[1])
 );
 
 //------------------------------------------------------------------------------
@@ -8542,7 +9738,7 @@ IDELAYE3 #(
 	.DELAY_FORMAT     ("TIME"),
 	.DELAY_SRC        ("IDATAIN"),
 	.DELAY_TYPE       ("FIXED"),
-	.DELAY_VALUE      (11'd2000),
+	.DELAY_VALUE      (1'd0),
 	.REFCLK_FREQUENCY (300.0),
 	.SIM_DEVICE       ("ULTRASCALE_PLUS"),
 	.UPDATE_MODE      ("ASYNC")
@@ -8554,13 +9750,13 @@ IDELAYE3 #(
 	.CLK         (1'd0),
 	.CNTVALUEIN  (1'd0),
 	.EN_VTC      (1'd1),
-	.IDATAIN     (ethphy_liteethphyrgmiirx_rx_data_ibuf[1]),
+	.IDATAIN     (ethphy_rx_data_ibuf[1]),
 	.INC         (1'd0),
 	.LOAD        (1'd0),
 	.RST         (1'd0),
 
 	// Outputs.
-	.DATAOUT     (ethphy_liteethphyrgmiirx_rx_data_idelay[1])
+	.DATAOUT     (ethphy_rx_data_idelay[1])
 );
 
 //------------------------------------------------------------------------------
@@ -8575,12 +9771,12 @@ IDDRE1 #(
 	// Inputs.
 	.C  (eth_rx_clk),
 	.CB (eth_rx_clk),
-	.D  (ethphy_liteethphyrgmiirx_rx_data_idelay[1]),
+	.D  (ethphy_rx_data_idelay[1]),
 	.R  (1'd0),
 
 	// Outputs.
-	.Q1 (ethphy_liteethphyrgmiirx_rx_data[1]),
-	.Q2 (ethphy_liteethphyrgmiirx_rx_data[5])
+	.Q1 (ethphy_rx_data[1]),
+	.Q2 (ethphy_rx_data[5])
 );
 
 //------------------------------------------------------------------------------
@@ -8591,7 +9787,7 @@ IBUF IBUF_4(
 	.I (rgmii_rx_data[2]),
 
 	// Outputs.
-	.O (ethphy_liteethphyrgmiirx_rx_data_ibuf[2])
+	.O (ethphy_rx_data_ibuf[2])
 );
 
 //------------------------------------------------------------------------------
@@ -8603,7 +9799,7 @@ IDELAYE3 #(
 	.DELAY_FORMAT     ("TIME"),
 	.DELAY_SRC        ("IDATAIN"),
 	.DELAY_TYPE       ("FIXED"),
-	.DELAY_VALUE      (11'd2000),
+	.DELAY_VALUE      (1'd0),
 	.REFCLK_FREQUENCY (300.0),
 	.SIM_DEVICE       ("ULTRASCALE_PLUS"),
 	.UPDATE_MODE      ("ASYNC")
@@ -8615,13 +9811,13 @@ IDELAYE3 #(
 	.CLK         (1'd0),
 	.CNTVALUEIN  (1'd0),
 	.EN_VTC      (1'd1),
-	.IDATAIN     (ethphy_liteethphyrgmiirx_rx_data_ibuf[2]),
+	.IDATAIN     (ethphy_rx_data_ibuf[2]),
 	.INC         (1'd0),
 	.LOAD        (1'd0),
 	.RST         (1'd0),
 
 	// Outputs.
-	.DATAOUT     (ethphy_liteethphyrgmiirx_rx_data_idelay[2])
+	.DATAOUT     (ethphy_rx_data_idelay[2])
 );
 
 //------------------------------------------------------------------------------
@@ -8636,12 +9832,12 @@ IDDRE1 #(
 	// Inputs.
 	.C  (eth_rx_clk),
 	.CB (eth_rx_clk),
-	.D  (ethphy_liteethphyrgmiirx_rx_data_idelay[2]),
+	.D  (ethphy_rx_data_idelay[2]),
 	.R  (1'd0),
 
 	// Outputs.
-	.Q1 (ethphy_liteethphyrgmiirx_rx_data[2]),
-	.Q2 (ethphy_liteethphyrgmiirx_rx_data[6])
+	.Q1 (ethphy_rx_data[2]),
+	.Q2 (ethphy_rx_data[6])
 );
 
 //------------------------------------------------------------------------------
@@ -8652,7 +9848,7 @@ IBUF IBUF_5(
 	.I (rgmii_rx_data[3]),
 
 	// Outputs.
-	.O (ethphy_liteethphyrgmiirx_rx_data_ibuf[3])
+	.O (ethphy_rx_data_ibuf[3])
 );
 
 //------------------------------------------------------------------------------
@@ -8664,7 +9860,7 @@ IDELAYE3 #(
 	.DELAY_FORMAT     ("TIME"),
 	.DELAY_SRC        ("IDATAIN"),
 	.DELAY_TYPE       ("FIXED"),
-	.DELAY_VALUE      (11'd2000),
+	.DELAY_VALUE      (1'd0),
 	.REFCLK_FREQUENCY (300.0),
 	.SIM_DEVICE       ("ULTRASCALE_PLUS"),
 	.UPDATE_MODE      ("ASYNC")
@@ -8676,13 +9872,13 @@ IDELAYE3 #(
 	.CLK         (1'd0),
 	.CNTVALUEIN  (1'd0),
 	.EN_VTC      (1'd1),
-	.IDATAIN     (ethphy_liteethphyrgmiirx_rx_data_ibuf[3]),
+	.IDATAIN     (ethphy_rx_data_ibuf[3]),
 	.INC         (1'd0),
 	.LOAD        (1'd0),
 	.RST         (1'd0),
 
 	// Outputs.
-	.DATAOUT     (ethphy_liteethphyrgmiirx_rx_data_idelay[3])
+	.DATAOUT     (ethphy_rx_data_idelay[3])
 );
 
 //------------------------------------------------------------------------------
@@ -8697,41 +9893,38 @@ IDDRE1 #(
 	// Inputs.
 	.C  (eth_rx_clk),
 	.CB (eth_rx_clk),
-	.D  (ethphy_liteethphyrgmiirx_rx_data_idelay[3]),
+	.D  (ethphy_rx_data_idelay[3]),
 	.R  (1'd0),
 
 	// Outputs.
-	.Q1 (ethphy_liteethphyrgmiirx_rx_data[3]),
-	.Q2 (ethphy_liteethphyrgmiirx_rx_data[7])
+	.Q1 (ethphy_rx_data[3]),
+	.Q2 (ethphy_rx_data[7])
 );
-
-assign rgmii_mdio = ethphy_data_oe ? ethphy_data_w : 1'bz;
-assign ethphy_data_r = rgmii_mdio;
 
 //------------------------------------------------------------------------------
 // Memory storage: 32-words x 12-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 12 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
 // Port 1 | Read: Sync  | Write: ---- | 
 reg [11:0] storage[0:31];
 reg [11:0] storage_dat0;
 reg [11:0] storage_dat1;
 always @(posedge sys_clk) begin
-	if (mac_core_tx_cdc_cdc_wrport_we)
-		storage[mac_core_tx_cdc_cdc_wrport_adr] <= mac_core_tx_cdc_cdc_wrport_dat_w;
-	storage_dat0 <= storage[mac_core_tx_cdc_cdc_wrport_adr];
+	if (mac_core_txdatapath_cdc_wrport_we)
+		storage[mac_core_txdatapath_cdc_wrport_adr] <= mac_core_txdatapath_cdc_wrport_dat_w;
+	storage_dat0 <= storage[mac_core_txdatapath_cdc_wrport_adr];
 end
 always @(posedge eth_tx_clk) begin
-	storage_dat1 <= storage[mac_core_tx_cdc_cdc_rdport_adr];
+	storage_dat1 <= storage[mac_core_txdatapath_cdc_rdport_adr];
 end
-assign mac_core_tx_cdc_cdc_wrport_dat_r = storage_dat0;
-assign mac_core_tx_cdc_cdc_rdport_dat_r = storage_dat1;
+assign mac_core_txdatapath_cdc_wrport_dat_r = storage_dat0;
+assign mac_core_txdatapath_cdc_rdport_dat_r = storage_dat1;
 
 
 //------------------------------------------------------------------------------
 // Memory storage_1: 5-words x 12-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 12 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
 // Port 1 | Read: Async | Write: ---- | 
 reg [11:0] storage_1[0:4];
 reg [11:0] storage_1_dat0;
@@ -8749,7 +9942,7 @@ assign mac_core_liteethmaccrc32checker_syncfifo_rdport_dat_r = storage_1[mac_cor
 //------------------------------------------------------------------------------
 // Memory storage_2: 32-words x 12-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 12 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
 // Port 1 | Read: Sync  | Write: ---- | 
 reg [11:0] storage_2[0:31];
 reg [11:0] storage_2_dat0;
@@ -8769,142 +9962,176 @@ assign mac_core_cdc_rdport_dat_r = storage_2_dat1;
 //------------------------------------------------------------------------------
 // Memory mem: 2-words x 81-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Write-First | Write-Granularity: 81 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Write-First
 // Port 1 | Read: Async | Write: ---- | 
 reg [80:0] mem[0:1];
-reg [0:0] mem_adr0;
+reg [80:0] mem_dat0;
 always @(posedge sys_clk) begin
 	if (arp_table_cache_mem_wr_port_we)
 		mem[arp_table_cache_mem_wr_port_adr] <= arp_table_cache_mem_wr_port_dat_w;
-	mem_adr0 <= arp_table_cache_mem_wr_port_adr;
+	if (arp_table_cache_mem_wr_port_we)
+		mem_dat0 <= arp_table_cache_mem_wr_port_dat_w;
+	else
+		mem_dat0 <= mem[arp_table_cache_mem_wr_port_adr];
 end
 always @(posedge sys_clk) begin
 end
-assign arp_table_cache_mem_wr_port_dat_r = mem[mem_adr0];
+assign arp_table_cache_mem_wr_port_dat_r = mem_dat0;
 assign arp_table_cache_mem_rd_port_dat_r = mem[arp_table_cache_mem_rd_port_adr];
 
 
 //------------------------------------------------------------------------------
-// Memory storage_3: 128-words x 12-bit
+// Memory mem_1: 128-words x 12-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 12 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Write-First
 // Port 1 | Read: Sync  | Write: ---- | 
-reg [11:0] storage_3[0:127];
-reg [11:0] storage_3_dat0;
-reg [11:0] storage_3_dat1;
+reg [11:0] mem_1[0:127];
+reg [11:0] mem_1_dat0;
+reg [11:0] mem_1_dat1;
 always @(posedge sys_clk) begin
-	if (icmp_echo_payload_fifo_wrport_we)
-		storage_3[icmp_echo_payload_fifo_wrport_adr] <= icmp_echo_payload_fifo_wrport_dat_w;
-	storage_3_dat0 <= storage_3[icmp_echo_payload_fifo_wrport_adr];
+	if (icmp_echo_buffer_wr_port_we)
+		mem_1[icmp_echo_buffer_wr_port_adr] <= icmp_echo_buffer_wr_port_dat_w;
+	if (icmp_echo_buffer_wr_port_we)
+		mem_1_dat0 <= icmp_echo_buffer_wr_port_dat_w;
+	else
+		mem_1_dat0 <= mem_1[icmp_echo_buffer_wr_port_adr];
 end
 always @(posedge sys_clk) begin
-	if (icmp_echo_payload_fifo_rdport_re)
-		storage_3_dat1 <= storage_3[icmp_echo_payload_fifo_rdport_adr];
+	if (icmp_echo_buffer_rd_port_re) begin
+		mem_1_dat1 <= mem_1[icmp_echo_buffer_rd_port_adr];
+	end
 end
-assign icmp_echo_payload_fifo_wrport_dat_r = storage_3_dat0;
-assign icmp_echo_payload_fifo_rdport_dat_r = storage_3_dat1;
+assign icmp_echo_buffer_wr_port_dat_r = mem_1_dat0;
+assign icmp_echo_buffer_rd_port_dat_r = mem_1_dat1;
 
 
 //------------------------------------------------------------------------------
-// Memory storage_4: 2-words x 114-bit
+// Memory storage_3: 16-words x 11-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 114 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
 // Port 1 | Read: Sync  | Write: ---- | 
-reg [113:0] storage_4[0:1];
-reg [113:0] storage_4_dat0;
-reg [113:0] storage_4_dat1;
+reg [10:0] storage_3[0:15];
+reg [10:0] storage_3_dat0;
+reg [10:0] storage_3_dat1;
 always @(posedge sys_clk) begin
-	if (icmp_echo_param_fifo_wrport_we)
-		storage_4[icmp_echo_param_fifo_wrport_adr] <= icmp_echo_param_fifo_wrport_dat_w;
-	storage_4_dat0 <= storage_4[icmp_echo_param_fifo_wrport_adr];
+	if (liteethudpstreamer0_tx_payload_fifo_wrport_we)
+		storage_3[liteethudpstreamer0_tx_payload_fifo_wrport_adr] <= liteethudpstreamer0_tx_payload_fifo_wrport_dat_w;
+	storage_3_dat0 <= storage_3[liteethudpstreamer0_tx_payload_fifo_wrport_adr];
 end
 always @(posedge sys_clk) begin
-	if (icmp_echo_param_fifo_rdport_re)
-		storage_4_dat1 <= storage_4[icmp_echo_param_fifo_rdport_adr];
+	if (liteethudpstreamer0_tx_payload_fifo_rdport_re) begin
+		storage_3_dat1 <= storage_3[liteethudpstreamer0_tx_payload_fifo_rdport_adr];
+	end
 end
-assign icmp_echo_param_fifo_wrport_dat_r = storage_4_dat0;
-assign icmp_echo_param_fifo_rdport_dat_r = storage_4_dat1;
+assign liteethudpstreamer0_tx_payload_fifo_wrport_dat_r = storage_3_dat0;
+assign liteethudpstreamer0_tx_payload_fifo_rdport_dat_r = storage_3_dat1;
 
 
 //------------------------------------------------------------------------------
-// Memory storage_5: 16-words x 10-bit
+// Memory storage_4: 17-words x 18-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 10 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
 // Port 1 | Read: Sync  | Write: ---- | 
-reg [9:0] storage_5[0:15];
-reg [9:0] storage_5_dat0;
-reg [9:0] storage_5_dat1;
+reg [17:0] storage_4[0:16];
+reg [17:0] storage_4_dat0;
+reg [17:0] storage_4_dat1;
 always @(posedge sys_clk) begin
-	if (liteethudpstreamer0_tx_fifo_wrport_we)
-		storage_5[liteethudpstreamer0_tx_fifo_wrport_adr] <= liteethudpstreamer0_tx_fifo_wrport_dat_w;
-	storage_5_dat0 <= storage_5[liteethudpstreamer0_tx_fifo_wrport_adr];
+	if (liteethudpstreamer0_tx_param_fifo_wrport_we)
+		storage_4[liteethudpstreamer0_tx_param_fifo_wrport_adr] <= liteethudpstreamer0_tx_param_fifo_wrport_dat_w;
+	storage_4_dat0 <= storage_4[liteethudpstreamer0_tx_param_fifo_wrport_adr];
 end
 always @(posedge sys_clk) begin
-	if (liteethudpstreamer0_tx_fifo_rdport_re)
-		storage_5_dat1 <= storage_5[liteethudpstreamer0_tx_fifo_rdport_adr];
+	if (liteethudpstreamer0_tx_param_fifo_rdport_re) begin
+		storage_4_dat1 <= storage_4[liteethudpstreamer0_tx_param_fifo_rdport_adr];
+	end
 end
-assign liteethudpstreamer0_tx_fifo_wrport_dat_r = storage_5_dat0;
-assign liteethudpstreamer0_tx_fifo_rdport_dat_r = storage_5_dat1;
+assign liteethudpstreamer0_tx_param_fifo_wrport_dat_r = storage_4_dat0;
+assign liteethudpstreamer0_tx_param_fifo_rdport_dat_r = storage_4_dat1;
+
+
+//------------------------------------------------------------------------------
+// Memory storage_5: 16-words x 12-bit
+//------------------------------------------------------------------------------
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
+// Port 1 | Read: Sync  | Write: ---- | 
+reg [11:0] storage_5[0:15];
+reg [11:0] storage_5_dat0;
+reg [11:0] storage_5_dat1;
+always @(posedge sys_clk) begin
+	if (liteethudpstreamer0_rx_fifo_wrport_we)
+		storage_5[liteethudpstreamer0_rx_fifo_wrport_adr] <= liteethudpstreamer0_rx_fifo_wrport_dat_w;
+	storage_5_dat0 <= storage_5[liteethudpstreamer0_rx_fifo_wrport_adr];
+end
+always @(posedge sys_clk) begin
+	if (liteethudpstreamer0_rx_fifo_rdport_re) begin
+		storage_5_dat1 <= storage_5[liteethudpstreamer0_rx_fifo_rdport_adr];
+	end
+end
+assign liteethudpstreamer0_rx_fifo_wrport_dat_r = storage_5_dat0;
+assign liteethudpstreamer0_rx_fifo_rdport_dat_r = storage_5_dat1;
 
 
 //------------------------------------------------------------------------------
 // Memory storage_6: 16-words x 11-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 11 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
 // Port 1 | Read: Sync  | Write: ---- | 
 reg [10:0] storage_6[0:15];
 reg [10:0] storage_6_dat0;
 reg [10:0] storage_6_dat1;
 always @(posedge sys_clk) begin
-	if (liteethudpstreamer0_rx_fifo_wrport_we)
-		storage_6[liteethudpstreamer0_rx_fifo_wrport_adr] <= liteethudpstreamer0_rx_fifo_wrport_dat_w;
-	storage_6_dat0 <= storage_6[liteethudpstreamer0_rx_fifo_wrport_adr];
+	if (liteethudpstreamer1_tx_payload_fifo_wrport_we)
+		storage_6[liteethudpstreamer1_tx_payload_fifo_wrport_adr] <= liteethudpstreamer1_tx_payload_fifo_wrport_dat_w;
+	storage_6_dat0 <= storage_6[liteethudpstreamer1_tx_payload_fifo_wrport_adr];
 end
 always @(posedge sys_clk) begin
-	if (liteethudpstreamer0_rx_fifo_rdport_re)
-		storage_6_dat1 <= storage_6[liteethudpstreamer0_rx_fifo_rdport_adr];
+	if (liteethudpstreamer1_tx_payload_fifo_rdport_re) begin
+		storage_6_dat1 <= storage_6[liteethudpstreamer1_tx_payload_fifo_rdport_adr];
+	end
 end
-assign liteethudpstreamer0_rx_fifo_wrport_dat_r = storage_6_dat0;
-assign liteethudpstreamer0_rx_fifo_rdport_dat_r = storage_6_dat1;
+assign liteethudpstreamer1_tx_payload_fifo_wrport_dat_r = storage_6_dat0;
+assign liteethudpstreamer1_tx_payload_fifo_rdport_dat_r = storage_6_dat1;
 
 
 //------------------------------------------------------------------------------
-// Memory storage_7: 16-words x 10-bit
+// Memory storage_7: 17-words x 18-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 10 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
 // Port 1 | Read: Sync  | Write: ---- | 
-reg [9:0] storage_7[0:15];
-reg [9:0] storage_7_dat0;
-reg [9:0] storage_7_dat1;
+reg [17:0] storage_7[0:16];
+reg [17:0] storage_7_dat0;
+reg [17:0] storage_7_dat1;
 always @(posedge sys_clk) begin
-	if (liteethudpstreamer1_tx_fifo_wrport_we)
-		storage_7[liteethudpstreamer1_tx_fifo_wrport_adr] <= liteethudpstreamer1_tx_fifo_wrport_dat_w;
-	storage_7_dat0 <= storage_7[liteethudpstreamer1_tx_fifo_wrport_adr];
+	if (liteethudpstreamer1_tx_param_fifo_wrport_we)
+		storage_7[liteethudpstreamer1_tx_param_fifo_wrport_adr] <= liteethudpstreamer1_tx_param_fifo_wrport_dat_w;
+	storage_7_dat0 <= storage_7[liteethudpstreamer1_tx_param_fifo_wrport_adr];
 end
 always @(posedge sys_clk) begin
-	if (liteethudpstreamer1_tx_fifo_rdport_re)
-		storage_7_dat1 <= storage_7[liteethudpstreamer1_tx_fifo_rdport_adr];
+	if (liteethudpstreamer1_tx_param_fifo_rdport_re) begin
+		storage_7_dat1 <= storage_7[liteethudpstreamer1_tx_param_fifo_rdport_adr];
+	end
 end
-assign liteethudpstreamer1_tx_fifo_wrport_dat_r = storage_7_dat0;
-assign liteethudpstreamer1_tx_fifo_rdport_dat_r = storage_7_dat1;
+assign liteethudpstreamer1_tx_param_fifo_wrport_dat_r = storage_7_dat0;
+assign liteethudpstreamer1_tx_param_fifo_rdport_dat_r = storage_7_dat1;
 
 
 //------------------------------------------------------------------------------
-// Memory storage_8: 16-words x 11-bit
+// Memory storage_8: 16-words x 12-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 11 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
 // Port 1 | Read: Sync  | Write: ---- | 
-reg [10:0] storage_8[0:15];
-reg [10:0] storage_8_dat0;
-reg [10:0] storage_8_dat1;
+reg [11:0] storage_8[0:15];
+reg [11:0] storage_8_dat0;
+reg [11:0] storage_8_dat1;
 always @(posedge sys_clk) begin
 	if (liteethudpstreamer1_rx_fifo_wrport_we)
 		storage_8[liteethudpstreamer1_rx_fifo_wrport_adr] <= liteethudpstreamer1_rx_fifo_wrport_dat_w;
 	storage_8_dat0 <= storage_8[liteethudpstreamer1_rx_fifo_wrport_adr];
 end
 always @(posedge sys_clk) begin
-	if (liteethudpstreamer1_rx_fifo_rdport_re)
+	if (liteethudpstreamer1_rx_fifo_rdport_re) begin
 		storage_8_dat1 <= storage_8[liteethudpstreamer1_rx_fifo_rdport_adr];
+	end
 end
 assign liteethudpstreamer1_rx_fifo_wrport_dat_r = storage_8_dat0;
 assign liteethudpstreamer1_rx_fifo_rdport_dat_r = storage_8_dat1;
@@ -8915,7 +10142,7 @@ assign liteethudpstreamer1_rx_fifo_rdport_dat_r = storage_8_dat1;
 //------------------------------------------------------------------------------
 FDCE FDCE(
 	// Inputs.
-	.C   (ethphy_clkin),
+	.C   (ethphy_clkin_signal),
 	.CE  (1'd1),
 	.CLR (1'd0),
 	.D   (ethphy_reset0),
@@ -8929,7 +10156,7 @@ FDCE FDCE(
 //------------------------------------------------------------------------------
 FDCE FDCE_1(
 	// Inputs.
-	.C   (ethphy_clkin),
+	.C   (ethphy_clkin_signal),
 	.CE  (1'd1),
 	.CLR (1'd0),
 	.D   (reset0),
@@ -8943,7 +10170,7 @@ FDCE FDCE_1(
 //------------------------------------------------------------------------------
 FDCE FDCE_2(
 	// Inputs.
-	.C   (ethphy_clkin),
+	.C   (ethphy_clkin_signal),
 	.CE  (1'd1),
 	.CLR (1'd0),
 	.D   (reset1),
@@ -8957,7 +10184,7 @@ FDCE FDCE_2(
 //------------------------------------------------------------------------------
 FDCE FDCE_3(
 	// Inputs.
-	.C   (ethphy_clkin),
+	.C   (ethphy_clkin_signal),
 	.CE  (1'd1),
 	.CLR (1'd0),
 	.D   (reset2),
@@ -8971,7 +10198,7 @@ FDCE FDCE_3(
 //------------------------------------------------------------------------------
 FDCE FDCE_4(
 	// Inputs.
-	.C   (ethphy_clkin),
+	.C   (ethphy_clkin_signal),
 	.CE  (1'd1),
 	.CLR (1'd0),
 	.D   (reset3),
@@ -8985,7 +10212,7 @@ FDCE FDCE_4(
 //------------------------------------------------------------------------------
 FDCE FDCE_5(
 	// Inputs.
-	.C   (ethphy_clkin),
+	.C   (ethphy_clkin_signal),
 	.CE  (1'd1),
 	.CLR (1'd0),
 	.D   (reset4),
@@ -8999,7 +10226,7 @@ FDCE FDCE_5(
 //------------------------------------------------------------------------------
 FDCE FDCE_6(
 	// Inputs.
-	.C   (ethphy_clkin),
+	.C   (ethphy_clkin_signal),
 	.CE  (1'd1),
 	.CLR (1'd0),
 	.D   (reset5),
@@ -9013,7 +10240,7 @@ FDCE FDCE_6(
 //------------------------------------------------------------------------------
 FDCE FDCE_7(
 	// Inputs.
-	.C   (ethphy_clkin),
+	.C   (ethphy_clkin_signal),
 	.CE  (1'd1),
 	.CLR (1'd0),
 	.D   (reset6),
@@ -9032,14 +10259,14 @@ PLLE2_ADV #(
 	.CLKOUT0_DIVIDE (4'd9),
 	.CLKOUT0_PHASE  (1'd0),
 	.CLKOUT1_DIVIDE (4'd9),
-	.CLKOUT1_PHASE  (90.0),
+	.CLKOUT1_PHASE  (0.0),
 	.DIVCLK_DIVIDE  (1'd1),
 	.REF_JITTER1    (0.01),
 	.STARTUP_WAIT   ("FALSE")
 ) PLLE2_ADV (
 	// Inputs.
 	.CLKFBIN  (pll_fb),
-	.CLKIN1   (ethphy_clkin),
+	.CLKIN1   (ethphy_clkin_signal),
 	.PWRDWN   (ethphy_power_down),
 	.RST      (reset7),
 
@@ -9158,8 +10385,23 @@ FDPE #(
 	.Q   (eth_rx_rst)
 );
 
+//------------------------------------------------------------------------------
+// Instance IOBUF of IOBUF Module.
+//------------------------------------------------------------------------------
+IOBUF IOBUF(
+	// Inputs.
+	.I  (ethphy_data_w),
+	.T  ((~ethphy_data_oe)),
+
+	// Outputs.
+	.O  (ethphy_data_r),
+
+	// InOuts.
+	.IO (rgmii_mdio)
+);
+
 endmodule
 
 // -----------------------------------------------------------------------------
-//  Auto-Generated by LiteX on 2026-05-28 20:01:06.
+//  Auto-Generated by LiteX on 2026-10-13 16:03:24.
 //------------------------------------------------------------------------------
