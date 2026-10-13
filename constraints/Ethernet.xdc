@@ -28,3 +28,8 @@ set_property PACKAGE_PIN M25 [get_ports eth_txc]
 set_property PACKAGE_PIN K9  [get_ports sys_rst_n]
 
 
+create_clock -name eth_rxck -period 8.000 [get_ports eth_rxc]
+create_clock -name eth_rxck -period 8.000 [get_ports eth_txc]
+
+
+
