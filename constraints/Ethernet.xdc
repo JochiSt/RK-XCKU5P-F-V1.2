@@ -31,5 +31,13 @@ set_property PACKAGE_PIN K9  [get_ports sys_rst_n]
 create_clock -name eth_rxck -period 8.000 [get_ports eth_rxc]
 create_clock -name eth_rxck -period 8.000 [get_ports eth_txc]
 
+set_property IOSTANDARD LVCMOS18 [get_ports eth_mdio]
+set_property IOSTANDARD LVCMOS18 [get_ports eth_mdc]
+set_property PACKAGE_PIN M19 [get_ports eth_mdio]
+set_property PACKAGE_PIN L19 [get_ports eth_mdc]
+
+set_false_path -to   [get_ports {eth_mdc eth_mdio}]
+set_false_path -from [get_ports eth_mdio]
+
 
 
