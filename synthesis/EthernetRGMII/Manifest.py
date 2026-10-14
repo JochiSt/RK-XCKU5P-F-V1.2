@@ -67,4 +67,5 @@ files = [
     "commands.tcl",
     "EthernetRGMII.vhdl",
     "delay_ref_clock.vhdl",
+    "send_udp_packet.vhdl",
     ]

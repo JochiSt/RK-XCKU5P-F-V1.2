@@ -73,29 +73,35 @@ ARCHITECTURE behaviour OF EthernetRGMII IS
     SIGNAL rgmii_rst_n : STD_LOGIC := '1';
     SIGNAL rgmii_int_n : STD_LOGIC := '0';
 
-    SIGNAL udp0_ip_address : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0');
+    SIGNAL udp0_ip_address : STD_LOGIC_VECTOR(31 DOWNTO 0) := x"C0_A8_01_04"; -- ip address, we are sending our packets to
+    SIGNAL udp0_udp_port : STD_LOGIC_VECTOR(15 DOWNTO 0) := x"07d0"; -- port 2000
+
     SIGNAL udp0_sink_data : STD_LOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
     SIGNAL udp0_sink_last : STD_LOGIC := '0';
     SIGNAL udp0_sink_ready : STD_LOGIC := '0';
     SIGNAL udp0_sink_valid : STD_LOGIC := '0';
+
     SIGNAL udp0_source_data : STD_LOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
     SIGNAL udp0_source_error : STD_LOGIC := '0';
     SIGNAL udp0_source_last : STD_LOGIC := '0';
     SIGNAL udp0_source_ready : STD_LOGIC := '0';
     SIGNAL udp0_source_valid : STD_LOGIC := '0';
-    SIGNAL udp0_udp_port : STD_LOGIC_VECTOR(15 DOWNTO 0) := (OTHERS => '0');
+
+    ----------------------------------------------------------------------------
 
     SIGNAL udp1_ip_address : STD_LOGIC_VECTOR(31 DOWNTO 0) := (OTHERS => '0');
+    SIGNAL udp1_udp_port : STD_LOGIC_VECTOR(15 DOWNTO 0) := x"07d1"; -- port 2001
+
     SIGNAL udp1_sink_data : STD_LOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
     SIGNAL udp1_sink_last : STD_LOGIC := '0';
     SIGNAL udp1_sink_ready : STD_LOGIC := '0';
     SIGNAL udp1_sink_valid : STD_LOGIC := '0';
+
     SIGNAL udp1_source_data : STD_LOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
     SIGNAL udp1_source_error : STD_LOGIC := '0';
     SIGNAL udp1_source_last : STD_LOGIC := '0';
     SIGNAL udp1_source_ready : STD_LOGIC := '0';
     SIGNAL udp1_source_valid : STD_LOGIC := '0';
-    SIGNAL udp1_udp_port : STD_LOGIC_VECTOR(15 DOWNTO 0) := (OTHERS => '0');
 
     ----------------------------------------------------------------------------
     -- PLL
@@ -152,6 +158,7 @@ BEGIN
     -- RGMII Ethernet
     ----------------------------------------------------------------------------
     sys_reset <= NOT pll_locked;
+
     liteeth_core_0 : liteeth_core
     PORT MAP(
         rgmii_clocks_rx   => eth_rxc,
@@ -177,6 +184,7 @@ BEGIN
         udp0_sink_last    => udp0_sink_last,
         udp0_sink_ready   => udp0_sink_ready,
         udp0_sink_valid   => udp0_sink_valid,
+
         udp0_source_data  => udp0_source_data,
         udp0_source_error => udp0_source_error,
         udp0_source_last  => udp0_source_last,
@@ -189,6 +197,7 @@ BEGIN
         udp1_sink_last    => udp1_sink_last,
         udp1_sink_ready   => udp1_sink_ready,
         udp1_sink_valid   => udp1_sink_valid,
+
         udp1_source_data  => udp1_source_data,
         udp1_source_error => udp1_source_error,
         udp1_source_last  => udp1_source_last,
@@ -196,4 +205,22 @@ BEGIN
         udp1_source_valid => udp1_source_valid,
         udp1_udp_port     => udp1_udp_port
     );
+
+    ----------------------------------------------------------------------------
+    -- Send UDP packets
+    ----------------------------------------------------------------------------
+    send_udp_packet_0 : ENTITY work.send_udp_packet
+        GENERIC MAP(
+            CLK_FREQ_HZ   => 200_000_000,
+            PAYLOAD_BYTES => 64,
+            PACKETS_PER_S => 1000
+        )
+        PORT MAP(
+            clk      => pll_200MHz,
+            rst      => sys_reset,
+            tx_valid => udp0_sink_valid,
+            tx_ready => udp0_sink_ready,
+            tx_last  => udp0_sink_last,
+            tx_data  => udp0_sink_data
+        );
 END ARCHITECTURE; -- behaviour
