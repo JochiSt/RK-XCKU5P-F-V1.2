@@ -1,10 +1,13 @@
-# PHY --------------------------------------------------------------------------
+# FPGA & TOOLS -----------------------------------------------------------------
 vendor: xilinx
 toolchain: vivado
 device: xcku5p-ffvb676-2-i
+
+# PHY --------------------------------------------------------------------------
 phy: LiteEthUSPHYRGMII
 
-phy_hw_init_reset: False
+phy_hw_init_reset: True
+
 # delays of 2ns are active on RTL8211F
 phy_rx_delay: 0
 phy_tx_delay: 0

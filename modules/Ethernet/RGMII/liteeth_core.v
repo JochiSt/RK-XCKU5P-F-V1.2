@@ -11,7 +11,7 @@
 // Device     : xcku5p-ffvb676-2-i
 // Hierarchy  : disabled
 // LiteX sha1 : b2759f69b
-// Date       : 2026-10-13 16:30:09
+// Date       : 2026-10-13 20:55:09
 //------------------------------------------------------------------------------
 
 `timescale 1ns / 1ps
@@ -88,6 +88,7 @@ UDPCore
 │    │    │    ├── [BB:PLLE2_ADV]
 │    │    │    ├── [BB:BUFG]
 │    │    │    └── [BB:BUFG]
+│    │    ├── hw_reset (LiteEthPHYHWReset)
 │    │    ├── [BB:OBUF]
 │    │    ├── [BB:BUFG]
 │    │    ├── [BB:IBUF]
@@ -294,13 +295,13 @@ UDPCore
 │         ├── csrstorage_1 (CSRStorage) [Gen]
 │         └── csrstatus_0 (CSRStatus) [Gen]
 ├── csr_interconnect (InterconnectShared)
+├── [BB:IOBUF]
 ├── [BB:FDPE]
 ├── [BB:FDPE]
 ├── [BB:FDPE]
 ├── [BB:FDPE]
 ├── [BB:FDPE]
-├── [BB:FDPE]
-└── [BB:IOBUF]
+└── [BB:FDPE]
 Legend:
   [Gen]: Auto-generated instance name.
   [BB:NAME]: Blackbox instance (verilog Instance).
@@ -594,14 +595,18 @@ wire          ethphy_data_r;
 wire          ethphy_data_w;
 wire          ethphy_eth_rx_clk_ibuf;
 wire          ethphy_eth_tx_clk_obuf;
+reg     [8:0] ethphy_hw_reset_counter = 9'd0;
+wire          ethphy_hw_reset_counter_ce;
+wire          ethphy_hw_reset_counter_done;
+wire          ethphy_hw_reset_reset;
 wire          ethphy_last;
-wire          ethphy_locked;
 wire          ethphy_mdc;
 wire          ethphy_oe;
-reg           ethphy_power_down = 1'd0;
+wire          ethphy_pll_locked;
+reg           ethphy_pll_power_down = 1'd0;
+reg           ethphy_pll_reset = 1'd0;
 wire          ethphy_r;
-reg           ethphy_reset0 = 1'd0;
-wire          ethphy_reset1;
+wire          ethphy_reset;
 reg           ethphy_reset_storage = 1'd0;
 reg           ethphy_reset_wr_stb = 1'd0;
 wire    [1:0] ethphy_rx_ctl;
@@ -2684,11 +2689,14 @@ assign udpcore_bus_errors_status = udpcore_bus_errors;
 assign sys_clk = sys_clock;
 assign por_clk = sys_clock;
 assign sys_rst = int_rst;
-assign ethphy_reset1 = ethphy_reset_storage;
-assign rgmii_rst_n = (~ethphy_reset1);
+assign ethphy_reset = (ethphy_reset_storage | ethphy_hw_reset_reset);
+assign rgmii_rst_n = (~ethphy_reset);
 assign ethphy_clkin_signal = eth_rx_clk;
 assign eth_tx_clk = ethphy_clkout_buf0;
 assign eth_tx_delayed_clk = ethphy_clkout_buf1;
+assign ethphy_hw_reset_counter_done = (ethphy_hw_reset_counter == 9'h100);
+assign ethphy_hw_reset_counter_ce = (~ethphy_hw_reset_counter_done);
+assign ethphy_hw_reset_reset = (~ethphy_hw_reset_counter_done);
 assign ethphy_sink_ready = 1'd1;
 assign ethphy_source_payload_be = 1'd1;
 assign ethphy_last = ((~ethphy_rx_ctl[0]) & ethphy_rx_ctl_d);
@@ -8312,7 +8320,7 @@ always @(*) begin
         end
     endcase
 end
-assign xilinxasyncresetsynchronizerimpl0 = (~ethphy_locked);
+assign xilinxasyncresetsynchronizerimpl0 = (~ethphy_pll_locked);
 assign ethphy_r = xilinxmultiregimpl01;
 assign mac_core_txdatapath_cdc_produce_rdomain = xilinxmultiregimpl11;
 assign mac_core_txdatapath_cdc_consume_wdomain = xilinxmultiregimpl21;
@@ -8497,6 +8505,9 @@ always @(posedge sys_clk) begin
         if (udpcore_bus_error) begin
             udpcore_bus_errors <= (udpcore_bus_errors + 1'd1);
         end
+    end
+    if (ethphy_hw_reset_counter_ce) begin
+        ethphy_hw_reset_counter <= (ethphy_hw_reset_counter + 1'd1);
     end
     mac_core_txdatapath_cdc_graycounter0_q_binary <= mac_core_txdatapath_cdc_graycounter0_q_next_binary;
     mac_core_txdatapath_cdc_graycounter0_q <= mac_core_txdatapath_cdc_graycounter0_q_next;
@@ -9237,6 +9248,7 @@ always @(posedge sys_clk) begin
         udpcore_bus_errors <= 32'd0;
         ethphy_reset_storage <= 1'd0;
         ethphy_reset_wr_stb <= 1'd0;
+        ethphy_hw_reset_counter <= 9'd0;
         ethphy__w_storage <= 3'd0;
         ethphy__w_wr_stb <= 1'd0;
         ethphy__r_wr_stb <= 1'd0;
@@ -10145,7 +10157,7 @@ FDCE FDCE(
 	.C   (ethphy_clkin_signal),
 	.CE  (1'd1),
 	.CLR (1'd0),
-	.D   (ethphy_reset0),
+	.D   (ethphy_pll_reset),
 
 	// Outputs.
 	.Q   (reset0)
@@ -10267,14 +10279,14 @@ PLLE2_ADV #(
 	// Inputs.
 	.CLKFBIN  (pll_fb),
 	.CLKIN1   (ethphy_clkin_signal),
-	.PWRDWN   (ethphy_power_down),
+	.PWRDWN   (ethphy_pll_power_down),
 	.RST      (reset7),
 
 	// Outputs.
 	.CLKFBOUT (pll_fb),
 	.CLKOUT0  (ethphy_clkout0),
 	.CLKOUT1  (ethphy_clkout1),
-	.LOCKED   (ethphy_locked)
+	.LOCKED   (ethphy_pll_locked)
 );
 
 (* ars_ff1 = "true", async_reg = "true" *)
@@ -10325,7 +10337,7 @@ FDPE #(
 	.C   (eth_tx_clk),
 	.CE  (1'd1),
 	.D   (1'd0),
-	.PRE (ethphy_reset1),
+	.PRE (ethphy_reset),
 
 	// Outputs.
 	.Q   (xilinxasyncresetsynchronizerimpl1_rst_meta)
@@ -10343,7 +10355,7 @@ FDPE #(
 	.C   (eth_tx_clk),
 	.CE  (1'd1),
 	.D   (xilinxasyncresetsynchronizerimpl1_rst_meta),
-	.PRE (ethphy_reset1),
+	.PRE (ethphy_reset),
 
 	// Outputs.
 	.Q   (eth_tx_rst)
@@ -10361,7 +10373,7 @@ FDPE #(
 	.C   (eth_rx_clk),
 	.CE  (1'd1),
 	.D   (1'd0),
-	.PRE (ethphy_reset1),
+	.PRE (ethphy_reset),
 
 	// Outputs.
 	.Q   (xilinxasyncresetsynchronizerimpl2_rst_meta)
@@ -10379,7 +10391,7 @@ FDPE #(
 	.C   (eth_rx_clk),
 	.CE  (1'd1),
 	.D   (xilinxasyncresetsynchronizerimpl2_rst_meta),
-	.PRE (ethphy_reset1),
+	.PRE (ethphy_reset),
 
 	// Outputs.
 	.Q   (eth_rx_rst)
@@ -10403,5 +10415,5 @@ IOBUF IOBUF(
 endmodule
 
 // -----------------------------------------------------------------------------
-//  Auto-Generated by LiteX on 2026-10-13 16:30:10.
+//  Auto-Generated by LiteX on 2026-10-13 20:55:09.
 //------------------------------------------------------------------------------
